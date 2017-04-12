@@ -1,0 +1,30 @@
+load ../test-foform.maude
+
+fmod FOFORM-SUBSTITUTION-TEST is
+  protecting FOFORM-SUBSTITUTION .
+  protecting NAT .
+
+  sort Analysis .
+
+  op test : Nat -> Analysis .
+  ops success failure : -> Analysis .
+
+  var N : Nat .
+
+  eq test(N) = failure [owise] .
+
+  ceq test(1) = success
+   if '_+_['Z:Nat, 'Y:Nat] := '_+_['X:Nat, 'Y:Nat] << ('X:Nat <- 'Z:Nat) .
+
+  ceq test(2) = success
+   if (A['X:Nat] '_+_['X:Nat, 'Y:Nat] ?= 'Z:Nat) := (A['X:Nat] '_+_['X:Nat, 'Y:Nat] ?= 'Z:Nat) << ('X:Nat <- 'A:Nat) .
+
+  ceq test(3) = success
+   if (A['X:Nat] '_+_['X:Nat, 'A:Nat] ?= 'Z:Nat) := (A['X:Nat] '_+_['X:Nat, 'Y:Nat] ?= 'Z:Nat) << ('Y:Nat <- 'A:Nat) .
+endfm
+
+reduce test(1) .
+reduce test(2) .
+reduce test(3) .
+
+q

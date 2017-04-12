@@ -549,8 +549,8 @@ fmod FOFORM-SUBSTITUTION is
   --- base case
   eq  F << none = F .
   --- quantifiers
-  eq (A[X ; Q] F) << (X <- Y ; S) = (A[X ; Q] F) << S .
-  eq (E[X ; Q] F) << (X <- Y ; S) = (E[X ; Q] F) << S .
+  eq (A[X ; Q] F) << (X <- U ; S) = (A[X ; Q] F) << S .
+  eq (E[X ; Q] F) << (X <- U ; S) = (E[X ; Q] F) << S .
   eq (A[Q]     F) <<  S           = A[Q] (F << S) [owise] .
   eq (E[Q]     F) <<  S           = E[Q] (F << S) [owise] .
   --- other symbols
