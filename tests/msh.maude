@@ -26,17 +26,17 @@ set print color on .
 reduce
 
 test [ current-module < upModule('CYCLE, true) >
-       ( trace < .CTermSetTrace >
+       ( strategy < explore-all-with(rewrite) >
          state < 'f['a.PreState] >
-         strategy < explore-all-with(rewrite) >
+         trace < .CTermSetTrace >
        reduces-to
+         strategy < .Program >
          state < .CTermSet >
          trace < 4 | 0 |-> < 'f['a.PreState],'f['a.PreState] >
                      1 |-> < 'f['b.PreState] ;; 'g['c.PreState],'f['a.PreState] ;; 'f['b.PreState] ;; 'g['c.PreState] >
                      2 |-> < 'f['c.PreState],'f['a.PreState] ;; 'f['b.PreState] ;; 'f['c.PreState] ;; 'g['c.PreState] >
                      3 |-> < .CTermSet,'f['a.PreState] ;; 'f['b.PreState] ;; 'f['c.PreState] ;; 'g['c.PreState] >
                >
-         strategy < .Program >
        )
      ]
 
@@ -45,17 +45,16 @@ test [ current-module < upModule('CYCLE, true) >
 reduce
 
 test [ current-module < upModule('CYCLE, true) >
-       ( trace < .CTermSetTrace >
+       ( strategy < explore-all-with(narrow) >
          state < 'f['Y:PreState] >
-         strategy < extend ; narrow ; extend >
-         --- strategy < explore-all-with(narrow) >
+         trace < .CTermSetTrace >
        reduces-to
-         state < .CTermSet >
-         trace < 2 | 0 |-> < 'f['Y:PreState] , 'f['Y:PreState] >
-                     1 |-> < 'g['c.PreState] , 'f['Y.PreState] ;; 'g['c.PreState] >
-                     --- 2 |-> < .CTermSet       , 'f['Y.PreState] ;; 'g['c.PreState] >
-               >
          strategy < .Program >
+         state < .CTermSet >
+         trace < 3 | 0 |-> < 'f['Y:PreState],'f['Y:PreState] >
+                     1 |-> < 'g['c.PreState],'f['Y:PreState] ;; 'g['c.PreState] >
+                     2 |-> < .CTermSet,'f['Y:PreState] ;; 'g['c.PreState] >
+               >
        )
     ]
 
@@ -64,10 +63,11 @@ test [ current-module < upModule('CYCLE, true) >
 reduce
 
 test [ current-module < upModule('NONDET-SCHEDULER, true) >
-       ( trace < .CTermSetTrace >
+       ( strategy < explore-all-with(rewrite) >
          state < '`{_`}['__['tb.Task, 'addTasks['__['ta.Task, 'tb.Task]]]] >
-         strategy < explore-all-with(rewrite) >
+         trace < .CTermSetTrace >
        reduces-to
+         strategy < .Program >
          state < .CTermSet >
          trace < 7 | 0 |-> < '`{_`}['__['tb.Task,'addTasks['__['ta.Task,'tb.Task]]]],'`{_`}['__['tb.Task,'addTasks['__['ta.Task,'tb.Task]]]] >
                      1 |-> < '_|_['tb.Task,'addTasks['__['ta.Task,'tb.Task]]] ;; '`{_`}['__['ta.Task,'tb.Task]],'_|_['tb.Task,'addTasks['__['ta.Task,'tb.Task]]] ;; '`{_`}['__['ta.Task,'tb.Task]] ;; '`{_`}['__['tb.Task,'addTasks['__['ta.Task,'tb.Task]]]] >
@@ -77,7 +77,6 @@ test [ current-module < upModule('NONDET-SCHEDULER, true) >
                      5 |-> < '`{_`}['.Tasks.Tasks],'_|_['ta.Task,'.Tasks.Tasks] ;; '_|_['ta.Task,'tb.Task] ;; '_|_['tb.Task,'.Tasks.Tasks] ;; '_|_['tb.Task,'ta.Task] ;; '_|_['tb.Task,'addTasks['__['ta.Task,'tb.Task]]] ;; '`{_`}['.Tasks.Tasks] ;; '`{_`}['ta.Task] ;; '`{_`}['tb.Task] ;; '`{_`}['__['ta.Task,'tb.Task]] ;; '`{_`}['__['tb.Task,'addTasks['__['ta.Task,'tb.Task]]]] ;; '`{_`}['addTasks['__['ta.Task,'tb.Task]]] >
                      6 |-> < .CTermSet,'_|_['ta.Task,'.Tasks.Tasks] ;; '_|_['ta.Task,'tb.Task] ;; '_|_['tb.Task,'.Tasks.Tasks] ;; '_|_['tb.Task,'ta.Task] ;; '_|_['tb.Task,'addTasks['__['ta.Task,'tb.Task]]] ;; '`{_`}['.Tasks.Tasks] ;; '`{_`}['ta.Task] ;; '`{_`}['tb.Task] ;; '`{_`}['__['ta.Task,'tb.Task]] ;; '`{_`}['__['tb.Task,'addTasks['__['ta.Task,'tb.Task]]]] ;; '`{_`}['addTasks['__['ta.Task,'tb.Task]]] >
                >
-         strategy < .Program >
        )
      ]
 
