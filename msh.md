@@ -104,8 +104,7 @@ fmod STATE is
   ceq #rewrite(MOD, T, T', N) = T'' ;; #rewrite(MOD, T, T', s(N)) if { T'' , TYPE , SUBST } := metaSearch(MOD, T, T', nil, '+, 1, N) .
   eq  #rewrite(MOD, T, T', N) = .CTermSet [owise] .
 
-  --- TODO: If the term passed to `#narrow` is ground with no condition, is it a safe optimization to
-  --- pass it to `#rewrite` instead?
+  --- TODO: If the term passed to `#narrow` is ground with no condition, is it a safe optimization to pass it to `#rewrite` instead?
   op #narrow : Module CTerm CTerm Nat -> CTermSet .
   -------------------------------------------------
   ceq #narrow(MOD, T, T', N) = T'' ;; #narrow(MOD, T, T', s(N)) if { T'' , TYPE , SUBST } := metaNarrow(MOD, T, T', '+, 1, N) .
@@ -311,12 +310,14 @@ narrowing modulo SMT trace-based analysis.
 fmod MSH-EXTENDED is
   protecting MSH .
 
-  op explore-all : -> Program .
-  -----------------------------
-  eq explore-all = extend
-                 ; while (not empty?) { narrow
-                                      ; extend
-                                      ; load
-                                      } .
+  var EXEC-COMMAND : Command{Module=>State} .
+
+  op explore-all-with : Command{Module=>State} -> Program .
+  ---------------------------------------------------------
+  eq explore-all-with(EXEC-COMMAND) = extend
+                                    ; while (not empty?) { EXEC-COMMAND
+                                                         ; extend
+                                                         ; load
+                                                         } .
 endfm
 ```
