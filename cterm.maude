@@ -21,18 +21,19 @@ load metafresh.maude
 load foform.maude
 
 fmod CTERM-SET is
-  protecting FOFORM-DEFINEDOPS + FOFORM-SUBSTITUTION .
+  protecting FOFORM-DEFINEDOPS + FOFORM-SUBSTITUTIONSET .
 
   sorts CTerm NeCTermSet CTermSet CTermSet? .
   subsorts Term < CTerm < NeCTermSet < CTermSet < CTermSet? .
 
   var N : Nat . vars F F' F'' : FOForm . var X : Variable . var 
-  var MOD : Module . var S : Substitution .
+  var MOD : Module . var S : Substitution . var SS : SubstitutionSet .
   vars T T' : Term . vars CT CT' CT'' : CTerm .
   vars CTS CTS' : CTermSet . vars NeCTS NeCTS' : NeCTermSet .
 
   op _|_ : Term FOForm -> CTerm [right id: tt prec 52] .
   ------------------------------------------------------
+  --- eq T | ff ;; CTS = CTS .
 
   op _<<_ : CTerm Substitution -> CTerm .
   ---------------------------------------
@@ -55,8 +56,8 @@ fmod CTERM-SET is
   eq NeCTS        ++ NeCTS' [ MOD ] = NeCTS ;; NeCTS' [owise] .
 
   ceq T | F ;; CTS ++ CT' ;; CTS' [ MOD ] = T | F'' ;; CTS ++ CTS' [ MOD ] if T' | F' := #varsApart(CT', T | F)
-                                                                           /\ S       := #subsumesWith(MOD, T, T')
-                                                                           /\ F''     := F \/ (#substAsFOForm(S) /\ (F' << S)) .
+                                                                           /\ S | SS  := #subsumesWith(MOD, T, T')
+                                                                           /\ F''     := F \/ (F' /\ #disjSubsts(S | SS)) .
 
   op _--_ : CTermSet? CTermSet? -> CTermSet? [right id: .CTermSet prec 62] .
   --------------------------------------------------------------------------
@@ -66,10 +67,10 @@ fmod CTERM-SET is
   eq NeCTS        -- NeCTS' [ MOD ] = NeCTS [owise] . --- Over-approximate when we can't simplify
 
   --- TODO: Should we use `++` instead? It would mean that by taking the difference, you make some things union-able.
-  ceq CT    -- CT' ;; CTS [ MOD ] = .CTermSet if S := #subsumesWith(MOD, CT', #varsApart(CT, CT')) .
+  ceq CT    -- CT' ;; CTS [ MOD ] = .CTermSet if S | SS := #subsumesWith(MOD, CT', #varsApart(CT, CT')) .
   ceq T | F -- CT' ;; CTS [ MOD ] = T | F'' -- CTS [ MOD ] if T' | F' := #varsApart(CT', T | F)
-                                                           /\ S       := #subsumesWith(MOD, T, T')
-                                                           /\ F''     := F /\ (#substAsFOForm(S) => ((~ F') << S)) .
+                                                           /\ S | SS  := #subsumesWith(MOD, T, T')
+                                                           /\ F''     := F /\ (#disjSubsts(S | SS) => (~ F')) .
   ceq CT    -- CT' ;; CTS [ MOD ] = CT -- (CTS' ;; CTS) [ MOD ] if CTS' := #intersect(CT, CT') .
 
   op #intersect : CTerm CTerm -> CTermSet? [comm] .
@@ -77,13 +78,23 @@ fmod CTERM-SET is
 
   op #varsApart : CTerm CTerm -> CTerm .
   --------------------------------------
+  eq #varsApart(CT, CT') = CT .
 
-  op #substAsFOForm : Substitution -> PosEqConj .
-  -----------------------------------------------
-  eq #substAsFOForm(none)       = tt .
-  eq #substAsFOForm(X <- T ; S) = X ?= T /\ #substAsFOForm(S) .
+  op #disjSubsts : SubstitutionSet -> PosEqQFForm? .
+  --------------------------------------------------
+  eq #disjSubsts(empty)  = ff .
+  eq #disjSubsts(S | SS) = #conjSubst(S) \/ #disjSubsts(SS) .
 
-  op #subsumesWith : Module CTerm CTerm -> Substitution? .
-  --------------------------------------------------------
+  op #conjSubst : Substitution -> PosEqConj? .
+  --------------------------------------------
+  eq #conjSubst(none)       = tt .
+  eq #conjSubst(X <- T ; S) = X ?= T /\ #conjSubst(S) .
+
+  op #subsumesWith : Module Term Term -> SubstitutionSet .
+  op #subsumesWith : Module Term Term Nat -> SubstitutionSet .
+  ------------------------------------------------------------
+  eq  #subsumesWith(MOD, T, T')    = #subsumesWith(MOD, T, T', 0) .
+  ceq #subsumesWith(MOD, T, T', N) = S | #subsumesWith(MOD, T, T', s(N)) if S := metaMatch(MOD, T, T', nil, N) .
+  eq  #subsumesWith(MOD, T, T', N) = empty [owise] .
 endfm
 
