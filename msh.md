@@ -16,11 +16,16 @@ Analysis
 
 ```{.maude .msh}
 fmod ANALYSIS is
-  sort Analysis .
+  sorts NeAnalysis Analysis .
+  subsort NeAnalysis < Analysis .
+
+  var NeA : NeAnalysis .
 
   op .Analysis : -> Analysis .
-  op __        : Analysis Analysis -> Analysis [assoc comm id: .Analysis prec 95 format(d n d)] .
-  -----------------------------------------------------------------------------------------------
+  op __        : Analysis Analysis   -> Analysis   [assoc comm id: .Analysis prec 95 format(d n d)] .
+  op __        : Analysis NeAnalysis -> NeAnalysis [ctor ditto] .
+  ---------------------------------------------------------------
+  eq NeA NeA = NeA .
 endfm
 ```
 
@@ -38,8 +43,8 @@ fmod MODULE is
 
   var H : Header . var MOD : Module .
 
-  op current-module <_> : Module -> Analysis .
-  --------------------------------------------
+  op current-module <_> : Module -> NeAnalysis .
+  ----------------------------------------------
 
   op set-module : Header -> Command{=>Module} .
 
@@ -57,6 +62,8 @@ The current state (over which we will call commands like `metaReduce` and
 given by the sort `CTermSet`.
 
 ```{.maude .msh}
+load cterm.maude
+
 fmod STATE is
   protecting MODULE .
   protecting CTERM-SET .
@@ -67,8 +74,8 @@ fmod STATE is
   vars T T' T'' : CTerm . vars NeCTS NeCTS' : NeCTermSet . vars CTS CTS' : CTermSet .
   var MOD : Module . var TYPE : Type . var SUBST : Substitution .
 
-  op state <_> : CTermSet -> Analysis .
-  -------------------------------------
+  op state <_> : CTermSet -> NeAnalysis .
+  ---------------------------------------
 
   op _<_> : Command{Module=>State} Module -> Command{=>State} .
   op _[_] : Command{=>State} CTermSet -> [CTermSet] [prec 55] .
@@ -126,8 +133,8 @@ fmod TRACE is
 
   var N : Nat . var MOD : Module . vars CTS CTS1 CTS2 : CTermSet . var CTSPM : CTermSetPairMap .
 
-  op trace <_> : CTermSetTrace -> Analysis .
-  ------------------------------------------
+  op trace <_> : CTermSetTrace -> NeAnalysis .
+  --------------------------------------------
 
   op <_,_> : CTermSet CTermSet -> CTermSetPair .
   ----------------------------------------------
@@ -150,7 +157,7 @@ fmod TRACE is
   op extend : -> Command{Module,State=>Trace} .
   ---------------------------------------------
   eq extend < MOD , CTS > [ 0    | .CTermSetPairMap            ] = s(0)    | 0 |-> < CTS , CTS > .
-  eq extend < MOD , CTS > [ s(N) | CTSPM N |-> < CTS1 , CTS2 > ] = s(s(N)) | CTSPM N |-> < CTS1 , CTS2 > s(N) |-> < CTS -- CTS2 , CTS ++ CTS2 > .
+  eq extend < MOD , CTS > [ s(N) | CTSPM N |-> < CTS1 , CTS2 > ] = s(s(N)) | CTSPM N |-> < CTS1 , CTS2 > s(N) |-> < CTS -- CTS2 [ MOD ] , CTS ++ CTS2 [ MOD ] > .
 
   op load : -> Command{Trace=>State} .
   ------------------------------------
@@ -179,8 +186,8 @@ fmod STRATEGY is
 
   vars P P' P1 P2 : Program . vars B B' : Bool . var N : Nat . var CTS : CTermSet . var NeCTS : NeCTermSet .
 
-  op strategy <_> : Program -> Analysis .
-  ---------------------------------------
+  op strategy <_> : Program -> NeAnalysis .
+  -----------------------------------------
 
   op .Program : -> Program .
   op _;_ : Program Program -> Program [assoc id: .Program prec 75] .
