@@ -124,29 +124,16 @@ first seen at that step.
 ```{.maude .msh}
 fmod TRACE is
   protecting STATE .
-
-  sorts CTermSetPair CTermSetPairMap CTermSetTrace .
+  protecting CTERM-TRACE .
 
   sorts Command{Module,State=>Trace} Command{=>Trace} .
   sort Command{Trace=>State} .
 
-  var N : Nat . var MOD : Module . vars CTS CTS1 CTS2 : CTermSet . var CTSPM : CTermSetPairMap .
+  var N : Nat . var H : Header . var MOD : Module .
+  vars CTS CTS1 CTS2 : CTermSet . var CTSPM : CTermSetPairMap .
 
   op trace <_> : CTermSetTrace -> NeAnalysis .
   --------------------------------------------
-
-  op <_,_> : CTermSet CTermSet -> CTermSetPair .
-  ----------------------------------------------
-
-  op .CTermSetPairMap : -> CTermSetPairMap .
-  op _|->_ : Nat CTermSetPair -> CTermSetPairMap [prec 64] .
-  op __    : CTermSetPairMap CTermSetPairMap -> CTermSetPairMap [assoc comm id: .CTermSetPairMap prec 65 format(d n d)] .
-  -----------------------------------------------------------------------------------------------------------------------
-
-  op .CTermSetTrace : -> CTermSetTrace .
-  op _|_            : Nat CTermSetPairMap -> CTermSetTrace [prec 66] .
-  --------------------------------------------------------------------
-  eq .CTermSetTrace = 0 | .CTermSetPairMap .
 
   op _<_,_> : Command{Module,State=>Trace} Module CTermSet -> Command{=>Trace} .
   op _<_>   : Command{Trace=>State} CTermSetTrace -> Command{=>State} .

@@ -21,7 +21,7 @@ load metafresh.maude
 load foform.maude
 
 fmod CTERM-SET is
-  protecting FOFORM-DEFINEDOPS + FOFORM-SUBSTITUTIONSET .
+  protecting FOFORM-DEFINEDOPS + FOFORMSIMPLIFY + FOFORM-SUBSTITUTIONSET .
 
   sorts CTerm NeCTermSet CTermSet CTermSet? .
   subsorts Term < CTerm < NeCTermSet < CTermSet < CTermSet? .
@@ -57,7 +57,7 @@ fmod CTERM-SET is
 
   ceq T | F ;; CTS ++ CT' ;; CTS' [ MOD ] = T | F'' ;; CTS ++ CTS' [ MOD ] if T' | F' := #varsApart(CT', T | F)
                                                                            /\ S | SS  := #subsumesWith(MOD, T, T')
-                                                                           /\ F''     := F \/ (F' /\ #disjSubsts(S | SS)) .
+                                                                           /\ F''     := simplify(F \/ (F' /\ #disjSubsts(S | SS))) .
 
   op _--_ : CTermSet? CTermSet? -> CTermSet? [right id: .CTermSet prec 62] .
   --------------------------------------------------------------------------
@@ -70,7 +70,7 @@ fmod CTERM-SET is
   ceq CT    -- CT' ;; CTS [ MOD ] = .CTermSet if S | SS := #subsumesWith(MOD, CT', #varsApart(CT, CT')) .
   ceq T | F -- CT' ;; CTS [ MOD ] = T | F'' -- CTS [ MOD ] if T' | F' := #varsApart(CT', T | F)
                                                            /\ S | SS  := #subsumesWith(MOD, T, T')
-                                                           /\ F''     := F /\ (#disjSubsts(S | SS) => (~ F')) .
+                                                           /\ F''     := simplify(F /\ (#disjSubsts(S | SS) => (~ F'))) .
   ceq CT    -- CT' ;; CTS [ MOD ] = CT -- (CTS' ;; CTS) [ MOD ] if CTS' := #intersect(CT, CT') .
 
   op #intersect : CTerm CTerm -> CTermSet? [comm] .
@@ -96,5 +96,24 @@ fmod CTERM-SET is
   eq  #subsumesWith(MOD, T, T')    = #subsumesWith(MOD, T, T', 0) .
   ceq #subsumesWith(MOD, T, T', N) = S | #subsumesWith(MOD, T, T', s(N)) if S := metaMatch(MOD, T, T', nil, N) .
   eq  #subsumesWith(MOD, T, T', N) = empty [owise] .
+endfm
+
+fmod CTERM-TRACE is
+  protecting CTERM-SET .
+
+  sorts CTermSetPair CTermSetPairMap CTermSetTrace .
+
+  op <_,_> : CTermSet CTermSet -> CTermSetPair .
+  ----------------------------------------------
+
+  op .CTermSetPairMap : -> CTermSetPairMap .
+  op _|->_ : Nat CTermSetPair -> CTermSetPairMap [prec 64] .
+  op __    : CTermSetPairMap CTermSetPairMap -> CTermSetPairMap [assoc comm id: .CTermSetPairMap prec 65 format(d n d)] .
+  -----------------------------------------------------------------------------------------------------------------------
+
+  op .CTermSetTrace : -> CTermSetTrace .
+  op _|_            : Nat CTermSetPairMap -> CTermSetTrace [prec 66] .
+  --------------------------------------------------------------------
+  eq .CTermSetTrace = 0 | .CTermSetPairMap .
 endfm
 ```
