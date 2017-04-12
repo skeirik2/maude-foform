@@ -64,7 +64,6 @@ fmod CTERM-SET is
   op #substAsConstraint : Substitution -> Bool .
   ----------------------------------------------
 
-  --- TODO: Can this return multiple ways the terms match?
   op #subsumesWith : Module CTerm CTerm -> Substitution? .
   --------------------------------------------------------
 

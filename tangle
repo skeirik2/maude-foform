@@ -1,5 +1,3 @@
 #!/usr/bin/env zsh
 
-pandoc-tangle --from markdown --to code-maude --code msh                      msh.md > msh.maude
-pandoc-tangle --from markdown --to code-maude --code example-cycle            msh.md > tests/msh/cycle.maude
-pandoc-tangle --from markdown --to code-maude --code example-nondet-scheduler msh.md > tests/msh/nondet-scheduler.maude
+pandoc-tangle --from markdown --to code-maude --code msh msh.md > msh.maude
