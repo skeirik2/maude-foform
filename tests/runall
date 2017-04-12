@@ -1,0 +1,4 @@
+#!/usr/bin/env zsh
+
+maude msh.maude
+maude foform.maude
