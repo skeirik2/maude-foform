@@ -34,6 +34,10 @@ fmod CTERM-SET is
   op _|_ : Term FOForm -> CTerm [right id: tt prec 52] .
   ------------------------------------------------------
 
+  op _<<_ : CTerm Substitution -> CTerm .
+  ---------------------------------------
+  eq (T | F) << S = (T << S) | (F << S) .
+
   op .CTermSet : -> CTermSet .
   op _;;_ : CTermSet CTermSet   -> CTermSet   [ctor assoc comm id: .CTermSet prec 60] .
   op _;;_ : CTermSet CTermSet?  -> CTermSet?  [ctor ditto] .
@@ -43,26 +47,30 @@ fmod CTERM-SET is
 
   op _[_] : CTermSet? Module -> [CTermSet] [prec 64] .
   ----------------------------------------------------
-  eq CT [ MOD ] = CT .
+  eq CTS [ MOD ] = CTS .
 
   op _++_ : CTermSet? CTermSet? -> CTermSet? [assoc comm id: .CTermSet prec 61] .
   -------------------------------------------------------------------------------
-  ceq (T | F ;; CTS ++ CT' ;; CTS') [ MOD ] = (T | F'' ;; CTS ++ CTS') [ MOD ] if T' | F' := #varsApart(CT', T | F)
-                                                                               /\ S       := #subsumesWith(MOD, T, T')
-                                                                               /\ F''     := F \/ (#substAsConstraint(S) /\ (F' << S)) .
-  eq  (NeCTS ++ NeCTS') = NeCTS ;; NeCTS' [owise] .
+  eq NeCTS ;; CTS ++ NeCTS ;; CTS'  = NeCTS ;; CTS ++ CTS' .
+  eq NeCTS        ++ NeCTS' [ MOD ] = NeCTS ;; NeCTS' [owise] .
+
+  ceq T | F ;; CTS ++ CT' ;; CTS' [ MOD ] = T | F'' ;; CTS ++ CTS' [ MOD ] if T' | F' := #varsApart(CT', T | F)
+                                                                           /\ S       := #subsumesWith(MOD, T, T')
+                                                                           /\ F''     := F \/ (#substAsFOForm(S) /\ (F' << S)) .
 
   op _--_ : CTermSet? CTermSet? -> CTermSet? [right id: .CTermSet prec 62] .
   --------------------------------------------------------------------------
-  eq  (NeCTS ;; CTS) -- (NeCTS ;; CTS') = CTS -- (NeCTS ;; CTS') .
-  eq  (.CTermSet -- NeCTS)    = .CTermSet .
-  eq  (CT ;; NeCTS -- NeCTS') = (CT -- NeCTS') ++ (NeCTS -- NeCTS') .
-  ceq (CT    -- CT' ;; CTS)   [ MOD ] = .CTermSet if S := #subsumesWith(MOD, CT', #varsApart(CT, CT')) .
-  ceq (T | F -- CT' ;; CTS)   [ MOD ] = T | F'' -- CTS [ MOD ] if T' | F' := #varsApart(CT', T | F)
-                                                               /\ S       := #subsumesWith(MOD, T, T')
-                                                               /\ F''     := F /\ (#substAsConstraint(S) => ((~ F') << S)) .
-  ceq CT -- CT' = CT -- CTS' if CTS' := #intersect(CT, CT') .
-  eq  NeCTS -- NeCTS' = NeCTS [owise] .
+  eq .CTermSet    -- NeCTS          = .CTermSet .
+  eq NeCTS ;; CTS -- NeCTS ;; CTS'  = CTS -- NeCTS ;; CTS' .
+  eq CT ;; NeCTS  -- NeCTS' [ MOD ] = (CT -- NeCTS' [ MOD ]) ;; (NeCTS -- NeCTS' [ MOD ]) .
+  eq NeCTS        -- NeCTS' [ MOD ] = NeCTS [owise] . --- Over-approximate when we can't simplify
+
+  --- TODO: Should we use `++` instead? It would mean that by taking the difference, you make some things union-able.
+  ceq CT    -- CT' ;; CTS [ MOD ] = .CTermSet if S := #subsumesWith(MOD, CT', #varsApart(CT, CT')) .
+  ceq T | F -- CT' ;; CTS [ MOD ] = T | F'' -- CTS [ MOD ] if T' | F' := #varsApart(CT', T | F)
+                                                           /\ S       := #subsumesWith(MOD, T, T')
+                                                           /\ F''     := F /\ (#substAsFOForm(S) => ((~ F') << S)) .
+  ceq CT    -- CT' ;; CTS [ MOD ] = CT -- (CTS' ;; CTS) [ MOD ] if CTS' := #intersect(CT, CT') .
 
   op #intersect : CTerm CTerm -> CTermSet? [comm] .
   -------------------------------------------------
@@ -70,10 +78,10 @@ fmod CTERM-SET is
   op #varsApart : CTerm CTerm -> CTerm .
   --------------------------------------
 
-  op #substAsConstraint : Substitution -> PosEqConj .
-  ---------------------------------------------------
-  eq #substAsConstraint(none)       = tt .
-  eq #substAsConstraint(X <- T ; S) = X ?= T /\ #substAsConstraint(S) .
+  op #substAsFOForm : Substitution -> PosEqConj .
+  -----------------------------------------------
+  eq #substAsFOForm(none)       = tt .
+  eq #substAsFOForm(X <- T ; S) = X ?= T /\ #substAsFOForm(S) .
 
   op #subsumesWith : Module CTerm CTerm -> Substitution? .
   --------------------------------------------------------
