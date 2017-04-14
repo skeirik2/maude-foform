@@ -18,28 +18,90 @@ fmod ANALYSIS is
 endfm
 
 
---- Current Module
---- --------------
+--- Module Database
+--- ---------------
 
---- Many parts need the analysis need the current module we're working in.
+--- We'll need a module data-base to work with. It should compute all sorts of nice
+--- things about modules for us.
 
 
-fmod MODULE is
-  protecting META-LEVEL .
+fmod MODULE-DATABASE is
+  extending META-LEVEL .
   extending ANALYSIS .
 
-  sorts Command{=>Module} .
+  sorts ModuleEnv ModuleConstruction .
+  sorts Command{=>Modules} .
 
-  var H : Header . var MOD : Module .
+  var H : Header . vars ME ME' : ModuleExpression . var MOD : Module .
+  var MC : ModuleConstruction . var MENV : ModuleEnv . var ID : Qid .
+  var IL : ImportList . var S : Sort . var SS : SortSet . var SSDS : SubsortDeclSet .
+  var OPDS : OpDeclSet . var MAS : MembAxSet . var EQS : EquationSet . var RLS : RuleSet .
 
-  op current-module <_> : Module -> NeAnalysis .
-  ----------------------------------------------
+  op .ModuleEnv : -> ModuleEnv .
+  op _|->_ : Header ModuleExpression -> ModuleEnv [ctor] .
+  op __ : ModuleEnv ModuleEnv -> ModuleEnv [ctor assoc comm id: .ModuleEnv prec 120] .
+  ------------------------------------------------------------------------------------
 
-  op set-module : Header -> Command{=>Module} .
+  op _[_] : Header ModuleEnv -> Module .
+  --------------------------------------
+  eq H [ H |-> ME MENV ] = #upModule(ME) .
 
-  op _[_] : Command{=>Module} Module -> [Module] .
-  ------------------------------------------------
-  eq set-module(H) [ MOD ] = upModule(H, true) .
+  op modules <_> : ModuleEnv -> NeAnalysis [ctor format(d d n n d)] .
+  -------------------------------------------------------------------
+
+  op _[_] : Command{=>Modules} ModuleEnv -> [ModuleEnv] .
+  -------------------------------------------------------
+
+  op clear-module-db : -> Command{=>Modules} .
+  --------------------------------------------
+  eq clear-module-db [ MENV ] = .ModuleEnv .
+
+  op load-module : Header -> Command{=>Modules} .
+  -----------------------------------------------
+  eq load-module(H) = set-module(H, H) .
+
+  op set-module : Header ModuleExpression -> Command{=>Modules} .
+  ---------------------------------------------------------------
+  eq set-module(H, ME) [ H |-> ME' MENV ] = H |-> ME MENV .
+  eq set-module(H, ME) [           MENV ] = H |-> ME MENV [owise] .
+
+  op List : Sort -> ModuleConstruction [ctor] .
+  op Set  : Sort -> ModuleConstruction [ctor] .
+
+  op ditto : -> Attr .
+
+  op #.List  : Sort -> Constant .
+  op #NeList : Sort -> Sort .
+  op #List   : Sort -> Sort .
+  ---------------------------
+  eq #.List(S)  = qid(".List{"  + string(S) + "}") .
+  eq #NeList(S) = qid("NeList{" + string(S) + "}") .
+  eq #List(S)   = qid("List{"   + string(S) + "}") .
+
+  op #ListSorts    : Sort -> SortSet .
+  op #ListSubsorts : Sort -> SubsortDeclSet .
+  op #ListOps      : Sort -> OpDeclSet .
+  op #ListEqs      : Sort -> EquationSet .
+  ----------------------------------------
+  eq #ListSorts(S)    = #NeList(S) ; #List(S) .
+  eq #ListSubsorts(S) = (subsort S < #NeList(S) .)
+                        (subsort #NeList(S) < #List(S) .) .
+  eq #ListOps(S)      = (op #.List(S) : nil -> #List(S) [ctor] .)
+                        (op '_`,_ : #List(S) #List(S)   -> #List(S)   [ctor assoc id(qid(string(#.List(S)) + ".List{PreState}"))] .)
+                        (op '_`,_ : #List(S) #NeList(S) -> #NeList(S) [ctor assoc id(qid(string(#.List(S)) + ".List{PreState}"))] .) .
+
+  op _deriving_ : ModuleExpression ModuleConstruction -> ModuleExpression [ctor] .
+  op _deriving_ : Module ModuleConstruction -> Module .
+  -----------------------------------------------------
+  eq #upModule(ME deriving MC) = #upModule(ME) deriving MC .
+  eq fmod H is IL sorts SS .                 SSDS                  OPDS             MAS EQS endfm deriving List(S)
+   = fmod H is IL sorts SS ; #ListSorts(S) . SSDS #ListSubsorts(S) OPDS #ListOps(S) MAS EQS endfm .
+  eq mod  H is IL sorts SS .                 SSDS                  OPDS             MAS EQS RLS endm deriving List(S)
+   = mod  H is IL sorts SS ; #ListSorts(S) . SSDS #ListSubsorts(S) OPDS #ListOps(S) MAS EQS RLS endm .
+
+  op #upModule : ModuleExpression -> Module [memo] .
+  --------------------------------------------------
+  eq #upModule(ME) = upModule(ME, true) .
 endfm
 
 
@@ -54,19 +116,19 @@ endfm
 load cterm.maude
 
 fmod STATE is
-  protecting MODULE .
+  protecting MODULE-DATABASE .
   protecting CTERM-SET .
 
-  sorts Command{Module=>State} Command{=>State} .
+  sorts Command{Modules=>State} Command{=>State} .
 
   var N : Nat . var CS : Command{=>State} .
   vars T T' T'' : CTerm . vars NeCTS NeCTS' : NeCTermSet . vars CTS CTS' : CTermSet .
   var MOD : Module . var TYPE : Type . var SUBST : Substitution .
 
-  op state <_> : CTermSet -> NeAnalysis .
-  ---------------------------------------
+  op state <_> : CTermSet -> NeAnalysis [ctor] .
+  ----------------------------------------------
 
-  op _<_> : Command{Module=>State} Module -> Command{=>State} .
+  op _<_> : Command{Modules=>State} Module -> Command{=>State} .
   op _[_] : Command{=>State} CTermSet -> [CTermSet] [prec 55] .
   -------------------------------------------------------------
   eq CS [ .CTermSet       ] = .CTermSet .
@@ -76,8 +138,8 @@ fmod STATE is
   ---------------------------------------
   eq set(CTS) [ CTS' ] = CTS .
 
-  ops reduce rewrite narrow narrow-smt : -> Command{Module=>State} .
-  ------------------------------------------------------------------
+  ops reduce rewrite narrow narrow-smt : -> Command{Modules=>State} .
+  -------------------------------------------------------------------
   ceq reduce     < MOD > [ T ] = T' if { T' , TYPE } := metaReduce(MOD, T) .
   eq  rewrite    < MOD > [ T ] = #rewrite(MOD, T, #varAway(MOD, T), 0) .
   eq  narrow     < MOD > [ T ] = #narrow(MOD, T, #varAway(MOD, T), 0) .
@@ -115,21 +177,21 @@ fmod TRACE is
   protecting STATE .
   protecting CTERM-TRACE .
 
-  sorts Command{Module,State=>Trace} Command{=>Trace} .
+  sorts Command{Modules,State=>Trace} Command{=>Trace} .
   sort Command{Trace=>State} .
 
   var N : Nat . var H : Header . var MOD : Module .
   vars CTS CTS1 CTS2 : CTermSet . var CTSPM : CTermSetPairMap .
 
-  op trace <_> : CTermSetTrace -> NeAnalysis .
-  --------------------------------------------
+  op trace <_> : CTermSetTrace -> NeAnalysis [ctor] .
+  ---------------------------------------------------
 
-  op _<_,_> : Command{Module,State=>Trace} Module CTermSet -> Command{=>Trace} .
+  op _<_,_> : Command{Modules,State=>Trace} Module CTermSet -> Command{=>Trace} .
   op _<_>   : Command{Trace=>State} CTermSetTrace -> Command{=>State} .
   op _[_] : Command{=>Trace} CTermSetTrace -> [CTermSetTrace] .
   -------------------------------------------------------------
 
-  op extend : -> Command{Module,State=>Trace} .
+  op extend : -> Command{Modules,State=>Trace} .
   ---------------------------------------------
   eq extend < MOD , CTS > [ 0    | .CTermSetPairMap            ] = s(0)    | 0 |-> < CTS , CTS > .
   eq extend < MOD , CTS > [ s(N) | CTSPM N |-> < CTS1 , CTS2 > ] = s(s(N)) | CTSPM N |-> < CTS1 , CTS2 > s(N) |-> < CTS -- CTS2 [ MOD ] , CTS ++ CTS2 [ MOD ] > .
@@ -152,25 +214,34 @@ fmod STRATEGY is
   extending BOOL .
   protecting NAT .
 
-  sorts BVar Command Program .
+  sorts BVar Command Program Output .
   subsort BVar < Bool .
-  subsort Command < Program .
+  subsorts Command < Program .
 
-  sorts Command{State=>Strategy} Command{=>Strategy} .
-  subsorts Command{State=>Strategy} Command{=>Strategy} < Command .
+  sorts Command{State=>Strategy} Command{Modules=>Strategy} Command{=>Strategy} .
+  subsorts Command{State=>Strategy} Command{Modules=>Strategy} Command{=>Strategy} < Command .
 
-  vars P P' P1 P2 : Program . vars B B' : Bool . var N : Nat . var CTS : CTermSet . var NeCTS : NeCTermSet .
+  sorts Command{Modules=>Output} Command{=>Output} .
+  subsorts Command{Modules=>Output} Command{=>Output} < Command .
+  subsort Command{=>Output} < Output .
 
-  op strategy <_> : Program -> NeAnalysis .
-  -----------------------------------------
+  vars P P' P1 P2 : Program . vars B B' : Bool . var N : Nat .
+  var CTS : CTermSet . var NeCTS : NeCTermSet .
+  var CSSt : Command{State=>Strategy} . var CSt : Command{=>Strategy} .
+  var CMO : Command{Modules=>Output} . var CO : Command{=>Output} . var O : Output .
+  var H : Header . var MENV : ModuleEnv .
 
-  op .Program : -> Program .
-  op _;_ : Program Program -> Program [assoc id: .Program prec 75] .
-  ------------------------------------------------------------------
+  op strategy <_> : Program -> NeAnalysis [ctor] .
+  op output   <_> : Output  -> NeAnalysis [ctor] .
+  ------------------------------------------------
 
-  op #bool : Bool -> Command .
-  op ?_:_  : Program Program -> Program [strat(0)] .
-  --------------------------------------------------
+  op .Program : -> Program [ctor] .
+  op _;_ : Program Program -> Program [ctor assoc id: .Program prec 75] .
+  -----------------------------------------------------------------------
+
+  op #bool : Bool -> Command [ctor] .
+  op ?_:_  : Program Program -> Program [ctor strat(0)] .
+  -------------------------------------------------------
   eq #bool(true)  ; ? P1 : P2 = P1 .
   eq #bool(false) ; ? P1 : P2 = P2 .
 
@@ -191,9 +262,33 @@ fmod STRATEGY is
   eq repeat 0    P = .Program .
   eq repeat s(N) P = P ; repeat N P .
 
+  op .Output : -> Output [ctor] .
+  op _;;;_ : Output Output -> Output [ctor assoc id: .Output] .
+  -------------------------------------------------------------
+
   op _<_> : Command{State=>Strategy} CTermSet -> Command{=>Strategy} .
+  op _<_> : Command{Modules=>Output} ModuleEnv -> Command{=>Output} .
   op _[_] : Command{=>Strategy} Program -> [Program] .
   ----------------------------------------------------
+  eq strategy < CMO          ; P > modules < MENV >
+   = strategy < CMO < MENV > ; P > modules < MENV > .
+
+  eq strategy < CSSt         ; P > state < CTS >
+   = strategy < CSSt < CTS > ; P > state < CTS > .
+
+  eq strategy < CSt ; P >
+   = strategy < CSt [ P ] > .
+
+  eq strategy < CO ; P > output < O >
+   = strategy <      P > output < O ;;; CO > .
+
+  op print : String -> Command{=>Output} .
+  ----------------------------------------
+
+  op show-module : Header -> Command{Modules=>Output} .
+  op show-module : Module -> Command{=>Output} [ctor] .
+  -----------------------------------------------------
+  eq show-module(H) < MENV > = show-module(H [ MENV ]) .
 
   op state-predicate : Bool -> Command{State=>Strategy} .
   -------------------------------------------------------
@@ -230,27 +325,26 @@ endfm
 
 
 fmod MSH is
-  protecting MODULE .
+  protecting MODULE-DATABASE .
   protecting STATE .
   protecting TRACE .
   extending STRATEGY .
 
-  var P : Program . var MOD : Module . var CTermS : CTermSet . var CTermST : CTermSetTrace .
+  var P : Program . var MDB : ModuleEnv . var CTermS : CTermSet . var CTermST : CTermSetTrace .
 
-  var CM : Command{=>Module} .
-  var CMS : Command{Module=>State} . var CTS : Command{Trace=>State} . var CS : Command{=>State} .
-  var CSSt : Command{State=>Strategy} . var CSt : Command{=>Strategy} .
-  var CMST : Command{Module,State=>Trace} . var CT : Command{=>Trace} .
+  var CM : Command{=>Modules} .
+  var CMS : Command{Modules=>State} . var CTS : Command{Trace=>State} . var CS : Command{=>State} .
+  var CMST : Command{Modules,State=>Trace} . var CT : Command{=>Trace} .
 
-  subsort Command{=>Module} < Command .
+  subsort Command{=>Modules} < Command .
   -------------------------------------
-  eq strategy < CM ; P > current-module < MOD >
-   = strategy <      P > current-module < CM [ MOD ] > .
-  
-  subsorts Command{Module=>State} Command{Trace=>State} Command{=>State} < Command .
-  ----------------------------------------------------------------------------------
-  eq strategy < CMS         ; P > current-module < MOD >
-   = strategy < CMS < MOD > ; P > current-module < MOD > .
+  eq strategy < CM ; P > modules < MDB >
+   = strategy <      P > modules < CM [ MDB ] > .
+
+  subsorts Command{Modules=>State} Command{Trace=>State} Command{=>State} < Command .
+  -----------------------------------------------------------------------------------
+  eq strategy < CMS                    ; P > modules < MDB >
+   = strategy < CMS < 'STATE [ MDB ] > ; P > modules < MDB > .
 
   eq strategy < CTS             ; P > trace < CTermST >
    = strategy < CTS < CTermST > ; P > trace < CTermST > .
@@ -258,18 +352,10 @@ fmod MSH is
   eq strategy < CS ; P > state < CTermS >
    = strategy < P      > state < CS [ CTermS ] > .
 
-  --- subsorts Command{State=>Strategy} Command{=>Strategy} < Command .
-  ---------------------------------------------------------------------
-  eq strategy < CSSt            ; P > state < CTermS >
-   = strategy < CSSt < CTermS > ; P > state < CTermS > .
-
-  eq strategy < CSt ; P >
-   = strategy < CSt [ P ] > .
-
-  subsorts Command{Module,State=>Trace} Command{=>Trace} < Command .
+  subsorts Command{Modules,State=>Trace} Command{=>Trace} < Command .
   ------------------------------------------------------------------
-  eq strategy < CMST                  ; P > current-module < MOD > state < CTermS >
-   = strategy < CMST < MOD , CTermS > ; P > current-module < MOD > state < CTermS > .
+  eq strategy < CMST                             ; P > modules < MDB > state < CTermS >
+   = strategy < CMST < 'TRACE [ MDB ] , CTermS > ; P > modules < MDB > state < CTermS > .
 
   eq strategy < CT ; P > trace < CTermST >
    = strategy <      P > trace < CT [ CTermST ] > .
@@ -286,9 +372,9 @@ endfm
 fmod MSH-EXTENDED is
   protecting MSH .
 
-  var EXEC-COMMAND : Command{Module=>State} .
+  var EXEC-COMMAND : Command{Modules=>State} .
 
-  op explore-all-with : Command{Module=>State} -> Program .
+  op explore-all-with : Command{Modules=>State} -> Program .
   ---------------------------------------------------------
   eq explore-all-with(EXEC-COMMAND) = extend
                                     ; while (not empty?) { EXEC-COMMAND
