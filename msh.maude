@@ -25,7 +25,7 @@ endfm
 --- things about modules for us.
 
 
-load module-exp.maude .
+load module-exp.maude
 
 fmod MODULE-DATABASE is
   protecting MODULE-EXPRESSION  .

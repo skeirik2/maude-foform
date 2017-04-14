@@ -36,7 +36,7 @@ We'll need a module data-base to work with. It should compute all sorts of nice
 things about modules for us.
 
 ```{.maude .msh}
-load module-exp.maude .
+load module-exp.maude
 
 fmod MODULE-DATABASE is
   protecting MODULE-EXPRESSION  .
