@@ -26,8 +26,9 @@ fmod CTERM-SET is
   sorts CTerm NeCTermSet CTermSet CTermSet? .
   subsorts Term < CTerm < NeCTermSet < CTermSet < CTermSet? .
 
+  var CTX : Context .
   vars N M M' : Nat . vars F F' F'' : FOForm . var X : Variable .
-  var MOD : Module . var S : Substitution . var SS : SubstitutionSet .
+  var MOD : Module . vars S S' : Substitution . var SS : SubstitutionSet .
   vars T T' : Term . vars CT CT' CT'' : CTerm .
   vars CTS CTS' : CTermSet . vars NeCTS NeCTS' : NeCTermSet .
 
@@ -41,6 +42,8 @@ fmod CTERM-SET is
   eq (T | F)       << S  = (T << S) | (F << S) .
   eq .CTermSet     << SS = .CTermSet .
   eq (CT ;; NeCTS) << SS = (CT << SS) ;; (NeCTS << SS) .
+  eq CT << empty         = .CTermSet .
+  eq CT << (S | S' | SS) = (CT << S) ;; (CT << S') ;; (CT << SS) .
 
   op .CTermSet : -> CTermSet .
   op _;;_ : CTermSet CTermSet   -> CTermSet   [ctor assoc comm id: .CTermSet prec 60] .
@@ -108,6 +111,13 @@ fmod CTERM-SET is
   eq  #subsumesWith(MOD, T, T')    = #subsumesWith(MOD, T, T', 0) .
   ceq #subsumesWith(MOD, T, T', N) = S | #subsumesWith(MOD, T, T', s(N)) if S := metaMatch(MOD, T, T', nil, N) .
   eq  #subsumesWith(MOD, T, T', N) = empty [owise] .
+
+  op #subsumesXWith : Module Term Term -> SubstitutionSet .
+  op #subsumesXWith : Module Term Term Nat -> SubstitutionSet .
+  ------------------------------------------------------------
+  eq  #subsumesXWith(MOD, T, T')    = #subsumesXWith(MOD, T, T', 0) .
+  ceq #subsumesXWith(MOD, T, T', N) = S | #subsumesXWith(MOD, T, T', s(N)) if { S , CTX } := metaXmatch(MOD, T, T', nil, 0, unbounded, N) .
+  eq  #subsumesXWith(MOD, T, T', N) = empty [owise] .
 endfm
 
 fmod CTERM-TRACE is
