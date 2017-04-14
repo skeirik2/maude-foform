@@ -1,5 +1,5 @@
 #!/usr/bin/env zsh
 
 pandoc-tangle --from markdown --to code-maude --code module-exp module-expressions.md > module-exp.maude
-pandoc-tangle --from markdown --to code-maude --code cterm constrained-terms.md       > cterm.maude
-pandoc-tangle --from markdown --to code-maude --code msh   msh.md                     > msh.maude
+pandoc-tangle --from markdown --to code-maude --code cterm      constrained-terms.md  > cterm.maude
+pandoc-tangle --from markdown --to code-maude --code msh        msh.md                > msh.maude

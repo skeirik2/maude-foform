@@ -1,6 +1,50 @@
 load ../msh.maude
 load ../systems/all-systems.maude
 
+set include BOOL off .
+
+fmod TEST-MODULE is
+  sorts A B .
+  subsort A < B .
+
+  op a : -> A .
+  op b : -> B .
+
+  op f : B -> A .
+  ---------------
+  eq f(b) = a .
+endfm
+
+--- fmod TEST-STUFF is
+---   op initMOD : -> Module .
+---   eq initMOD = ( fmod 'TEST-MODULE is
+---                    nil
+---                    sorts 'A ; 'B .
+---                    subsort 'A < 'B .
+---                    op 'a : nil -> 'A [none] .
+---                    op 'b : nil -> 'B [none] .
+---                    op 'f : 'B  -> 'A [none] .
+---                    none
+---                    eq 'f['b.B] = 'a.A [none] .
+---                    none
+---                  endfm
+---                ) .
+--- 
+---   op origSorts : -> SortSet .
+---   eq origSorts = 'A ; 'B .
+--- 
+---   op forallSorts : -> Term .
+---   eq forallSorts = 'X:Sort .
+---   op existsSorts : -> Term .
+---   eq existsSorts = '_<_>[''List.Sort, 'X:Sort] .
+--- 
+---   op fc : -> FreeConstruction .
+---   eq fc = forall forallSorts exists existsSorts .
+--- 
+---   op sxw : -> SubstitutionSet .
+---   eq sxw = #subsumesXWith(upModule('META-LEVEL, true), forallSorts, upTerm(origSorts)) .
+--- endfm
+
 fmod MSH-TEST-HARNESS is
   extending MSH-EXTENDED .
 
@@ -31,6 +75,51 @@ claim [ strategy < print("hello") >
         strategy < .Program >
         output < print("hello") >
       ]
+.
+
+reduce
+
+claim [ ( modules < .ModuleEnv >
+          strategy < load-module('TEST-MODULE)
+                   ; set-module('TEST-MODULE2, 'TEST-MODULE deriving forall 'X:Sort exists ('_<_>[''List.Sort, 'X:Sort]))
+                   ; show-module('TEST-MODULE)
+                   ; show-module('TEST-MODULE2)
+                   >
+          output < .Output >
+        )
+
+      reduces-to
+
+        ( modules < 'TEST-MODULE |-> 'TEST-MODULE 'TEST-MODULE2 |-> ('TEST-MODULE deriving forall 'X:Sort exists ('_<_>[''List.Sort, 'X:Sort]))>
+          strategy < .Program >
+          output <   show-module( fmod 'TEST-MODULE is
+                                    nil
+                                    sorts 'A ; 'B .
+                                    subsort 'A < 'B .
+                                    op 'a : nil -> 'A [none] .
+                                    op 'b : nil -> 'B [none] .
+                                    op 'f : 'B  -> 'A [none] .
+                                    none
+                                    eq 'f['b.B] = 'a.A [none] .
+                                    none
+                                  endfm
+                                )
+                 ;;; show-module( fmod 'TEST-MODULE is
+                                    nil
+                                    sorts 'A ; 'B ; 'List`{A`} ; 'List`{B`} .
+                                    subsort 'A < 'B .
+                                    op 'a : nil -> 'A [none] .
+                                    op 'b : nil -> 'B [none] .
+                                    op 'f : 'B  -> 'A [none] .
+                                    none
+                                    eq 'f['b.B] = 'a.A [none] .
+                                    none
+                                  endfm
+                                )
+                 >
+        )
+      ]
+
 .
 
 reduce

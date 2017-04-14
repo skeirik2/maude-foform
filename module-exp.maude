@@ -11,11 +11,12 @@ fmod MODULE-EXPRESSION is
   sorts FreeConstruction ModuleConstruction .
   subsort ModuleExpression < ModuleConstruction .
 
-  var N : Nat . var CTX : Context .
+  var N : Nat . var CTX : Context . var CT : CTerm . var CTS : CTermSet .
   var MC : ModuleConstruction . var FC : FreeConstruction . var ME : ModuleExpression . var H : Header . var ID : Qid .
-  var IL : ImportList . var S : Sort . vars SS SS' SS'' : SortSet . var SSDS : SubsortDeclSet .
+  var IL : ImportList . vars S S' : Sort . vars SS SS' SS'' : SortSet . var SSDS : SubsortDeclSet .
   var OPDS : OpDeclSet . var MAS : MembAxSet . var EQS : EquationSet . var RLS : RuleSet .
   var NeSS : NeTypeSet . var SUBST : Substitution . var SUBSTS : SubstitutionSet .
+  vars T T' : Term . vars NeCTS NeCTS' : NeCTermSet .
 
   op #upModule : ModuleConstruction -> Module [memo] .
   ----------------------------------------------------
@@ -48,29 +49,31 @@ fmod MODULE-EXPRESSION is
                         (op '_`,_ : #List(S) #NeList(S) -> #NeList(S) [ctor assoc id(qid(string(#.List(S)) + ".List{PreState}"))] .) .
 
   op _deriving_ : ModuleConstruction FreeConstruction -> ModuleConstruction .
-  op _deriving_ : Module FreeConstruction -> Module .
-  ---------------------------------------------------
+  op _deriving_ : Module FreeConstruction -> [Module] .
+  -----------------------------------------------------
   eq #upModule(MC deriving FC) = #upModule(MC) deriving FC .
   eq fmod H is IL sorts SS .                 SSDS                  OPDS             MAS EQS endfm deriving List(S)
    = fmod H is IL sorts SS ; #ListSorts(S) . SSDS #ListSubsorts(S) OPDS #ListOps(S) MAS EQS endfm .
   eq mod  H is IL sorts SS .                 SSDS                  OPDS             MAS EQS RLS endm deriving List(S)
    = mod  H is IL sorts SS ; #ListSorts(S) . SSDS #ListSubsorts(S) OPDS #ListOps(S) MAS EQS RLS endm .
 
-
-  op forall_exists_ : SortSet SortSet -> FreeConstruction .
-  ---------------------------------------------------------
-  ceq fmod H is IL sorts SS        . SSDS OPDS MAS EQS endfm deriving forall SS' exists SS''
-    = fmod H is IL sorts SS ; NeSS . SSDS OPDS MAS EQS endfm if SUBST | SUBSTS := #sortMatches(SS', SS)
-                                                             /\ NeSS           := downTerm(upTerm(SS'') << (SUBST | SUBSTS), none) .
+  op forall_exists_ : Term Term -> FreeConstruction .
+  ---------------------------------------------------
+  ceq fmod H is IL sorts SS       . SSDS OPDS MAS EQS endfm deriving forall T exists T'
+    = fmod H is IL sorts SS ; SS' . SSDS OPDS MAS EQS endfm if SUBST | SUBSTS := #subsumesXWith(upModule('META-MODULE, true), T, upTerm(SS))
+                                                           /\ SS'             := #resolveSorts(T' << (SUBST | SUBSTS)) .
 
 
   op _<_> : Sort TypeList -> Sort .
 
-  op #sortMatches : SortSet SortSet -> SubstitutionSet .
-  op #sortMatches : SortSet SortSet Nat -> SubstitutionSet .
-  ----------------------------------------------------------
-  eq  #sortMatches(SS, SS')    = #sortMatches(SS, SS', 0) .
-  ceq #sortMatches(SS, SS', N) = SUBST | #sortMatches(SS, SS', s(N)) if { SUBST , CTX } := metaXmatch(#upModule('META-MODULE), upTerm(SS), upTerm(SS'), nil, 0, 0, N) .
-  eq  #sortMatches(SS, SS', N) = empty [owise] .
+  op #resolveSorts : CTermSet -> [SortSet] .
+  ------------------------------------------
+  eq #resolveSorts(NeCTS ;; NeCTS') = #resolveSorts(NeCTS) ; #resolveSorts(NeCTS') .
+  ceq #resolveSorts(CT) = S if S := #resolveSort(downTerm(CT, nil)) .
+
+  op #resolveSort : Sort -> Sort .
+  --------------------------------
+  eq #resolveSort(S < S' >) = qid(string(S) + "{" + string(S') + "}") .
+  eq #resolveSort(S)        = S [owise] .
 endfm
 
