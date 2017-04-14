@@ -23,6 +23,8 @@ fmod FOFORM-SUBSTITUTION-TEST is
    if (A['X:Nat] '_+_['X:Nat, 'A:Nat] ?= 'Z:Nat) := (A['X:Nat] '_+_['X:Nat, 'Y:Nat] ?= 'Z:Nat) << ('Y:Nat <- 'A:Nat) .
 endfm
 
+set print color on .
+
 reduce test(1) .
 reduce test(2) .
 reduce test(3) .
