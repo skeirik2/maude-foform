@@ -26,18 +26,21 @@ fmod CTERM-SET is
   sorts CTerm NeCTermSet CTermSet CTermSet? .
   subsorts Term < CTerm < NeCTermSet < CTermSet < CTermSet? .
 
-  var N : Nat . vars F F' F'' : FOForm . var X : Variable . var 
+  vars N M M' : Nat . vars F F' F'' : FOForm . var X : Variable .
   var MOD : Module . var S : Substitution . var SS : SubstitutionSet .
   vars T T' : Term . vars CT CT' CT'' : CTerm .
   vars CTS CTS' : CTermSet . vars NeCTS NeCTS' : NeCTermSet .
 
   op _|_ : Term FOForm -> CTerm [right id: tt prec 52] .
   ------------------------------------------------------
-  --- eq T | ff ;; CTS = CTS .
+  eq T | ff ;; CTS = CTS .
 
   op _<<_ : CTerm Substitution -> CTerm .
-  ---------------------------------------
-  eq (T | F) << S = (T << S) | (F << S) .
+  op _<<_ : CTerm SubstitutionSet -> CTermSet .
+  ---------------------------------------------
+  eq (T | F)       << S  = (T << S) | (F << S) .
+  eq .CTermSet     << SS = .CTermSet .
+  eq (CT ;; NeCTS) << SS = (CT << SS) ;; (NeCTS << SS) .
 
   op .CTermSet : -> CTermSet .
   op _;;_ : CTermSet CTermSet   -> CTermSet   [ctor assoc comm id: .CTermSet prec 60] .
@@ -65,17 +68,26 @@ fmod CTERM-SET is
   eq NeCTS ;; CTS -- NeCTS ;; CTS'  = CTS -- NeCTS ;; CTS' .
   eq CT ;; NeCTS  -- NeCTS' [ MOD ] = (CT -- NeCTS' [ MOD ]) ;; (NeCTS -- NeCTS' [ MOD ]) .
   eq NeCTS        -- NeCTS' [ MOD ] = NeCTS [owise] . --- Over-approximate when we can't simplify
+  ceq CT    -- CT' ;; CTS'  [ MOD ] = .CTermSet if S | SS := #subsumesWith(MOD, CT', #varsApart(CT, CT')) .
+  ceq T | F -- CT' ;; CTS'  [ MOD ] = CT -- CTS' [ MOD ] if T' | F' := #varsApart(CT', T | F)
+                                                         /\ S | SS  := #subsumesWith(MOD, T, T')
+                                                         /\ CT      := (T | F /\ (#disjSubsts(S | SS) => (~ F'))) .
+  ceq CT    -- CT' ;; CTS   [ MOD ] = CT -- CTS' ;; CTS [ MOD ] if CTS' := #intersect(MOD, CT, CT') .
 
-  --- TODO: Should we use `++` instead? It would mean that by taking the difference, you make some things union-able.
-  ceq CT    -- CT' ;; CTS [ MOD ] = .CTermSet if S | SS := #subsumesWith(MOD, CT', #varsApart(CT, CT')) .
-  ceq T | F -- CT' ;; CTS [ MOD ] = T | F'' -- CTS [ MOD ] if T' | F' := #varsApart(CT', T | F)
-                                                           /\ S | SS  := #subsumesWith(MOD, T, T')
-                                                           /\ F''     := simplify(F /\ (#disjSubsts(S | SS) => (~ F'))) .
-  ceq CT    -- CT' ;; CTS [ MOD ] = CT -- (CTS' ;; CTS) [ MOD ] if CTS' := #intersect(CT, CT') .
-
-  op #intersect : CTerm CTerm -> CTermSet? [comm] .
+  op #intersect : Module CTerm CTerm -> CTermSet? .
   -------------------------------------------------
+  ceq #intersect(MOD, T | F, CT') = (T | F /\ F') << (S | SS) if T' | F' := #varsApart(CT', T | F)
+                                                              /\ S | SS  := #unifiers(MOD, T, T') .
 
+  --- simulate commutativity in 2nd/3rd argument.
+  op #unifiers : Module Term Term -> SubstitutionSet .
+  op #unifiers : Module Term Term Nat Nat -> SubstitutionSet .
+  ------------------------------------------------------------
+  eq  #unifiers(MOD, T, T')       = #unifiers(MOD, T, T', 0, 0) .
+  ceq #unifiers(MOD, T, T', N, M) = S | #unifiers(MOD, T, T', s(N), M') if { S , M' } := metaUnify(MOD, T =? T', N, M) .
+  eq  #unifiers(MOD, T, T', N, M) = empty [owise] .
+
+  --- TODO: This should eventually actually try to do what it claims.
   op #varsApart : CTerm CTerm -> CTerm .
   --------------------------------------
   eq #varsApart(CT, CT') = CT .
