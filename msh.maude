@@ -25,26 +25,24 @@ endfm
 --- things about modules for us.
 
 
+load module-exp.maude .
+
 fmod MODULE-DATABASE is
-  extending META-LEVEL .
+  protecting MODULE-EXPRESSION  .
   extending ANALYSIS .
 
-  sorts ModuleEnv ModuleConstruction .
-  sorts Command{=>Modules} .
+  sorts ModuleEnv Command{=>Modules} .
 
-  var H : Header . vars ME ME' : ModuleExpression . var MOD : Module .
-  var MC : ModuleConstruction . var MENV : ModuleEnv . var ID : Qid .
-  var IL : ImportList . var S : Sort . var SS : SortSet . var SSDS : SubsortDeclSet .
-  var OPDS : OpDeclSet . var MAS : MembAxSet . var EQS : EquationSet . var RLS : RuleSet .
+  var Q : Qid . vars MC MC' : ModuleConstruction . var MENV : ModuleEnv .
 
   op .ModuleEnv : -> ModuleEnv .
-  op _|->_ : Header ModuleExpression -> ModuleEnv [ctor] .
+  op _|->_ : Qid ModuleConstruction -> ModuleEnv [ctor] .
   op __ : ModuleEnv ModuleEnv -> ModuleEnv [ctor assoc comm id: .ModuleEnv prec 120] .
   ------------------------------------------------------------------------------------
 
-  op _[_] : Header ModuleEnv -> Module .
-  --------------------------------------
-  eq H [ H |-> ME MENV ] = #upModule(ME) .
+  op _[_] : Qid ModuleEnv -> Module .
+  -----------------------------------
+  eq Q [ Q |-> MC MENV ] = #upModule(MC) .
 
   op modules <_> : ModuleEnv -> NeAnalysis [ctor format(d d n n d)] .
   -------------------------------------------------------------------
@@ -56,52 +54,14 @@ fmod MODULE-DATABASE is
   --------------------------------------------
   eq clear-module-db [ MENV ] = .ModuleEnv .
 
-  op load-module : Header -> Command{=>Modules} .
-  -----------------------------------------------
-  eq load-module(H) = set-module(H, H) .
+  op load-module : Qid -> Command{=>Modules} .
+  --------------------------------------------
+  eq load-module(Q) = set-module(Q, Q) .
 
-  op set-module : Header ModuleExpression -> Command{=>Modules} .
+  op set-module : Qid ModuleConstruction -> Command{=>Modules} .
   ---------------------------------------------------------------
-  eq set-module(H, ME) [ H |-> ME' MENV ] = H |-> ME MENV .
-  eq set-module(H, ME) [           MENV ] = H |-> ME MENV [owise] .
-
-  op List : Sort -> ModuleConstruction [ctor] .
-  op Set  : Sort -> ModuleConstruction [ctor] .
-
-  op ditto : -> Attr .
-
-  op #.List  : Sort -> Constant .
-  op #NeList : Sort -> Sort .
-  op #List   : Sort -> Sort .
-  ---------------------------
-  eq #.List(S)  = qid(".List{"  + string(S) + "}") .
-  eq #NeList(S) = qid("NeList{" + string(S) + "}") .
-  eq #List(S)   = qid("List{"   + string(S) + "}") .
-
-  op #ListSorts    : Sort -> SortSet .
-  op #ListSubsorts : Sort -> SubsortDeclSet .
-  op #ListOps      : Sort -> OpDeclSet .
-  op #ListEqs      : Sort -> EquationSet .
-  ----------------------------------------
-  eq #ListSorts(S)    = #NeList(S) ; #List(S) .
-  eq #ListSubsorts(S) = (subsort S < #NeList(S) .)
-                        (subsort #NeList(S) < #List(S) .) .
-  eq #ListOps(S)      = (op #.List(S) : nil -> #List(S) [ctor] .)
-                        (op '_`,_ : #List(S) #List(S)   -> #List(S)   [ctor assoc id(qid(string(#.List(S)) + ".List{PreState}"))] .)
-                        (op '_`,_ : #List(S) #NeList(S) -> #NeList(S) [ctor assoc id(qid(string(#.List(S)) + ".List{PreState}"))] .) .
-
-  op _deriving_ : ModuleExpression ModuleConstruction -> ModuleExpression [ctor] .
-  op _deriving_ : Module ModuleConstruction -> Module .
-  -----------------------------------------------------
-  eq #upModule(ME deriving MC) = #upModule(ME) deriving MC .
-  eq fmod H is IL sorts SS .                 SSDS                  OPDS             MAS EQS endfm deriving List(S)
-   = fmod H is IL sorts SS ; #ListSorts(S) . SSDS #ListSubsorts(S) OPDS #ListOps(S) MAS EQS endfm .
-  eq mod  H is IL sorts SS .                 SSDS                  OPDS             MAS EQS RLS endm deriving List(S)
-   = mod  H is IL sorts SS ; #ListSorts(S) . SSDS #ListSubsorts(S) OPDS #ListOps(S) MAS EQS RLS endm .
-
-  op #upModule : ModuleExpression -> Module [memo] .
-  --------------------------------------------------
-  eq #upModule(ME) = upModule(ME, true) .
+  eq set-module(Q, MC) [ Q |-> MC' MENV ] = Q |-> MC MENV .
+  eq set-module(Q, MC) [           MENV ] = Q |-> MC MENV [owise] .
 endfm
 
 
