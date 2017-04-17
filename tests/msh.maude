@@ -31,6 +31,10 @@ fmod TEST-STUFF is
                    none
                  endfm
                ) .
+
+  op simpleStruct : Nat -> ModuleTemplate .
+  eq simpleStruct(1) = (sorts svar('X) ; svar('Y) . subsort svar('X) < svar('Y) .) .
+  eq simpleStruct(2) = (sorts 'A ; 'B . subsort 'A < 'B .) .
 endfm
 
 fmod MSH-TEST-HARNESS is
@@ -41,16 +45,17 @@ fmod MSH-TEST-HARNESS is
   op claim : Analysis Analysis -> Analysis .
   op success : -> Analysis .
 
-  op failure [_,_] : Analysis Analysis -> [Analysis] [format(d d n n n n d)].
-  eq failure [ NeA A , NeA A' ] = failure [ A , A' ] .
-
   op _reduces-to_ : Analysis Analysis -> [Analysis] [prec 98].
   ------------------------------------------------------------
-  eq NeA (A reduces-to A') = (NeA A) reduces-to (NeA A') .
+  eq NeA (A reduces-to A')          = (NeA A) reduces-to (NeA A') .
 
-  op claim [_] : Analysis -> [Analysis] .
-  --------------------------------------
-  ceq claim [ INIT reduces-to CORRECT ] = if A == CORRECT then success else failure [ CORRECT , INIT ] fi if A := INIT .
+  op failure [_] : Analysis -> [Analysis] [format(d d n n d)] .
+  -------------------------------------------------------------
+  eq failure [ NeA A reduces-to NeA A' ] = failure [ A reduces-to A' ] .
+
+  op claim   [_] : Analysis -> [Analysis] [format(d d n n d)] .
+  -------------------------------------------------------------
+  ceq claim [ INIT reduces-to CORRECT ] = if A == CORRECT then success else failure [ A reduces-to CORRECT ] fi if A := INIT .
 endfm
 
 set print color on .

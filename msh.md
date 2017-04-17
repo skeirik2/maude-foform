@@ -48,8 +48,8 @@ fmod MODULE-DATABASE is
 
   op .ModuleEnv : -> ModuleEnv .
   op _|->_ : Qid ModuleConstruction -> ModuleEnv [ctor] .
-  op __ : ModuleEnv ModuleEnv -> ModuleEnv [ctor assoc comm id: .ModuleEnv prec 120] .
-  ------------------------------------------------------------------------------------
+  op __ : ModuleEnv ModuleEnv -> ModuleEnv [ctor assoc comm id: .ModuleEnv prec 120 format(d n d)] .
+  --------------------------------------------------------------------------------------------------
 
   op _[_] : Qid ModuleEnv -> Module .
   -----------------------------------
