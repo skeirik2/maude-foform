@@ -82,19 +82,6 @@ fmod CTERM-SET is
   ceq #intersect(MOD, T | F, CT') = (T | F /\ F') << (S | SS) if T' | F' := #varsApart(CT', T | F)
                                                               /\ S | SS  := #unifiers(MOD, T, T') .
 
-  --- simulate commutativity in 2nd/3rd argument.
-  op #unifiers : Module Term Term -> SubstitutionSet .
-  op #unifiers : Module Term Term Nat Nat -> SubstitutionSet .
-  ------------------------------------------------------------
-  eq  #unifiers(MOD, T, T')       = #unifiers(MOD, T, T', 0, 0) .
-  ceq #unifiers(MOD, T, T', N, M) = S | #unifiers(MOD, T, T', s(N), M') if { S , M' } := metaUnify(MOD, T =? T', N, M) .
-  eq  #unifiers(MOD, T, T', N, M) = empty [owise] .
-
-  --- TODO: This should eventually actually try to do what it claims.
-  op #varsApart : CTerm CTerm -> CTerm .
-  --------------------------------------
-  eq #varsApart(CT, CT') = CT .
-
   op #disjSubsts : SubstitutionSet -> PosEqQFForm? .
   --------------------------------------------------
   eq #disjSubsts(empty)  = ff .
@@ -105,6 +92,20 @@ fmod CTERM-SET is
   eq #conjSubst(none)       = tt .
   eq #conjSubst(X <- T ; S) = X ?= T /\ #conjSubst(S) .
 
+  --- TODO: This should eventually actually try to do what it claims.
+  op #varsApart : CTerm CTerm -> CTerm .
+  --------------------------------------
+  eq #varsApart(CT, CT') = CT .
+
+  --- These should be moved to their own Meta-Level utils file.
+
+  op #unifiers : Module Term Term -> SubstitutionSet .
+  op #unifiers : Module Term Term Nat Nat -> SubstitutionSet .
+  ------------------------------------------------------------
+  eq  #unifiers(MOD, T, T')       = #unifiers(MOD, T, T', 0, 0) .
+  ceq #unifiers(MOD, T, T', N, M) = S | #unifiers(MOD, T, T', s(N), M') if { S , M' } := metaUnify(MOD, T =? T', N, M) .
+  eq  #unifiers(MOD, T, T', N, M) = empty [owise] .
+
   op #subsumesWith : Module Term Term -> SubstitutionSet .
   op #subsumesWith : Module Term Term Nat -> SubstitutionSet .
   ------------------------------------------------------------
@@ -114,7 +115,7 @@ fmod CTERM-SET is
 
   op #subsumesXWith : Module Term Term -> SubstitutionSet .
   op #subsumesXWith : Module Term Term Nat -> SubstitutionSet .
-  ------------------------------------------------------------
+  -------------------------------------------------------------
   eq  #subsumesXWith(MOD, T, T')    = #subsumesXWith(MOD, T, T', 0) .
   ceq #subsumesXWith(MOD, T, T', N) = S | #subsumesXWith(MOD, T, T', s(N)) if { S , CTX } := metaXmatch(MOD, T, T', nil, 0, unbounded, N) .
   eq  #subsumesXWith(MOD, T, T', N) = empty [owise] .
