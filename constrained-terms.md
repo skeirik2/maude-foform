@@ -120,7 +120,14 @@ fmod CTERM-SET is
   ceq #subsumesXWith(MOD, T, T', N) = S | #subsumesXWith(MOD, T, T', s(N)) if { S , CTX } := metaXmatch(MOD, T, T', nil, 0, unbounded, N) .
   eq  #subsumesXWith(MOD, T, T', N) = empty [owise] .
 endfm
+```
 
+A trace of constrained terms is just a map from naturals to pairs
+constrained-term sets. The first element of the pair are the states seen for the
+first time in that step, and the second element are the accumulated states up to
+that point.
+
+```{.maude .cterm}
 fmod CTERM-TRACE is
   protecting CTERM-SET .
 

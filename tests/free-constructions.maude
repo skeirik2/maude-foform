@@ -1,0 +1,91 @@
+load ../msh.maude
+
+fmod TEST-STUFF is
+  protecting MODULE-EXPRESSION .
+
+  op initMOD : -> Module .
+  eq initMOD = ( fmod 'TEST-MODULE is
+                   nil
+                   sorts 'A ; 'B .
+                   subsort 'A < 'B .
+                   op 'a : nil -> 'A [none] .
+                   op 'b : nil -> 'B [none] .
+                   op 'f : 'B  -> 'A [none] .
+                   none
+                   eq 'f['b.B] = 'a.A [none] .
+                   none
+                 endfm
+               ) .
+
+  op simpleStruct : Nat -> ModuleTemplate .
+  eq simpleStruct(1) = (sorts svar('X) ; svar('Y) . subsort svar('X) < svar('Y) .) .
+  eq simpleStruct(2) = (sorts 'A ; 'B . subsort 'A < 'B .) .
+endfm
+
+set include BOOL off .
+
+fmod TEST-MODULE is
+  sorts A B .
+  subsort A < B .
+
+  op a : -> A .
+  op b : -> B .
+
+  op f : B -> A .
+  ---------------
+  eq f(b) = a .
+endfm
+
+select MSH .
+set print color on .
+
+reduce
+
+claim [ ( modules < .ModuleEnv >
+          strategy < load-module('TEST-MODULE)
+                   ; set-module('TEST-MODULE2, ('TEST-MODULE deriving List))
+                   ; show-module('TEST-MODULE)
+                   ; show-module('TEST-MODULE2)
+                   >
+          output < .Output >
+        )
+
+      reduces-to
+
+        ( modules < 'TEST-MODULE |-> 'TEST-MODULE 'TEST-MODULE2 |-> ('TEST-MODULE deriving List)>
+          strategy < .Program >
+          output <   show-module( fmod 'TEST-MODULE is
+                                    nil
+                                    sorts 'A ; 'B .
+                                    subsort 'A < 'B .
+                                    op 'a : nil -> 'A [none] .
+                                    op 'b : nil -> 'B [none] .
+                                    op 'f : 'B  -> 'A [none] .
+                                    none
+                                    eq 'f['b.B] = 'a.A [none] .
+                                    none
+                                  endfm
+                                )
+                 ;;; show-module( fmod 'TEST-MODULE is
+                                    nil
+                                    sorts 'A ; 'B ; 'List < 'A > ; 'List < 'B > ; 'NeList < 'A > ; 'NeList < 'B > .
+                                    subsort 'A < 'B .
+                                    subsort 'A < ('NeList < 'A >) .
+                                    subsort 'B < ('NeList < 'B >) .
+                                    subsort ('List < 'A >) < ('List < 'B >) .
+                                    subsort ('NeList < 'A >) < ('List < 'A >) .
+                                    subsort ('NeList < 'A >) < ('NeList < 'B >) .
+                                    subsort ('NeList < 'B >) < ('List < 'B >) .
+                                    op 'a : nil -> 'A [none] .
+                                    op 'b : nil -> 'B [none] .
+                                    op 'f : 'B  -> 'A [none] .
+                                    none
+                                    eq 'f['b.B] = 'a.A [none] .
+                                    none
+                                  endfm
+                                )
+                 >
+        )
+      ]
+
+.

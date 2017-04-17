@@ -1,0 +1,74 @@
+load ../msh.maude
+load ../state-space.maude
+load ../systems/all-systems.maude
+
+select STATE-EXPLORE .
+set print color on .
+
+reduce
+
+claim [ modules < .ModuleEnv >
+        ( strategy < load-module('CYCLE) ; set-module('STATE, 'CYCLE) ; set-module('TRACE, 'CYCLE)
+                   ; explore-all-with(rewrite)
+                   ; clear-module-db
+                   >
+          state < 'f['a.PreState] >
+          trace < .CTermSetTrace >
+        reduces-to
+          strategy < .Program >
+          state < .CTermSet >
+          trace < 4 | 0 |-> < 'f['a.PreState]                    , 'f['a.PreState] >
+                      1 |-> < 'f['b.PreState] ;; 'g['c.PreState] , 'f['a.PreState] ;; 'f['b.PreState] ;; 'g['c.PreState] >
+                      2 |-> < 'f['c.PreState]                    , 'f['a.PreState] ;; 'f['b.PreState] ;; 'f['c.PreState] ;; 'g['c.PreState] >
+                      3 |-> < .CTermSet                          , 'f['a.PreState] ;; 'f['b.PreState] ;; 'f['c.PreState] ;; 'g['c.PreState] >
+                >
+        )
+      ]
+
+.
+
+reduce
+
+claim [ modules < .ModuleEnv >
+        ( strategy < load-module('CYCLE) ; set-module('STATE, 'CYCLE) ; set-module('TRACE, 'CYCLE)
+                   ; explore-all-with(narrow)
+                   ; clear-module-db
+                   >
+          state < 'f['Y:PreState] >
+          trace < .CTermSetTrace >
+        reduces-to
+          strategy < .Program >
+          state < .CTermSet >
+          trace < 3 | 0 |-> < 'f['Y:PreState] , 'f['Y:PreState] >
+                      1 |-> < 'g['c.PreState] , 'f['Y:PreState] ;; 'g['c.PreState] >
+                      2 |-> < .CTermSet       , 'f['Y:PreState] ;; 'g['c.PreState] >
+                >
+        )
+      ]
+
+.
+
+reduce
+
+claim [ modules < .ModuleEnv >
+        ( strategy < load-module('NONDET-SCHEDULER) ; set-module('STATE, 'NONDET-SCHEDULER) ; set-module('TRACE, 'NONDET-SCHEDULER)
+                   ; explore-all-with(rewrite)
+                   ; clear-module-db
+                   >
+          state < '`{_`}['__['tb.Task, 'addTasks['__['ta.Task, 'tb.Task]]]] >
+          trace < .CTermSetTrace >
+        reduces-to
+          strategy < .Program >
+          state < .CTermSet >
+          trace < 7 | 0 |-> < '`{_`}['__['tb.Task,'addTasks['__['ta.Task,'tb.Task]]]]                                         , '`{_`}['__['tb.Task,'addTasks['__['ta.Task,'tb.Task]]]] >
+                      1 |-> < '_|_['tb.Task,'addTasks['__['ta.Task,'tb.Task]]] ;; '`{_`}['__['ta.Task,'tb.Task]]              , '_|_['tb.Task,'addTasks['__['ta.Task,'tb.Task]]] ;; '`{_`}['__['ta.Task,'tb.Task]] ;; '`{_`}['__['tb.Task,'addTasks['__['ta.Task,'tb.Task]]]] >
+                      2 |-> < '_|_['ta.Task,'tb.Task] ;; '_|_['tb.Task,'ta.Task] ;; '`{_`}['addTasks['__['ta.Task,'tb.Task]]] , '_|_['ta.Task,'tb.Task] ;; '_|_['tb.Task,'ta.Task] ;; '_|_['tb.Task,'addTasks['__['ta.Task,'tb.Task]]] ;; '`{_`}['__['ta.Task,'tb.Task]] ;; '`{_`}['__['tb.Task,'addTasks['__['ta.Task,'tb.Task]]]] ;; '`{_`}['addTasks['__['ta.Task,'tb.Task]]] >
+                      3 |-> < '`{_`}['ta.Task] ;; '`{_`}['tb.Task]                                                            , '_|_['ta.Task,'tb.Task] ;; '_|_['tb.Task,'ta.Task] ;; '_|_['tb.Task,'addTasks['__['ta.Task,'tb.Task]]] ;; '`{_`}['ta.Task] ;; '`{_`}['tb.Task] ;; '`{_`}['__['ta.Task,'tb.Task]] ;; '`{_`}['__['tb.Task,'addTasks['__['ta.Task,'tb.Task]]]] ;; '`{_`}['addTasks['__['ta.Task,'tb.Task]]] >
+                      4 |-> < '_|_['ta.Task,'.Tasks.Tasks] ;; '_|_['tb.Task,'.Tasks.Tasks]                                    , '_|_['ta.Task,'.Tasks.Tasks] ;; '_|_['ta.Task,'tb.Task] ;; '_|_['tb.Task,'.Tasks.Tasks] ;; '_|_['tb.Task,'ta.Task] ;; '_|_['tb.Task,'addTasks['__['ta.Task,'tb.Task]]] ;; '`{_`}['ta.Task] ;; '`{_`}['tb.Task] ;; '`{_`}['__['ta.Task,'tb.Task]] ;; '`{_`}['__['tb.Task,'addTasks['__['ta.Task,'tb.Task]]]] ;; '`{_`}['addTasks['__['ta.Task,'tb.Task]]] >
+                      5 |-> < '`{_`}['.Tasks.Tasks]                                                                           , '_|_['ta.Task,'.Tasks.Tasks] ;; '_|_['ta.Task,'tb.Task] ;; '_|_['tb.Task,'.Tasks.Tasks] ;; '_|_['tb.Task,'ta.Task] ;; '_|_['tb.Task,'addTasks['__['ta.Task,'tb.Task]]] ;; '`{_`}['.Tasks.Tasks] ;; '`{_`}['ta.Task] ;; '`{_`}['tb.Task] ;; '`{_`}['__['ta.Task,'tb.Task]] ;; '`{_`}['__['tb.Task,'addTasks['__['ta.Task,'tb.Task]]]] ;; '`{_`}['addTasks['__['ta.Task,'tb.Task]]] >
+                      6 |-> < .CTermSet                                                                                       , '_|_['ta.Task,'.Tasks.Tasks] ;; '_|_['ta.Task,'tb.Task] ;; '_|_['tb.Task,'.Tasks.Tasks] ;; '_|_['tb.Task,'ta.Task] ;; '_|_['tb.Task,'addTasks['__['ta.Task,'tb.Task]]] ;; '`{_`}['.Tasks.Tasks] ;; '`{_`}['ta.Task] ;; '`{_`}['tb.Task] ;; '`{_`}['__['ta.Task,'tb.Task]] ;; '`{_`}['__['tb.Task,'addTasks['__['ta.Task,'tb.Task]]]] ;; '`{_`}['addTasks['__['ta.Task,'tb.Task]]] >
+                >
+        )
+      ]
+
+.

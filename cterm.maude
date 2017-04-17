@@ -121,6 +121,13 @@ fmod CTERM-SET is
   eq  #subsumesXWith(MOD, T, T', N) = empty [owise] .
 endfm
 
+
+--- A trace of constrained terms is just a map from naturals to pairs
+--- constrained-term sets. The first element of the pair are the states seen for the
+--- first time in that step, and the second element are the accumulated states up to
+--- that point.
+
+
 fmod CTERM-TRACE is
   protecting CTERM-SET .
 

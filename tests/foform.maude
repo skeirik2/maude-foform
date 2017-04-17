@@ -28,5 +28,3 @@ set print color on .
 reduce test(1) .
 reduce test(2) .
 reduce test(3) .
-
-q

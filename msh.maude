@@ -1,5 +1,12 @@
+--- MSH
+--- ===
+
+--- MSH (for "Maude Shell") is a simple soup of state with one cell (the "strategy"
+--- cell) which contains the program to be executed. Using sorts, you specify which
+--- where to load arguments for commands from, and MSH does the plumbing for you.
+
 --- Analysis
---- ========
+--- --------
 
 --- `Analysis` is an $AC$-soup of state.
 
@@ -8,13 +15,28 @@ fmod ANALYSIS is
   sorts NeAnalysis Analysis .
   subsort NeAnalysis < Analysis .
 
-  var NeA : NeAnalysis .
+  vars INIT CORRECT A A' : Analysis . var NeA : NeAnalysis .
 
   op .Analysis : -> Analysis .
   op __        : Analysis Analysis   -> Analysis   [assoc comm id: .Analysis prec 95 format(d n d)] .
   op __        : Analysis NeAnalysis -> NeAnalysis [ctor ditto] .
   ---------------------------------------------------------------
   eq NeA NeA = NeA .
+
+  op claim : Analysis Analysis -> Analysis .
+  op success : -> Analysis .
+
+  op _reduces-to_ : Analysis Analysis -> [Analysis] [prec 98].
+  ------------------------------------------------------------
+  eq NeA (A reduces-to A')          = (NeA A) reduces-to (NeA A') .
+
+  op failure [_] : Analysis -> [Analysis] [format(d d n n d)] .
+  -------------------------------------------------------------
+  eq failure [ NeA A reduces-to NeA A' ] = failure [ A reduces-to A' ] .
+
+  op claim   [_] : Analysis -> [Analysis] [format(d d n n d)] .
+  -------------------------------------------------------------
+  ceq claim [ INIT reduces-to CORRECT ] = if A == CORRECT then success else failure [ A reduces-to CORRECT ] fi if A := INIT .
 endfm
 
 
@@ -182,13 +204,10 @@ fmod STRATEGY is
   subsorts Command{State=>Strategy} Command{Modules=>Strategy} Command{=>Strategy} < Command .
 
   sorts Command{Modules=>Output} Command{=>Output} .
-  subsorts Command{Modules=>Output} Command{=>Output} < Command .
   subsort Command{=>Output} < Output .
 
   vars P P' P1 P2 : Program . vars B B' : Bool . var N : Nat .
   var CTS : CTermSet . var NeCTS : NeCTermSet .
-  var CSSt : Command{State=>Strategy} . var CSt : Command{=>Strategy} .
-  var CMO : Command{Modules=>Output} . var CO : Command{=>Output} . var O : Output .
   var H : Header . var MENV : ModuleEnv .
 
   op strategy <_> : Program -> NeAnalysis [ctor] .
@@ -230,17 +249,6 @@ fmod STRATEGY is
   op _<_> : Command{Modules=>Output} ModuleEnv -> Command{=>Output} .
   op _[_] : Command{=>Strategy} Program -> [Program] .
   ----------------------------------------------------
-  eq strategy < CMO          ; P > modules < MENV >
-   = strategy < CMO < MENV > ; P > modules < MENV > .
-
-  eq strategy < CSSt         ; P > state < CTS >
-   = strategy < CSSt < CTS > ; P > state < CTS > .
-
-  eq strategy < CSt ; P >
-   = strategy < CSt [ P ] > .
-
-  eq strategy < CO ; P > output < O >
-   = strategy <      P > output < O ;;; CO > .
 
   op print : String -> Command{=>Output} .
   ----------------------------------------
@@ -271,7 +279,7 @@ fmod STRATEGY is
 endfm
 
 
---- MSH
+--- MSH {#msh-1}
 --- ---
 
 --- When the above state components are put together (in a parallel manner), then
@@ -290,56 +298,50 @@ fmod MSH is
   protecting TRACE .
   extending STRATEGY .
 
-  var P : Program . var MDB : ModuleEnv . var CTermS : CTermSet . var CTermST : CTermSetTrace .
-
-  var CM : Command{=>Modules} .
-  var CMS : Command{Modules=>State} . var CTS : Command{Trace=>State} . var CS : Command{=>State} .
+  var CMO : Command{Modules=>Output} . var CO : Command{=>Output} . var O : Output .
+  var CM : Command{=>Modules} . var MENV : ModuleEnv .
+  var CSSt : Command{State=>Strategy} . var CSt : Command{=>Strategy} . var P : Program . var CTermS : CTermSet .
+  var CMS : Command{Modules=>State} . var CTS : Command{Trace=>State} . var CS : Command{=>State} . var CTermST : CTermSetTrace .
   var CMST : Command{Modules,State=>Trace} . var CT : Command{=>Trace} .
+
+  subsorts Command{Modules=>Output} Command{=>Output} < Command .
+  ---------------------------------------------------------------
+  eq strategy < CO ; P > output < O >
+   = strategy <      P > output < O ;;; CO > .
+
+  eq strategy < CMO          ; P > modules < MENV >
+   = strategy < CMO < MENV > ; P > modules < MENV > .
 
   subsort Command{=>Modules} < Command .
   -------------------------------------
-  eq strategy < CM ; P > modules < MDB >
-   = strategy <      P > modules < CM [ MDB ] > .
+  eq strategy < CM ; P > modules < MENV >
+   = strategy <      P > modules < CM [ MENV ] > .
+
+  --- subsorts Command{State=>Strategy} Command{Modules=>Strategy} Command{=>Strategy} < Command .
+  --------------------------------------------------------------------------------------------
+  eq strategy < CSt ; P >
+   = strategy < CSt [ P ] > .
+
+  eq strategy < CSSt            ; P > state < CTermS >
+   = strategy < CSSt < CTermS > ; P > state < CTermS > .
 
   subsorts Command{Modules=>State} Command{Trace=>State} Command{=>State} < Command .
   -----------------------------------------------------------------------------------
-  eq strategy < CMS                    ; P > modules < MDB >
-   = strategy < CMS < 'STATE [ MDB ] > ; P > modules < MDB > .
+  eq strategy < CS ; P > state < CTermS >
+   = strategy < P      > state < CS [ CTermS ] > .
+
+  eq strategy < CMS                     ; P > modules < MENV >
+   = strategy < CMS < 'STATE [ MENV ] > ; P > modules < MENV > .
 
   eq strategy < CTS             ; P > trace < CTermST >
    = strategy < CTS < CTermST > ; P > trace < CTermST > .
 
-  eq strategy < CS ; P > state < CTermS >
-   = strategy < P      > state < CS [ CTermS ] > .
-
   subsorts Command{Modules,State=>Trace} Command{=>Trace} < Command .
   ------------------------------------------------------------------
-  eq strategy < CMST                             ; P > modules < MDB > state < CTermS >
-   = strategy < CMST < 'TRACE [ MDB ] , CTermS > ; P > modules < MDB > state < CTermS > .
-
   eq strategy < CT ; P > trace < CTermST >
    = strategy <      P > trace < CT [ CTermST ] > .
-endfm
 
-
---- Narrowing modulo SMT
---- ====================
-
---- Here we instantiate all the above given components to a language suitable for
---- narrowing modulo SMT trace-based analysis.
-
-
-fmod MSH-EXTENDED is
-  protecting MSH .
-
-  var EXEC-COMMAND : Command{Modules=>State} .
-
-  op explore-all-with : Command{Modules=>State} -> Program .
-  ---------------------------------------------------------
-  eq explore-all-with(EXEC-COMMAND) = extend
-                                    ; while (not empty?) { EXEC-COMMAND
-                                                         ; extend
-                                                         ; load
-                                                         } .
+  eq strategy < CMST                              ; P > modules < MENV > state < CTermS >
+   = strategy < CMST < 'TRACE [ MENV ] , CTermS > ; P > modules < MENV > state < CTermS > .
 endfm
 
