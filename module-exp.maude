@@ -12,41 +12,25 @@
 --- and `#subsumesXWith` away from that module.
 
 
-load cterm
+fmod STRUCTURED-QID is
+  extending META-LEVEL .
 
-fmod STRUCTURED-SORTS is
-  protecting CTERM-SET .
+  var Q : Qid . var V : Variable . var QL : QidList . vars NeQL NeQL' : NeQidList . 
 
-  var Q : Qid . var S : Sort . var SS : SortSet . var SSDS : SubsortDeclSet .
-  var CT : CTerm . vars NeCTS NeCTS' : NeCTermSet . var TL : TypeList . var NeTL NeTL' : NeTypeList .
+  op _<_> : Qid QidList -> Qid [prec 23] .
+  ----------------------------------------
 
-  op _<_> : Sort NeTypeList -> Sort .
-  -----------------------------------
-
-  op downSortsError?    : -> [SortSet] .
-  op downSubsortsError? : -> [SubsortDeclSet] .
-  op svar    : Qid -> Sort .
-  op ssetvar : Qid -> SortSet .
-  op subsvar : Qid -> SubsortDeclSet .
-  ------------------------------------
-  ceq svar(Q)    = S    if S    := downTerm(qid(string(Q) + ":Sort"),           downSortsError?) .
-  ceq ssetvar(Q) = SS   if SS   := downTerm(qid(string(Q) + ":SortSet"),        downSortsError?) .
-  ceq subsvar(Q) = SSDS if SSDS := downTerm(qid(string(Q) + ":SubsortDeclSet"), downSubsortsError?) .
-
-  op #resolveSorts : CTermSet -> [SortSet] .
-  ------------------------------------------
-  eq  #resolveSorts(NeCTS ;; NeCTS') = #resolveSorts(NeCTS) ; #resolveSorts(NeCTS') .
-  ceq #resolveSorts(CT)              = S if S := #unparseSort(downTerm(CT, none)) .
-
-  op #unparseSort : Sort -> Sort .
+  op #unparseQid : Qid -> String .
   --------------------------------
-  eq #unparseSort(S < TL >) = qid(string(S) + "{" + #unparseSorts(TL) + "}") .
-  eq #unparseSort(S)        = S [owise] .
+  eq  #unparseQid(Q < QL >) = #unparseQid(Q) + "{" + #unparseQids(QL) + "}" .
+  ceq #unparseQid(Q)        = string(V) if V := upTerm(Q) .
+  eq  #unparseQid(Q)        = string(Q) [owise] .
 
-  op #unparseSorts : TypeList -> String .
-  ---------------------------------------
-  eq #unparseSorts(NeTL ; NeTL') = #unparseSorts(NeTL) + ";" + #unparseSorts(NeTL') .
-  eq #unparseSorts(S)            = string(#unparseSort(S)) .
+  op #unparseQids : QidList -> String .
+  -------------------------------------
+  eq #unparseQids(none)         = "" .
+  eq #unparseQids(Q)            = #unparseQid(Q) .
+  eq #unparseQids(NeQL ; NeQL') = #unparseQids(NeQL) + ";" + #unparseQids(NeQL') .
 endfm
 
 
@@ -63,33 +47,44 @@ endfm
 --- substitution. The operator `_<<_` is lifted over module templates.
 
 
+load cterm.maude
+
 fmod MODULE-TEMPLATE is
-  protecting STRUCTURED-SORTS .
+  protecting STRUCTURED-QID .
   protecting META-LEVEL .
+  protecting CTERM-SET .
 
   sorts SortTemplate ModuleTemplate .
   subsort SortTemplate < ModuleTemplate .
 
   vars MT MT' : ModuleTemplate . var Q : Qid . vars SU SU' : Substitution . var SUBSTS : SubstitutionSet .
-  var H : Header . var IL : ImportList . vars SS SS' : SortSet . vars SSDS SSDS' : SubsortDeclSet .
+  var H : Header . var IL : ImportList . var S : Sort . vars SS SS' : SortSet . vars SSDS SSDS' : SubsortDeclSet .
   vars OPDS OPDS' : OpDeclSet . var MAS : MembAxSet . var EQS : EquationSet . var RLS : RuleSet .
+  var TL : TypeList . var T : Type . var AS : AttrSet .
 
   op sorts_._ : SortSet SubsortDeclSet -> SortTemplate [format(d d d n d)] .
   op __ : SortTemplate OpDeclSet -> ModuleTemplate [right id: none format(d ni d)] .
   ----------------------------------------------------------------------------------
 
+  op downSortsError?    : -> [SortSet] .
+  op downSubsortsError? : -> [SubsortDeclSet] .
+  op downAttrSetError? : -> [AttrSet] .
   op downOpSetError? : -> [OpDeclSet] .
+  op svar    : Qid -> Sort .
+  op ssetvar : Qid -> SortSet .
+  op subsvar : Qid -> SubsortDeclSet .
+  op attrsetvar : Qid -> AttrSet .
   op opsetvar : Qid -> OpDeclSet .
   --------------------------------
-  ceq opsetvar(Q) = OPDS if OPDS := downTerm(qid(string(Q) + ":OpDeclSet"), downOpSetError?) .
-
-  op ##MTCTX## : -> ModuleTemplate .
-  ----------------------------------
-  eq ##MTCTX## = sorts ssetvar('##MTCTXSORT##) . subsvar('##MTCTXSUBSORT##) opsetvar('##MTCTXOPSET##) .
+  ceq svar(Q)       = S    if S    := downTerm(qid(string(Q) + ":Sort"),           downSortsError?) .
+  ceq ssetvar(Q)    = SS   if SS   := downTerm(qid(string(Q) + ":SortSet"),        downSortsError?) .
+  ceq subsvar(Q)    = SSDS if SSDS := downTerm(qid(string(Q) + ":SubsortDeclSet"), downSubsortsError?) .
+  ceq attrsetvar(Q) = AS   if AS   := downTerm(qid(string(Q) + ":AttrSet"),        downAttrSetError?) .
+  ceq opsetvar(Q)   = OPDS if OPDS := downTerm(qid(string(Q) + ":OpDeclSet"),      downOpSetError?) .
 
   op match_with_ : ModuleTemplate ModuleTemplate -> [SubstitutionSet] .
   ---------------------------------------------------------------------
-  ceq match MT with MT' = SUBSTS if SUBSTS := #subsumesWith(upModule('MODULE-TEMPLATE, true), upTerm(MT ++ ##MTCTX##), upTerm(MT')) .
+  ceq match MT with MT' = SUBSTS if SUBSTS := #subsumesWith(upModule('MODULE-TEMPLATE, true), upTerm(#varExtendTemplate(MT)), upTerm(MT')) .
 
   op _++_ : ModuleTemplate ModuleTemplate -> ModuleTemplate [assoc comm] .
   ------------------------------------------------------------------------
@@ -108,6 +103,18 @@ fmod MODULE-TEMPLATE is
   ceq MT << SU                  = MT' if MT' := downTerm(upTerm(MT) << SU, moduleTemplateError?) .
   eq  MT << empty               = sorts none . none .
   eq  MT << (SU | SU' | SUBSTS) = (MT << SU) ++ (MT << SU') ++ (MT << SUBSTS) .
+
+  op #varExtendTemplate : ModuleTemplate -> ModuleTemplate .
+  ----------------------------------------------------------
+  eq #varExtendTemplate(sorts SS . SSDS OPDS) = ( sorts SS ; ssetvar('##MTMTXSORTS##) .
+                                                  SSDS subsvar('##MTCTXSUBSORT##)
+                                                  (#varExtendOpDecls(OPDS) opsetvar('##MTCTXOPSET##))
+                                                ) .
+
+  op #varExtendOpDecls : OpDeclSet -> OpDeclSet .
+  -----------------------------------------------
+  eq #varExtendOpDecls(none) = none .
+  eq #varExtendOpDecls(op Q : TL -> T [AS] .) = (op Q : TL -> T [AS attrsetvar('##MTCTXATTRSET##)] .) .
 
   op #mkTemplate : Module -> [ModuleTemplate] .
   ---------------------------------------------
@@ -134,7 +141,7 @@ fmod MODULE-EXPRESSION is
 
   var ME : ModuleExpression . var MC : ModuleConstruction . vars FC FC' : FreeConstruction .
   var SUBSTS : SubstitutionSet . var MOD : Module . vars MT MT' : ModuleTemplate .
-  vars S NeS : Sort . var Nil : Qid .
+  vars S NeS : Sort . vars Op Nil : Qid . var AS : AttrSet .
 
   op #upModule : ModuleConstruction -> Module [memo] .
   ----------------------------------------------------
@@ -166,27 +173,46 @@ fmod MODULE-EXPRESSION is
 
   op covariant-data : Sort -> FreeConstruction .
   ----------------------------------------------
-  ceq covariant-data(S) =   forall ( sorts svar('X) .
-                                     none
-                                   )
-                            exists ( sorts S < svar('X) > ; NeS < svar('X) > .
-                                     subsort       svar('X)   < NeS < svar('X) > .
-                                     subsort NeS < svar('X) > <   S < svar('X) > .
-                                     --- op qid("." + string(S) + "{" + string(svar('X)) + "}") : nil -> S < svar('X) > [ctor] .
-                                   )
-                          ; forall ( sorts svar('X) ; S < svar('X) > ; NeS < svar('X) >
-                                         ; svar('Y) ; S < svar('Y) > ; NeS < svar('Y) > .
-                                     subsort svar('X) < svar('Y) .
-                                   )
-                            exists ( sorts none .
-                                     subsort   S < svar('X) > <   S < svar('Y) > .
-                                     subsort NeS < svar('X) > < NeS < svar('Y) > .
-                                   )
-                        if NeS := qid("Ne" + string(S)) .
+  ceq covariant-data(S) = ( forall sorts svar('X) .
+                                   none
+                            exists sorts S < svar('X) > ; NeS < svar('X) > .
+                                   subsort       svar('X)   < NeS < svar('X) > .
+                                   subsort NeS < svar('X) > <   S < svar('X) > .
+                                   --- op Nil < svar('X) > : nil -> S < svar('X) > [ctor] .
+                          ; forall sorts svar('X) ; S < svar('X) > ; NeS < svar('X) >
+                                       ; svar('Y) ; S < svar('Y) > ; NeS < svar('Y) > .
+                                   subsort svar('X) < svar('Y) .
+                            exists sorts none .
+                                   subsort   S < svar('X) > <   S < svar('Y) > .
+                                   subsort NeS < svar('X) > < NeS < svar('Y) > .
+                          )
+                        if NeS := qid("Ne" + string(S))
+                        /\ Nil := qid("." + string(S)) .
+
+  var Q : Qid .
+  op const : Qid Sort -> Term .
+  -----------------------------
+  eq const(Q, S) = qid(string(Q) + "." + string(S)) .
+
+  op covariant-data-with-binops : Sort Qid AttrSet -> FreeConstruction .
+  ----------------------------------------------------------------------
+  ceq covariant-data-with-binops(S, Op, AS) = ( covariant-data(S)
+                                              ; forall sorts svar('X) ; S < svar('X) > ; NeS < svar('X) > .
+                                                       subsort       svar('X)   < NeS < svar('X) > .
+                                                       subsort NeS < svar('X) > <   S < svar('X) > .
+                                                exists sorts none .
+                                                       none
+                                                       ( op Nil < svar('X) > : nil -> S < svar('X) > [ctor] .
+                                                         op Op :   S < svar('X) > S < svar('X) > ->   S < svar('X) > [ctor id(const(Nil < svar('X) >, S < svar('X) >)) AS] .
+                                                         op Op : NeS < svar('X) > S < svar('X) > -> NeS < svar('X) > [ctor id(const(Nil < svar('X) >, S < svar('X) >)) AS] .
+                                                       )
+                                              )
+                                            if NeS := qid("Ne" + string(S))
+                                            /\ Nil := qid("." + string(S)) .
 
   ops List Set : -> FreeConstruction .
   ------------------------------------
   eq List = covariant-data('List) .
-  eq Set  = covariant-data('Set) .
+  eq Set  = covariant-data-with-binops('Set, '_;_, assoc comm) .
 endfm
 
