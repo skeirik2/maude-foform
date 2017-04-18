@@ -1,130 +1,276 @@
-Structured Sorts
+Module Templates
 ================
 
-First we need structured sorts (sorts that have meaning in how they're built).
-Maude's built-in structured sorts (eg. `List{X}`) don't have enough flexibility.
-For example, they can't handle multiple levels of nesting (eg. `List{Set{X}}`).
-
-This module still needs `#parseSort` so that it can go from the unstructured
-sorts of Maude to these structured sorts.
-
-Eventually we should remove the dependency on `cterm` by moving `#subsumesWith`
-and `#subsumesXWith` away from that module.
+First, we'll need a way to generate variables at the object level because
+writing all our syntax at the meta-level can be a pain. Additionally, we'll need
+a way to have "structured" sort names and operator names. For this, a few
+constructors are provided.
 
 ```{.maude .module-exp}
 fmod STRUCTURED-QID is
   extending META-LEVEL .
 
-  var Q : Qid . var V : Variable . var QL : QidList . vars NeQL NeQL' : NeQidList . 
+  var Q : Qid . var S : Sort . var SS : SortSet . var SSDS : SubsortDeclSet . var AS : AttrSet .
+  var OPDS : OpDeclSet . var MAS : MembAxSet . var EQS : EquationSet . var RLS : RuleSet .
 
-  op _<_> : Qid QidList -> Qid [prec 23] .
-  ----------------------------------------
+  op _<_> : Qid  TypeList -> Qid  [prec 23] .
+  op _<_> : Sort TypeList -> Sort [prec 23] .
+  op var : Qid Sort -> Variable .
+  op _._ : Qid Sort -> Constant [prec 24] .
+  -----------------------------------------
 
-  op #unparseQid : Qid -> String .
-  --------------------------------
-  eq  #unparseQid(Q < QL >) = #unparseQid(Q) + "{" + #unparseQids(QL) + "}" .
-  ceq #unparseQid(Q)        = string(V) if V := upTerm(Q) .
-  eq  #unparseQid(Q)        = string(Q) [owise] .
-
-  op #unparseQids : QidList -> String .
-  -------------------------------------
-  eq #unparseQids(none)         = "" .
-  eq #unparseQids(Q)            = #unparseQid(Q) .
-  eq #unparseQids(NeQL ; NeQL') = #unparseQids(NeQL) + ";" + #unparseQids(NeQL') .
+  op downSortsError?     : -> [SortSet] .
+  op downSubsortsError?  : -> [SubsortDeclSet] .
+  op downAttrSetError?   : -> [AttrSet] .
+  op downOpSetError?     : -> [OpDeclSet] .
+  op downMembAxSetError? : -> [MembAxSet] .
+  op downEqSetError?     : -> [EquationSet] .
+  op downRuleSetError?   : -> [RuleSet] .
+  op svar         : Qid -> Sort .
+  op ssetvar      : Qid -> SortSet .
+  op subsvar      : Qid -> SubsortDeclSet .
+  op attrsetvar   : Qid -> AttrSet .
+  op opsetvar     : Qid -> OpDeclSet .
+  op membaxsetvar : Qid -> MembAxSet .
+  op eqsetvar     : Qid -> EquationSet .
+  op rulesetvar   : Qid -> RuleSet .
+  ----------------------------------
+  ceq svar(Q)         = S    if S    := downTerm(qid(string(Q) + ":Sort"),           downSortsError?) .
+  ceq ssetvar(Q)      = SS   if SS   := downTerm(qid(string(Q) + ":SortSet"),        downSortsError?) .
+  ceq subsvar(Q)      = SSDS if SSDS := downTerm(qid(string(Q) + ":SubsortDeclSet"), downSubsortsError?) .
+  ceq attrsetvar(Q)   = AS   if AS   := downTerm(qid(string(Q) + ":AttrSet"),        downAttrSetError?) .
+  ceq opsetvar(Q)     = OPDS if OPDS := downTerm(qid(string(Q) + ":OpDeclSet"),      downOpSetError?) .
+  ceq membaxsetvar(Q) = MAS  if MAS  := downTerm(qid(string(Q) + ":MembAxSet"),      downMembAxSetError?) .
+  ceq eqsetvar(Q)     = EQS  if EQS  := downTerm(qid(string(Q) + ":EquationSet"),    downEqSetError?) .
+  ceq rulesetvar(Q)   = RLS  if RLS  := downTerm(qid(string(Q) + ":RuleSet"),        downRuleSetError?) .
 endfm
 ```
 
-Module Templates
-================
+Module templates serve as more flexible module data-structures than what the
+`META-LEVEL` provides for modules. The main functionality exported is:
 
-Module templates serve as "anonymous views". If the template matches, then the
-substitutions generated serve as the `view` from the template to the module. The
-`match_with_` function is provided, which will extend a module template in the
-appropriate ways to match as generally as possible (a sort of custom "matching
-with extension").
+-   `match_with_ : ModuleTemplate ModuleTemplate -> SubstitutionSet` will extend
+    the first module template by padding it with variables in all the "sensible"
+    places, then call `metaMatch` on the result to the second module. This
+    achieves "matching with extension" over module templates.
 
-Instantiation of a module template is done the same way as variable
-substitution. The operator `_<<_` is lifted over module templates.
+-   `asTemplate : Module -> ModuleTemplate` and
+    `fromTemplate : ModuleTemplate -> Module` provide functions between the
+    normal Maude modules and the module templates defined here.
+
+-   `_++_ : ModuleTemplate ModuleTemplate -> ModuleTemplate` and
+    `_++_ : Module ModuleTemplate -> Module` will respectively union together
+    two module templates and add the data in a module template into a module.
+
+-   `_<<_ : ModuleTemplate SubstitutionSet -> ModuleTemplate`: This will apply
+    each substitution to the module template and union together the resulting
+    module templates.
 
 ```{.maude .module-exp}
 load cterm.maude
 
 fmod MODULE-TEMPLATE is
   protecting STRUCTURED-QID .
-  protecting META-LEVEL .
   protecting CTERM-SET .
 
-  sorts SortTemplate ModuleTemplate .
-  subsort SortTemplate < ModuleTemplate .
+  sorts SortTemplate SubsortTemplate OpTemplate MembAxTemplate EqTemplate RuleTemplate ModuleTemplate .
+  subsort SortTemplate < SubsortTemplate < OpTemplate < MembAxTemplate < EqTemplate < RuleTemplate < ModuleTemplate .
 
-  vars MT MT' : ModuleTemplate . var Q : Qid . vars SU SU' : Substitution . var SUBSTS : SubstitutionSet .
+  var MOD : Module . var Q : Qid .
+  vars MT MT' : ModuleTemplate . vars SU SU' : Substitution . var SUBSTS : SubstitutionSet .
   var H : Header . var IL : ImportList . var S : Sort . vars SS SS' : SortSet . vars SSDS SSDS' : SubsortDeclSet .
-  vars OPDS OPDS' : OpDeclSet . var MAS : MembAxSet . var EQS : EquationSet . var RLS : RuleSet .
-  var TL : TypeList . var T : Type . var AS : AttrSet .
+  vars OPDS OPDS' : OpDeclSet . vars MAS MAS' : MembAxSet . vars EQS EQS' : EquationSet . vars RLS RLS' : RuleSet .
+  var TL : TypeList . var TYPE : Type . vars T T' : Term . var AS : AttrSet . var EQC : EqCondition . var C : Condition .
 
-  op sorts_._ : SortSet SubsortDeclSet -> SortTemplate [format(d d d n d)] .
-  op __ : SortTemplate OpDeclSet -> ModuleTemplate [right id: none format(d ni d)] .
-  ----------------------------------------------------------------------------------
-
-  op downSortsError?    : -> [SortSet] .
-  op downSubsortsError? : -> [SubsortDeclSet] .
-  op downAttrSetError? : -> [AttrSet] .
-  op downOpSetError? : -> [OpDeclSet] .
-  op svar    : Qid -> Sort .
-  op ssetvar : Qid -> SortSet .
-  op subsvar : Qid -> SubsortDeclSet .
-  op attrsetvar : Qid -> AttrSet .
-  op opsetvar : Qid -> OpDeclSet .
-  --------------------------------
-  ceq svar(Q)       = S    if S    := downTerm(qid(string(Q) + ":Sort"),           downSortsError?) .
-  ceq ssetvar(Q)    = SS   if SS   := downTerm(qid(string(Q) + ":SortSet"),        downSortsError?) .
-  ceq subsvar(Q)    = SSDS if SSDS := downTerm(qid(string(Q) + ":SubsortDeclSet"), downSubsortsError?) .
-  ceq attrsetvar(Q) = AS   if AS   := downTerm(qid(string(Q) + ":AttrSet"),        downAttrSetError?) .
-  ceq opsetvar(Q)   = OPDS if OPDS := downTerm(qid(string(Q) + ":OpDeclSet"),      downOpSetError?) .
+  op (sorts_.) : SortSet -> SortTemplate [format(d d d d) prec 60] .
+  op __ : SortTemplate    SubsortDeclSet -> SubsortTemplate [right id: none format(d ni d) prec 61] .
+  op __ : SubsortTemplate OpDeclSet      -> OpTemplate      [right id: none format(d ni d) prec 62] .
+  op __ : OpTemplate      MembAxSet      -> MembAxTemplate  [right id: none format(d ni d) prec 63] .
+  op __ : MembAxTemplate  EquationSet    -> EqTemplate      [right id: none format(d ni d) prec 64] .
+  op __ : EqTemplate      RuleSet        -> RuleTemplate    [right id: none format(d ni d) prec 65] .
+  ---------------------------------------------------------------------------------------------------
 
   op match_with_ : ModuleTemplate ModuleTemplate -> [SubstitutionSet] .
   ---------------------------------------------------------------------
   ceq match MT with MT' = SUBSTS if SUBSTS := #subsumesWith(upModule('MODULE-TEMPLATE, true), upTerm(#varExtendTemplate(MT)), upTerm(MT')) .
 
+  op asTemplate : Module -> [ModuleTemplate] .
+  --------------------------------------------
+  eq asTemplate(fmod H is IL sorts SS . SSDS OPDS MAS EQS     endfm) = sorts SS . SSDS OPDS MAS EQS .
+  eq asTemplate( mod H is IL sorts SS . SSDS OPDS MAS EQS RLS endm)  = sorts SS . SSDS OPDS MAS EQS RLS .
+
+  op fromTemplate : Header ImportList ModuleTemplate -> Module .
+  --------------------------------------------------------------
+  eq fromTemplate(H, IL, (sorts SS . SSDS OPDS MAS EQS))     = (fmod H is IL sorts SS . SSDS OPDS MAS EQS     endfm) .
+  eq fromTemplate(H, IL, (sorts SS . SSDS OPDS MAS EQS RLS)) = (mod  H is IL sorts SS . SSDS OPDS MAS EQS RLS endm) .
+
   op _++_ : ModuleTemplate ModuleTemplate -> ModuleTemplate [assoc comm] .
   ------------------------------------------------------------------------
-  eq (sorts SS . SSDS OPDS) ++ (sorts SS' . SSDS' OPDS') = sorts SS ; SS' . SSDS SSDS' (OPDS OPDS') .
+  eq (sorts SS . SSDS OPDS MAS EQS RLS) ++ (sorts SS' . SSDS' OPDS' MAS' EQS' RLS')
+   = (sorts SS ; SS' .) (SSDS SSDS') (OPDS OPDS') (MAS MAS') (EQS EQS') (RLS RLS') .
 
-  op _++_ : Module ModuleTemplate -> [Module] .
-  ---------------------------------------------
-  eq (fmod H is IL sorts SS .       SSDS       OPDS       MAS EQS     endfm) ++ (sorts SS' . SSDS' OPDS')
-   = (fmod H is IL sorts SS ; SS' . SSDS SSDS' OPDS OPDS' MAS EQS     endfm) .
-  eq (mod  H is IL sorts SS .       SSDS       OPDS       MAS EQS RLS endm)  ++ (sorts SS' . SSDS' OPDS')
-   = (mod  H is IL sorts SS ; SS' . SSDS SSDS' OPDS OPDS' MAS EQS RLS endm) .
+  op _++_ : Module ModuleTemplate -> Module .
+  -------------------------------------------
+  eq MOD ++ MT = fromTemplate(getName(MOD), getImports(MOD), asTemplate(MOD) ++ MT) .
 
   op moduleTemplateError? : -> [ModuleTemplate] .
   op _<<_ : ModuleTemplate SubstitutionSet -> ModuleTemplate .
   ------------------------------------------------------------
   ceq MT << SU                  = MT' if MT' := downTerm(upTerm(MT) << SU, moduleTemplateError?) .
-  eq  MT << empty               = sorts none . none .
+  eq  MT << empty               = (sorts none .) .
   eq  MT << (SU | SU' | SUBSTS) = (MT << SU) ++ (MT << SU') ++ (MT << SUBSTS) .
 
   op #varExtendTemplate : ModuleTemplate -> ModuleTemplate .
   ----------------------------------------------------------
-  eq #varExtendTemplate(sorts SS . SSDS OPDS) = ( sorts SS ; ssetvar('##MTMTXSORTS##) .
-                                                  SSDS subsvar('##MTCTXSUBSORT##)
-                                                  (#varExtendOpDecls(OPDS) opsetvar('##MTCTXOPSET##))
-                                                ) .
+  eq #varExtendTemplate(sorts SS . SSDS OPDS MAS EQS RLS) = ( (sorts SS ;              ssetvar('##MTMTXSORTS##) .)
+                                                              (SSDS                    subsvar('##MTCTXSUBSORT##))
+                                                              (#varExtendOpDecls(OPDS) opsetvar('##MTCTXOPSET##))
+                                                              (#varExtendMembAxs(MAS)  membaxsetvar('##MTCTXMEMBAXSET##))
+                                                              (#varExtendEqs(EQS)      eqsetvar('##MTCTXEQSET##))
+                                                              (#varExtendRules(RLS)    rulesetvar('##MTCTXRULESET##))
+                                                            ) .
 
-  op #varExtendOpDecls : OpDeclSet -> OpDeclSet .
-  -----------------------------------------------
+  --- TODO: All of these variables need to be made actually fresh.
+  --- This doesn't work as soon as we have more than one membership axiom.
+
+  op #varExtendOpDecls : OpDeclSet -> [OpDeclSet] .
+  -------------------------------------------------
   eq #varExtendOpDecls(none) = none .
-  eq #varExtendOpDecls(op Q : TL -> T [AS] .) = (op Q : TL -> T [AS attrsetvar('##MTCTXATTRSET##)] .) .
+  eq #varExtendOpDecls(op Q : TL -> TYPE [AS] .) = (op Q : TL -> TYPE [AS attrsetvar('##MTCTXATTRSET##)] .) .
 
-  op #mkTemplate : Module -> [ModuleTemplate] .
-  ---------------------------------------------
-  eq #mkTemplate(fmod H is IL sorts SS . SSDS OPDS MAS EQS     endfm) = sorts SS . SSDS OPDS .
-  eq #mkTemplate(mod  H is IL sorts SS . SSDS OPDS MAS EQS RLS endm)  = sorts SS . SSDS OPDS .
+  op #varExtendMembAxs : MembAxSet -> [MembAxSet] .
+  -------------------------------------------------
+  eq #varExtendMembAxs(none) = none .
+  eq #varExtendMembAxs( mb T : S        [AS] .) = ( mb T : S        [AS attrsetvar('##MTCTXATTRSET##)] .) .
+  eq #varExtendMembAxs(cmb T : S if EQC [AS] .) = (cmb T : S if EQC [AS attrsetvar('##MTCTXATTRSET##)] .) .
+
+  op #varExtendEqs : EquationSet -> [EquationSet] .
+  -------------------------------------------------
+  eq #varExtendEqs(none) = none .
+  eq #varExtendEqs( eq T = T'        [AS] .) = ( eq T = T'        [AS attrsetvar('##MTCTXATTRSE##)] .) .
+  eq #varExtendEqs(ceq T = T' if EQC [AS] .) = (ceq T = T' if EQC [AS attrsetvar('##MTCTXATTRSE##)] .) .
+
+  op #varExtendRules : RuleSet -> [RuleSet] .
+  -------------------------------------------
+  eq #varExtendRules(none) = none .
+  eq #varExtendRules( rl T => T'      [AS] .) = ( rl T => T'      [AS attrsetvar('##MTCTXATTRSE##)] .) .
+  eq #varExtendRules(crl T => T' if C [AS] .) = (crl T => T' if C [AS attrsetvar('##MTCTXATTRSE##)] .) .
 endfm
 ```
 
-Module Expressions
+Free Constructions
 ==================
+
+Free constructions are a pair of a theory `FTH` and a parametized module
+`FMOD{X :: FTH}` such that deciding if some module `MOD` has a view from `FTH`
+can be done purely with matching. If so, then the resulting substitution is used
+to instantiate `FMOD{X :: FTH}`, and the resulting module is
+`MOD + FMOD{X :: FTH}`. For this, we'll heavily use the machinery of
+`MODULE-TEMPLATE`.
+
+```{.maude .module-exp}
+fmod FREE-CONSTRUCTION is
+  protecting MODULE-TEMPLATE .
+
+  sort FreeConstruction .
+
+  var SUBSTS : SubstitutionSet . var MOD : Module . vars MT MT' : ModuleTemplate .
+  vars S NeS : Sort . vars Op Nil : Qid . var AS : AttrSet .
+
+  op _;_ : FreeConstruction FreeConstruction -> FreeConstruction [ctor assoc prec 110 format(d n d d)] .
+  ------------------------------------------------------------------------------------------------------
+
+  op forall_exists_ : ModuleTemplate ModuleTemplate -> FreeConstruction [ctor prec 100 format(d n++i n ni-- d)] .
+  ---------------------------------------------------------------------------------------------------------------
+```
+
+Covariant Data
+--------------
+
+Covariant data are data-structures that follow the normal
+`subsorts X < NeData{X} < Data{X} .` pattern. The free construction
+`covariant-data` will build the sort-structure for you.
+
+```{.maude .module-exp}
+  op covariant-data : Sort -> FreeConstruction .
+  ----------------------------------------------
+  ceq covariant-data(S) = ( forall sorts svar('X) .
+                            exists ( sorts S < svar('X) > ; NeS < svar('X) > . )
+                                   ( subsort       svar('X)   < NeS < svar('X) > .
+                                     subsort NeS < svar('X) > <   S < svar('X) > .
+                                   )
+                                   op Nil : nil -> S < svar('X) > [ctor] .
+                          ; forall ( sorts svar('X) ; S < svar('X) > ; NeS < svar('X) >
+                                         ; svar('Y) ; S < svar('Y) > ; NeS < svar('Y) > .
+                                   )
+                                   ( subsort svar('X) < svar('Y) . )
+                            exists ( sorts none . )
+                                   ( subsort   S < svar('X) > <   S < svar('Y) > .
+                                     subsort NeS < svar('X) > < NeS < svar('Y) > .
+                                   )
+                          )
+                        if NeS := qid("Ne" + string(S))
+                        /\ Nil := qid("." + string(S)) < svar('X) > .
+
+  op covariant-data-with-binops : Sort Qid AttrSet -> FreeConstruction .
+  ----------------------------------------------------------------------
+  ceq covariant-data-with-binops(S, Op, AS) = ( covariant-data(S)
+                                              ; forall ( sorts svar('X) ; S < svar('X) > ; NeS < svar('X) > . )
+                                                       ( subsort       svar('X)   < NeS < svar('X) > .
+                                                         subsort NeS < svar('X) > <   S < svar('X) > .
+                                                       )
+                                                exists ( sorts none . )
+                                                       ( op Op :   S < svar('X) > S < svar('X) > ->   S < svar('X) > [ctor id(Nil . S < svar('X) >) AS] .
+                                                         op Op : NeS < svar('X) > S < svar('X) > -> NeS < svar('X) > [ctor id(Nil . S < svar('X) >) AS] .
+                                                       )
+                                              )
+                                            if NeS := qid("Ne" + string(S))
+                                            /\ Nil := qid("."  + string(S)) < svar('X) > .
+```
+
+The free constructions for data-types `List` and `Set` are provided here.
+
+```{.maude .module-exp}
+  ops List Set : -> FreeConstruction .
+  ------------------------------------
+  ceq List = ( covariant-data('List)
+             ; forall ( sorts svar('X) ; 'NeList < svar('X) > ; 'List < svar('X) > . )
+                      ( subsort           svar('X)   < 'NeList < svar('X) > .
+                        subsort 'NeList < svar('X) > <   'List < svar('X) > .
+                      )
+                      ( op Nil : nil -> 'List < svar('X) > [ctor] . )
+               exists ( sorts none . )
+                      ( op '_`,_ : 'List < svar('X) >   'List < svar('X) > ->   'List < svar('X) > [ctor assoc id(Nil . 'List < svar('X) >)] .
+                        op '_`,_ : 'List < svar('X) > 'NeList < svar('X) > -> 'NeList < svar('X) > [ctor assoc id(Nil . 'List < svar('X) >)] .
+                      )
+             )
+           if Nil := '.List < svar('X) > .
+
+  ceq Set  = ( covariant-data('Set)
+             ; forall ( sorts svar('X) ; 'NeSet < svar('X) > ; 'Set < svar('X) > . )
+                      ( subsort           svar('X)  < 'NeSet < svar('X) > .
+                        subsort 'NeSet < svar('X) > <   'Set < svar('X) > .
+                      )
+                      ( op Nil : nil -> 'Set < svar('X) > [ctor] . )
+               exists ( sorts none . )
+                      ( op '_;_ : 'Set < svar('X) >   'Set < svar('X) > ->   'Set < svar('X) > [ctor assoc comm id(Nil . 'Set < svar('X) >)] .
+                        op '_;_ : 'Set < svar('X) > 'NeSet < svar('X) > -> 'NeSet < svar('X) > [ctor assoc comm id(Nil . 'Set < svar('X) >)] .
+                      )
+                      ( eq '_;_[var('NeS, 'NeSet < svar('X) >), var('NeS, 'NeSet < svar('X) >)] = var('NeS, 'NeSet < svar('X) >) [none] . )
+             )
+           if Nil := '.Set < svar('X) > .
+endfm
+```
+
+Meta Theory
+-----------
+
+Sometimes you want a "meta theory" specific to your module. For example, you may
+want to express using just a sort that a meta-level `Term` is a well-formed term
+in your theory, or that it is a well-formed term of a specific sort in your
+theory. This free construction will extend your module with its meta-theory, so
+that this can be done.
+
 
 This module simply provides the hookup to our extension of the Meta-Level module
 expressions. A memo-ised version of `upModule` is provided too for the
@@ -134,85 +280,25 @@ second module template to determine the associated parameterized module.
 
 ```{.maude .module-exp}
 fmod MODULE-EXPRESSION is
-  protecting MODULE-TEMPLATE .
+  protecting FREE-CONSTRUCTION .
 
-  sorts ModuleConstruction FreeConstruction .
+  sort ModuleConstruction .
   subsort ModuleExpression < ModuleConstruction .
 
-  var ME : ModuleExpression . var MC : ModuleConstruction . vars FC FC' : FreeConstruction .
-  var SUBSTS : SubstitutionSet . var MOD : Module . vars MT MT' : ModuleTemplate .
-  vars S NeS : Sort . vars Op Nil : Qid . var AS : AttrSet .
+  var MOD : Module . var ME : ModuleExpression . var SUBSTS : SubstitutionSet .
+  var MC : ModuleConstruction . vars FC FC' : FreeConstruction . vars MT MT' : ModuleTemplate .
 
   op #upModule : ModuleConstruction -> Module [memo] .
   ----------------------------------------------------
   eq #upModule(ME) = upModule(ME, true) .
 
-  op _;_ : FreeConstruction FreeConstruction -> FreeConstruction [ctor assoc prec 110 format(d n d d)] .
-  ------------------------------------------------------------------------------------------------------
-
-  op _deriving_ : ModuleConstruction FreeConstruction -> ModuleConstruction [ctor prec 120] .
-  op _deriving_ : Module FreeConstruction -> [Module] [ctor prec 120] .
-  ---------------------------------------------------------------------
+  op _deriving_ : ModuleConstruction FreeConstruction -> ModuleConstruction [prec 120] .
+  --------------------------------------------------------------------------------------
   eq #upModule((MC deriving FC)) = #upModule(MC) deriving FC .
-  eq MOD deriving (FC ; FC')     = (MOD deriving FC) deriving FC' .
 
-  op forall_exists_ : ModuleTemplate ModuleTemplate -> FreeConstruction [ctor prec 100 format(d n++i n ni-- d)] .
-  ---------------------------------------------------------------------------------------------------------------
-  ceq MOD deriving forall MT exists MT' = MOD ++ (MT' << SUBSTS) if SUBSTS := match MT with #mkTemplate(MOD) .
-```
-
-Covariant data are data-structures that follow the normal
-`subsorts X < NeData{X} < Data{X} .` pattern. The free construction
-`covariant-data` will build the sort-structure for you. The default
-data-structures for `List` and `Set` are provided.
-
-We'll need structured operator names (in addition to structured sort names)
-order to fully express these constructions. Perhaps this suggests "structured
-Qid" as a thing to build?
-
-```{.maude .module-exp}
-  op covariant-data : Sort -> FreeConstruction .
-  ----------------------------------------------
-  ceq covariant-data(S) = ( forall sorts svar('X) .
-                                   none
-                            exists sorts S < svar('X) > ; NeS < svar('X) > .
-                                   subsort       svar('X)   < NeS < svar('X) > .
-                                   subsort NeS < svar('X) > <   S < svar('X) > .
-                                   --- op Nil < svar('X) > : nil -> S < svar('X) > [ctor] .
-                          ; forall sorts svar('X) ; S < svar('X) > ; NeS < svar('X) >
-                                       ; svar('Y) ; S < svar('Y) > ; NeS < svar('Y) > .
-                                   subsort svar('X) < svar('Y) .
-                            exists sorts none .
-                                   subsort   S < svar('X) > <   S < svar('Y) > .
-                                   subsort NeS < svar('X) > < NeS < svar('Y) > .
-                          )
-                        if NeS := qid("Ne" + string(S))
-                        /\ Nil := qid("." + string(S)) .
-
-  var Q : Qid .
-  op const : Qid Sort -> Term .
-  -----------------------------
-  eq const(Q, S) = qid(string(Q) + "." + string(S)) .
-
-  op covariant-data-with-binops : Sort Qid AttrSet -> FreeConstruction .
-  ----------------------------------------------------------------------
-  ceq covariant-data-with-binops(S, Op, AS) = ( covariant-data(S)
-                                              ; forall sorts svar('X) ; S < svar('X) > ; NeS < svar('X) > .
-                                                       subsort       svar('X)   < NeS < svar('X) > .
-                                                       subsort NeS < svar('X) > <   S < svar('X) > .
-                                                exists sorts none .
-                                                       none
-                                                       ( op Nil < svar('X) > : nil -> S < svar('X) > [ctor] .
-                                                         op Op :   S < svar('X) > S < svar('X) > ->   S < svar('X) > [ctor id(const(Nil < svar('X) >, S < svar('X) >)) AS] .
-                                                         op Op : NeS < svar('X) > S < svar('X) > -> NeS < svar('X) > [ctor id(const(Nil < svar('X) >, S < svar('X) >)) AS] .
-                                                       )
-                                              )
-                                            if NeS := qid("Ne" + string(S))
-                                            /\ Nil := qid("." + string(S)) .
-
-  ops List Set : -> FreeConstruction .
-  ------------------------------------
-  eq List = covariant-data('List) .
-  eq Set  = covariant-data-with-binops('Set, '_;_, assoc comm) .
+  op _deriving_ : Module FreeConstruction -> [Module] [prec 120] .
+  ----------------------------------------------------------------
+  eq  MOD deriving (FC ; FC')           = (MOD deriving FC) deriving FC' .
+  ceq MOD deriving forall MT exists MT' = MOD ++ (MT' << SUBSTS) if SUBSTS := match MT with asTemplate(MOD) .
 endfm
 ```

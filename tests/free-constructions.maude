@@ -76,9 +76,15 @@ claim [ ( modules < .ModuleEnv >
                                     subsort ('NeList < 'A >) < ('List < 'A >) .
                                     subsort ('NeList < 'A >) < ('NeList < 'B >) .
                                     subsort ('NeList < 'B >) < ('List < 'B >) .
+                                    op '_`,_ : 'List < 'A > 'List < 'A > -> 'List < 'A > [assoc ctor id('.List < 'A > . 'List < 'A >)] .
+                                    op '_`,_ : 'List < 'A > 'NeList < 'A > -> 'NeList < 'A > [assoc ctor id('.List < 'A > . 'List < 'A >)] .
+                                    op '_`,_ : 'List < 'B > 'List < 'B > -> 'List < 'B > [assoc ctor id('.List < 'B > . 'List < 'B >)] .
+                                    op '_`,_ : 'List < 'B > 'NeList < 'B > -> 'NeList < 'B > [assoc ctor id('.List < 'B > . 'List < 'B >)] .
                                     op 'a : nil -> 'A [none] .
                                     op 'b : nil -> 'B [none] .
                                     op 'f : 'B  -> 'A [none] .
+                                    op '.List < 'A > : nil -> 'List < 'A > [ctor] .
+                                    op '.List < 'B > : nil -> 'List < 'B > [ctor] .
                                     none
                                     eq 'f['b.B] = 'a.A [none] .
                                     none
