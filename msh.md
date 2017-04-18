@@ -12,6 +12,8 @@ Analysis
 
 ```{.maude .msh}
 fmod ANALYSIS is
+  protecting BOOL .
+
   sorts NeAnalysis Analysis .
   subsort NeAnalysis < Analysis .
 
