@@ -119,12 +119,12 @@ fmod MODULE-TEMPLATE is
   sorts SortTemplate SubsortTemplate OpTemplate MembAxTemplate EqTemplate RuleTemplate ModuleTemplate .
   subsort SortTemplate < SubsortTemplate < OpTemplate < MembAxTemplate < EqTemplate < RuleTemplate < ModuleTemplate .
 
-  vars H H' : Header . var I : Import . vars IL IL' IL'' : ImportList . vars S S' : Sort . vars SS SS' : SortSet . vars SSDS SSDS' : SubsortDeclSet .
+  vars H H' : Header . vars I I' : Import . vars IL IL' IL'' : ImportList . vars S S' : Sort . vars SS SS' : SortSet . vars SSDS SSDS' : SubsortDeclSet .
   vars OPDS OPDS' : OpDeclSet . vars MAS MAS' : MembAxSet . vars EQS EQS' : EquationSet . vars RLS RLS' : RuleSet .
-  var AS : AttrSet . vars A A' : Attr . var EQC : EqCondition . var C : Condition . vars MT MT' : ModuleTemplate .
+  var AS : AttrSet . vars A A' : Attr . var EQC : EqCondition . vars C C' : Condition . vars MT MT' : ModuleTemplate .
   var MOD : Module . var Q : Qid . var TL : TypeList . var TYPE : Type . vars T T' : Term .
   vars SU SU' : Substitution . var SUBSTS : SubstitutionSet .
-  var ST : SortTemplate . var SST : SubsortTemplate . var MAT : MembAxTemplate . var EQT : EqTemplate . var RLT : RuleTemplate .
+  var ST : SortTemplate . var SST : SubsortTemplate . var OPT : OpTemplate . var MAT : MembAxTemplate . var EQT : EqTemplate . var RLT : RuleTemplate .
   vars NeTL NeTL' : NeTypeList .
   vars OP OP' : OpDecl . vars EQ EQ' : Equation . vars MB MB' : MembAx . vars RL RL' : Rule .
 
@@ -209,13 +209,13 @@ fmod MODULE-TEMPLATE is
 
   op #resolveNames : ModuleTemplate -> ModuleTemplate .
   -----------------------------------------------------
-  eq #resolveNames(sorts SS .) = (sorts #resolveSorts(SS) .) .
-  eq #resolveNames(ST  SSDS)   = #resolveNames(ST)   #resolveSubsorts(SSDS) .
-  eq #resolveNames(SST OPDS)   = #resolveNames(SST)  #resolveOps(OPDS) .
-  eq #resolveNames(SST MAS)    = #resolveNames(SST)  #resolveMemberships(MAS) .
-  eq #resolveNames(MAT EQS)    = #resolveNames(MAT)  #resolveEquations(EQS) .
-  eq #resolveNames(EQT RLS)    = #resolveNames(EQT)  #resolveRules(RLS) .
-  eq #resolveNames(IL RLT)     = #resolveImports(IL) #resolveNames(RLT) .
+  eq  #resolveNames(sorts SS .) = (sorts #resolveSorts(SS) .) .
+  ceq #resolveNames(ST   SSDS)  = #resolveNames(ST)   #resolveSubsorts(SSDS)   if not (SSDS == none) .
+  ceq #resolveNames(SST  OPDS)  = #resolveNames(SST)  #resolveOps(OPDS)        if not (OPDS == none) .
+  ceq #resolveNames(OPT  MAS)   = #resolveNames(OPT)  #resolveMemberships(MAS) if not (MAS  == none) .
+  ceq #resolveNames(MAT  EQS)   = #resolveNames(MAT)  #resolveEquations(EQS)   if not (EQS  == none) .
+  ceq #resolveNames(EQT  RLS)   = #resolveNames(EQT)  #resolveRules(RLS)       if not (RLS  == none) .
+  ceq #resolveNames(IL   RLT)   = #resolveImports(IL) #resolveNames(RLT)       if not (IL   == nil) .
 
   op #resolveSubsorts : SubsortDeclSet -> SubsortDeclSet .
   --------------------------------------------------------
@@ -231,9 +231,14 @@ fmod MODULE-TEMPLATE is
   eq #resolveAttrs(A A' AS) = #resolveAttrs(A) #resolveAttrs(A') #resolveAttrs(AS) .
   eq #resolveAttrs(A)       = A [owise] .
 
-  op #resolveEqCondition : EqCondition -> EqCondition .
   op #resolveCondition : Condition -> Condition .
   ----------------------------------------------
+  eq  #resolveCondition(nil) = nil .
+  eq  #resolveCondition(T = T')  = #resolveTerm(T) =  #resolveTerm(T') .
+  eq  #resolveCondition(T : S)   = #resolveTerm(T) :  #resolveSorts(S) .
+  eq  #resolveCondition(T := T') = #resolveTerm(T) := #resolveTerm(T') .
+  eq  #resolveCondition(T => T') = #resolveTerm(T) => #resolveTerm(T') .
+  ceq #resolveCondition(C /\ C') = #resolveCondition(C) /\ #resolveCondition(C') if not (C == nil or C' == nil) .
 
   op #resolveOps : OpDeclSet -> OpDeclSet .
   -----------------------------------------
@@ -246,14 +251,14 @@ fmod MODULE-TEMPLATE is
   eq #resolveMemberships(none) = none .
   eq #resolveMemberships(MB MB' MAS) = #resolveMemberships(MB) #resolveMemberships(MB') #resolveMemberships(MAS) .
   eq #resolveMemberships( mb T : S        [AS] .) = ( mb #resolveTerm(T) : #resolveSorts(S)                           [#resolveAttrs(AS)] .) .
-  eq #resolveMemberships(cmb T : S if EQC [AS] .) = (cmb #resolveTerm(T) : #resolveSorts(S) if #resolveEqCondition(EQC) [#resolveAttrs(AS)] .) .
+  eq #resolveMemberships(cmb T : S if EQC [AS] .) = (cmb #resolveTerm(T) : #resolveSorts(S) if #resolveCondition(EQC) [#resolveAttrs(AS)] .) .
   
   op #resolveEquations : EquationSet -> EquationSet .
   ---------------------------------------------------
   eq #resolveEquations(none) = none .
   eq #resolveEquations(EQ EQ' EQS) = #resolveEquations(EQ) #resolveEquations(EQ') #resolveEquations(EQS) .
-  eq #resolveEquations( eq T = T'        [AS] .) = ( eq #resolveTerm(T) = #resolveTerm(T')                             [#resolveAttrs(AS)] .) .
-  eq #resolveEquations(ceq T = T' if EQC [AS] .) = (ceq #resolveTerm(T) = #resolveTerm(T') if #resolveEqCondition(EQC) [#resolveAttrs(AS)] .) .
+  eq #resolveEquations( eq T = T'        [AS] .) = ( eq #resolveTerm(T) = #resolveTerm(T')                           [#resolveAttrs(AS)] .) .
+  eq #resolveEquations(ceq T = T' if EQC [AS] .) = (ceq #resolveTerm(T) = #resolveTerm(T') if #resolveCondition(EQC) [#resolveAttrs(AS)] .) .
 
   op #resolveRules : RuleSet -> RuleSet .
   ---------------------------------------
@@ -266,8 +271,8 @@ fmod MODULE-TEMPLATE is
   -----------------------------------------------
   eq #resolveImports(nil) = nil .
   eq #resolveImports(I IL I IL')       = #resolveImports(I IL IL') .
-  eq #resolveImports(IL I IL' I)       = #resolveImports(IL I IL') .
-  eq #resolveImports(IL I IL' I IL'')  = #resolveImports(IL I IL' IL'') .
+  eq #resolveImports(I)                = I .
+  eq #resolveImports(I I' IL)          = I #resolveImports(I' IL) [owise] .
 endfm
 
 
@@ -341,7 +346,7 @@ fmod FREE-CONSTRUCTION is
                                                   )
                                          )
                                        if NeS := qid("Ne" + string(S))
-                                       /\ Nil := qid("." + string(S)) < svar('X) > .
+                                       /\ Nil := qid("." + string(S)) .
 
 
 --- The free constructions for data-types `LIST` and `SET` are provided here.
@@ -370,23 +375,27 @@ fmod FREE-CONSTRUCTION is
 
   vars SMOD SMODX : Sort . vars T TMOD TMODX : Term . var CMOD : Constant .
 
-  op MetaTerms : -> ModFreeConstruction .
-  ---------------------------------------
-  ceq MetaTerms < Q > = forall ( sorts svar('X) . )
-                        exists ( extending 'META-LEVEL . )
-                               ( sorts SMOD ; SMODX . )
-                               ( subsort SMOD < 'Term .
-                                 subsort SMODX < SMOD .
-                               )
-                               ( cmb T    : SMOD  if 'true.Bool = 'wellFormed['upModule[CMOD, 'true.Bool], T] [none] .
-                                 cmb TMOD : SMODX if 'true.Bool = 'sortLeq['upModule[CMOD, 'true.Bool], 'leastSort['upModule[CMOD, 'true.Bool], TMOD], svar('X) . 'Sort] [none] .
-                               )
-                      if CMOD  := Q . 'Qid
-                      /\ SMOD  := 'Term < Q >
-                      /\ SMODX := 'Term < Q svar('X) >
-                      /\ T     := var('T, 'Term)
-                      /\ TMOD  := var( 'T < SMOD >,  SMOD)
-                      /\ TMODX := var('TM < SMODX >, SMODX) .
+  op META-THEORY : -> ModFreeConstruction .
+  ----------------------------------------
+  ceq META-THEORY < Q > =   forall ( sorts svar('X) . )
+                            exists ( extending 'META-LEVEL . )
+                                   ( sorts SMOD ; SMODX . )
+                                   ( subsort SMOD < 'Term .
+                                     subsort SMODX < SMOD .
+                                   )
+                                   ( cmb T    : SMOD  if 'true.Bool = 'wellFormed['upModule[CMOD, 'true.Bool], T] [none] .
+                                     cmb TMOD : SMODX if 'true.Bool = 'sortLeq['upModule[CMOD, 'true.Bool], 'leastSort['upModule[CMOD, 'true.Bool], TMOD], svar('X) . 'Sort] [none] .
+                                   )
+                          ; forall ( sorts svar('X) ; svar('Y) ; 'Term < Q svar('X) > ; 'Term < Q svar('Y) > . )
+                                   ( subsort svar('X) < svar('Y) . )
+                            exists ( sorts none . )
+                                   ( subsort 'Term < Q svar('X) > < 'Term < Q svar('Y) > . )
+                        if CMOD  := Q . 'Qid
+                        /\ SMOD  := 'Term < Q >
+                        /\ SMODX := 'Term < Q svar('X) >
+                        /\ T     := var('T, 'Term)
+                        /\ TMOD  := var( 'T < SMOD >,  SMOD)
+                        /\ TMODX := var('TM < SMODX >, SMODX) .
 endfm
 
 
