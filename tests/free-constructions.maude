@@ -153,3 +153,23 @@ claim [ ( modules < .ModuleEnv >
       ]
 
 .
+
+---reduce
+---
+---claim [ ( modules < .ModuleEnv >
+---          strategy < load-module('TEST-MODULE)
+---                   ; set-module('STATE, 'TEST-MODULE deriving SET)
+---                   ; reduce
+---                   >
+---          state < '_;_['a.A, 'a.A, 'b.B, 'b.B, 'f['b.B]] >
+---        )
+---
+---      reduces-to
+---
+---        ( modules < 'TEST-MODULE |-> 'TEST-MODULE 'STATE |-> ('TEST-MODULE deriving SET) >
+---          strategy < .Program >
+---          state < '_;_['a.A, 'b.B] >
+---        )
+---      ]
+---
+---.

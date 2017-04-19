@@ -57,16 +57,16 @@ fmod MODULE-DATABASE is
 
   sorts ModuleEnv Command{=>Modules} .
 
-  var Q : Qid . vars MC MC' : ModuleConstruction . var MENV : ModuleEnv .
+  var Q : Qid . vars ME ME' : ModuleExpression . var MENV : ModuleEnv .
 
   op .ModuleEnv : -> ModuleEnv .
-  op _|->_ : Qid ModuleConstruction -> ModuleEnv [ctor] .
+  op _|->_ : Qid ModuleExpression -> ModuleEnv [ctor] .
   op __ : ModuleEnv ModuleEnv -> ModuleEnv [ctor assoc comm id: .ModuleEnv prec 120 format(d n d)] .
   --------------------------------------------------------------------------------------------------
 
   op _[_] : Qid ModuleEnv -> Module .
   -----------------------------------
-  eq Q [ Q |-> MC MENV ] = #upModule(MC) .
+  eq Q [ Q |-> ME MENV ] = #upModule(ME) .
 
   op modules <_> : ModuleEnv -> NeAnalysis [ctor format(d d n n d)] .
   -------------------------------------------------------------------
@@ -82,10 +82,10 @@ fmod MODULE-DATABASE is
   --------------------------------------------
   eq load-module(Q) = set-module(Q, Q) .
 
-  op set-module : Qid ModuleConstruction -> Command{=>Modules} .
-  ---------------------------------------------------------------
-  eq set-module(Q, MC) [ Q |-> MC' MENV ] = Q |-> MC MENV .
-  eq set-module(Q, MC) [           MENV ] = Q |-> MC MENV [owise] .
+  op set-module : Qid ModuleExpression -> Command{=>Modules} .
+  ------------------------------------------------------------
+  eq set-module(Q, ME) [ Q |-> ME' MENV ] = Q |-> ME MENV .
+  eq set-module(Q, ME) [           MENV ] = Q |-> ME MENV [owise] .
 endfm
 
 
@@ -332,8 +332,8 @@ fmod MSH is
   eq strategy < CS ; P > state < CTermS >
    = strategy < P      > state < CS [ CTermS ] > .
 
-  eq strategy < CMS                     ; P > modules < MENV >
-   = strategy < CMS < 'STATE [ MENV ] > ; P > modules < MENV > .
+  eq strategy < CMS                                     ; P > modules < MENV >
+   = strategy < CMS < #resolveModule('STATE [ MENV ]) > ; P > modules < MENV > .
 
   eq strategy < CTS             ; P > trace < CTermST >
    = strategy < CTS < CTermST > ; P > trace < CTermST > .
@@ -343,7 +343,7 @@ fmod MSH is
   eq strategy < CT ; P > trace < CTermST >
    = strategy <      P > trace < CT [ CTermST ] > .
 
-  eq strategy < CMST                              ; P > modules < MENV > state < CTermS >
-   = strategy < CMST < 'TRACE [ MENV ] , CTermS > ; P > modules < MENV > state < CTermS > .
+  eq strategy < CMST                                              ; P > modules < MENV > state < CTermS >
+   = strategy < CMST < #resolveModule('TRACE [ MENV ]) , CTermS > ; P > modules < MENV > state < CTermS > .
 endfm
 
