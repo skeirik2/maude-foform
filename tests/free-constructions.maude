@@ -43,16 +43,16 @@ reduce
 
 claim [ ( modules < .ModuleEnv >
           strategy < load-module('TEST-MODULE)
-                   ; set-module('TEST-MODULE2, ('TEST-MODULE deriving List))
+                   ; set-module('TEST-MODULE-LIST, ('TEST-MODULE deriving LIST))
                    ; show-module('TEST-MODULE)
-                   ; show-module('TEST-MODULE2)
+                   ; show-module('TEST-MODULE-LIST)
                    >
           output < .Output >
         )
 
       reduces-to
 
-        ( modules < 'TEST-MODULE |-> 'TEST-MODULE 'TEST-MODULE2 |-> ('TEST-MODULE deriving List)>
+        ( modules < 'TEST-MODULE |-> 'TEST-MODULE 'TEST-MODULE-LIST |-> ('TEST-MODULE deriving LIST)>
           strategy < .Program >
           output <   show-module( fmod 'TEST-MODULE is
                                     nil
@@ -77,8 +77,8 @@ claim [ ( modules < .ModuleEnv >
                                     subsort ('NeList < 'A >) < ('NeList < 'B >) .
                                     subsort ('NeList < 'B >) < ('List < 'B >) .
                                     op '_`,_ : 'List < 'A > 'List < 'A > -> 'List < 'A > [assoc ctor id('.List < 'A > . 'List < 'A >)] .
-                                    op '_`,_ : 'List < 'A > 'NeList < 'A > -> 'NeList < 'A > [assoc ctor id('.List < 'A > . 'List < 'A >)] .
                                     op '_`,_ : 'List < 'B > 'List < 'B > -> 'List < 'B > [assoc ctor id('.List < 'B > . 'List < 'B >)] .
+                                    op '_`,_ : 'List < 'A > 'NeList < 'A > -> 'NeList < 'A > [assoc ctor id('.List < 'A > . 'List < 'A >)] .
                                     op '_`,_ : 'List < 'B > 'NeList < 'B > -> 'NeList < 'B > [assoc ctor id('.List < 'B > . 'List < 'B >)] .
                                     op 'a : nil -> 'A [none] .
                                     op 'b : nil -> 'B [none] .
@@ -88,6 +88,64 @@ claim [ ( modules < .ModuleEnv >
                                     none
                                     eq 'f['b.B] = 'a.A [none] .
                                     none
+                                  endfm
+                                )
+                 >
+        )
+      ]
+
+.
+
+reduce
+
+claim [ ( modules < .ModuleEnv >
+          strategy < load-module('TEST-MODULE)
+                   ; set-module('TEST-MODULE-SET, ('TEST-MODULE deriving SET))
+                   ; show-module('TEST-MODULE)
+                   ; show-module('TEST-MODULE-SET)
+                   >
+          output < .Output >
+        )
+
+      reduces-to
+
+        ( modules < 'TEST-MODULE |-> 'TEST-MODULE 'TEST-MODULE-SET |-> ('TEST-MODULE deriving SET)>
+          strategy < .Program >
+          output <   show-module( fmod 'TEST-MODULE is
+                                    nil
+                                    sorts 'A ; 'B .
+                                    subsort 'A < 'B .
+                                    op 'a : nil -> 'A [none] .
+                                    op 'b : nil -> 'B [none] .
+                                    op 'f : 'B  -> 'A [none] .
+                                    none
+                                    eq 'f['b.B] = 'a.A [none] .
+                                    none
+                                  endfm
+                                )
+                 ;;; show-module( fmod 'TEST-MODULE is
+                                    nil
+                                    sorts 'A ; 'B ; 'NeSet < 'A > ; 'NeSet < 'B > ; 'Set < 'A > ; 'Set < 'B > .
+                                    subsort 'A < 'B .
+                                    subsort 'A < 'NeSet < 'A > .
+                                    subsort 'B < 'NeSet < 'B > .
+                                    subsort 'NeSet < 'A > < 'NeSet < 'B > .
+                                    subsort 'NeSet < 'A > < 'Set < 'A > .
+                                    subsort 'NeSet < 'B > < 'Set < 'B > .
+                                    subsort 'Set < 'A > < 'Set < 'B > .
+                                    op '_;_ : 'Set < 'A > 'Set < 'A > -> 'Set < 'A > [assoc comm ctor id('.Set < 'A > . 'Set < 'A >)] .
+                                    op '_;_ : 'Set < 'B > 'Set < 'B > -> 'Set < 'B > [assoc comm ctor id('.Set < 'B > . 'Set < 'B >)] .
+                                    op '_;_ : 'Set < 'A > 'NeSet < 'A > -> 'NeSet < 'A > [assoc comm ctor id('.Set < 'A > . 'Set < 'A >)] .
+                                    op '_;_ : 'Set < 'B > 'NeSet < 'B > -> 'NeSet < 'B > [assoc comm ctor id('.Set < 'B > . 'Set < 'B >)] .
+                                    op 'a : nil -> 'A [none] .
+                                    op 'b : nil -> 'B [none] .
+                                    op 'f : 'B -> 'A [none] .
+                                    op '.Set < 'A > : nil -> 'Set < 'A > [ctor] .
+                                    op '.Set < 'B > : nil -> 'Set < 'B > [ctor] .
+                                    none
+                                    eq '_;_[var('NeS < 'A >, 'NeSet < 'A >),var('NeS < 'A >, 'NeSet < 'A >)] = var('NeS < 'A >, 'NeSet < 'A >) [none] .
+                                    eq '_;_[var('NeS < 'B >, 'NeSet < 'B >),var('NeS < 'B >, 'NeSet < 'B >)] = var('NeS < 'B >, 'NeSet < 'B >) [none] .
+                                    eq 'f['b.B] = 'a.A [none] .
                                   endfm
                                 )
                  >
