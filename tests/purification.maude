@@ -1,0 +1,80 @@
+set include NAT off .
+set include INT off .
+set include RAT off .
+set include BOOL off .
+
+fmod MYINT is
+  sorts N NzN .
+  sorts I NzI .
+  subsort NzN < NzI N < I .
+
+  op 0 : -> N [ctor] .
+  op 1 : -> NzN [ctor] .
+  op _+_ : N NzN -> NzN [ctor assoc comm id: 0 prec 26] .
+  op _+_ : N N   -> N   [ctor ditto] .
+  op _+_ : I I   -> I   [ctor ditto] .
+
+  op _*_ : NzN NzN -> NzN [assoc comm id: 1 prec 24] .
+  op _*_ : NzI NzI -> NzI [ditto] .
+  op _*_ : N   N   -> N   [ditto] .
+  op _*_ : I   I   -> I   [ditto] .
+endfm
+
+fmod MYINT-RAT is
+  protecting MYINT .
+
+  sorts R NzR .
+  subsorts NzI < NzR < R .
+  subsort I < R .
+
+  op _+_ : R   R   -> R   [ctor ditto] .
+  op _*_ : R   R   -> R   [ditto] .
+  op _*_ : NzR NzR -> NzR [ditto] .
+
+  op _/_ : R NzR -> R [ctor right id: 1 prec 25] .
+endfm
+
+fmod MYINT-LIST is
+  protecting MYINT .
+
+  sorts NeList List .
+  subsort NeList < List .
+
+  op nil : -> List .
+  op _,_ : I List -> NeList [ctor prec 27] .
+endfm
+
+--- It should be the case that intersect(MYINT-LIST, MYINT-RAT) == MYINT
+
+fmod MYINT-META-THEORY is
+  protecting MYINT .
+  extending META-LEVEL .
+
+  sorts Constant{MYINT} Variable{MYINT} TermQid{MYINT} GroundTerm{MYINT} Term{MYINT} NeGroundTermList{MYINT} GroundTermList{MYINT} NeTermList{MYINT} TermList{MYINT} .
+  subsorts Constant{MYINT} Variable{MYINT} < TermQid{MYINT} < Qid Term{MYINT} .
+  subsorts Constant{MYINT} < GroundTerm{MYINT} < Term{MYINT} NeGroundTermList{MYINT} < NeTermList{MYINT} .
+  subsorts NeGroundTermList{MYINT} < NeTermList{MYINT} GroundTermList{MYINT} < TermList{MYINT} .
+  subsort Constant{MYINT}         < Constant         .
+  subsort Variable{MYINT}         < Variable         .
+  subsort TermQid{MYINT}          < TermQid          .
+  subsort GroundTerm{MYINT}       < GroundTerm       .
+  subsort Term{MYINT}             < Term             .
+  subsort NeGroundTermList{MYINT} < NeGroundTermList .
+  subsort GroundTermList{MYINT}   < GroundTermList   .
+  subsort NeTermList{MYINT}       < NeTermList       .
+  subsort TermList{MYINT}         < TermList         .
+
+  var T : Term . var V : Variable . var GT : GroundTerm . var C : Constant .
+  cmb T  : Term{MYINT}       if wellFormed(upModule('MYINT, true), T) .
+  cmb V  : Variable{MYINT}   if wellFormed(upModule('MYINT, true), V) .
+  cmb GT : GroundTerm{MYINT} if wellFormed(upModule('MYINT, true), GT) .
+
+  --- TODO: Why does this cause an infinite loop?
+  --- cmb C  : Constant{MYINT}   if wellFormed(upModule('MYINT, true), C) .
+
+  var GT`{MYINT`} : GroundTerm{MYINT} .
+
+  op tt : Term -> Term .
+  ----------------------
+  eq tt(GT`{MYINT`}) = '0.N .
+endfm
