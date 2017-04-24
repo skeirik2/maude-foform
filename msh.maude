@@ -244,10 +244,11 @@ fmod STRATEGY is
   eq repeat s(N) P = P ; repeat N P .
 
   op .Output : -> Output [ctor] .
-  op _;;;_ : Output Output -> Output [ctor assoc id: .Output] .
-  -------------------------------------------------------------
+  op _;;;_ : Output Output -> Output [ctor assoc id: .Output prec 50] .
+  ---------------------------------------------------------------------
 
   op _<_> : Command{State=>Strategy} CTermSet -> Command{=>Strategy} .
+  op _<_> : Command{Modules=>Strategy} ModuleEnv -> Command{=>Strategy} .
   op _<_> : Command{Modules=>Output} ModuleEnv -> Command{=>Output} .
   op _[_] : Command{=>Strategy} Program -> [Program] .
   ----------------------------------------------------
@@ -259,6 +260,13 @@ fmod STRATEGY is
   op show-module : Module -> Command{=>Output} [ctor] .
   -----------------------------------------------------
   eq show-module(H) < MENV > = show-module(H [ MENV ]) .
+
+  var T : Term . var TYPE : Type .
+
+  op sort       : Term -> Command{Modules=>Output} .
+  op _has-sort_ : Term Type -> Command{=>Output} [prec 45] .
+  ----------------------------------------------------------
+  ceq sort(T) < MENV > = T has-sort TYPE if TYPE := leastSort('current [ MENV ], T) .
 
   op state-predicate : Bool -> Command{State=>Strategy} .
   -------------------------------------------------------
