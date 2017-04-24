@@ -2,3 +2,4 @@ load foform.maude
 load msh.maude
 load state-space.maude
 load free-constructions.maude
+load purification.maude

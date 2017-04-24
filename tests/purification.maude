@@ -45,36 +45,30 @@ fmod MYINT-LIST is
 endfm
 
 --- It should be the case that intersect(MYINT-LIST, MYINT-RAT) == MYINT
+load ../msh.maude
+select MSH .
 
-fmod MYINT-META-THEORY is
-  protecting MYINT .
-  extending META-LEVEL .
+set print color on .
 
-  sorts Constant{MYINT} Variable{MYINT} TermQid{MYINT} GroundTerm{MYINT} Term{MYINT} NeGroundTermList{MYINT} GroundTermList{MYINT} NeTermList{MYINT} TermList{MYINT} .
-  subsorts Constant{MYINT} Variable{MYINT} < TermQid{MYINT} < Qid Term{MYINT} .
-  subsorts Constant{MYINT} < GroundTerm{MYINT} < Term{MYINT} NeGroundTermList{MYINT} < NeTermList{MYINT} .
-  subsorts NeGroundTermList{MYINT} < NeTermList{MYINT} GroundTermList{MYINT} < TermList{MYINT} .
-  subsort Constant{MYINT}         < Constant         .
-  subsort Variable{MYINT}         < Variable         .
-  subsort TermQid{MYINT}          < TermQid          .
-  subsort GroundTerm{MYINT}       < GroundTerm       .
-  subsort Term{MYINT}             < Term             .
-  subsort NeGroundTermList{MYINT} < NeGroundTermList .
-  subsort GroundTermList{MYINT}   < GroundTermList   .
-  subsort NeTermList{MYINT}       < NeTermList       .
-  subsort TermList{MYINT}         < TermList         .
+reduce
 
-  var T : Term . var V : Variable . var GT : GroundTerm . var C : Constant .
-  cmb T  : Term{MYINT}       if wellFormed(upModule('MYINT, true), T) .
-  cmb V  : Variable{MYINT}   if wellFormed(upModule('MYINT, true), V) .
-  cmb GT : GroundTerm{MYINT} if wellFormed(upModule('MYINT, true), GT) .
+claim [ ( modules  < .ModuleEnv >
+          strategy < load-module('MYINT)
+                   ; set-module('current, ('MYINT deriving META-THEORY))
+                   ; sort( upTerm('_+_['1.NzN, '1.NzN]) )
+                   ; sort( upTerm('_+_['1.NzN, 'X:NzN]) )
+                   >
+          output   < .Output >
+        )
 
-  --- TODO: Why does this cause an infinite loop?
-  --- cmb C  : Constant{MYINT}   if wellFormed(upModule('MYINT, true), C) .
+      reduces-to
 
-  var GT`{MYINT`} : GroundTerm{MYINT} .
+        ( modules  < 'MYINT |-> 'MYINT 'current |-> ('MYINT deriving META-THEORY) >
+          strategy < .Program >
+          output   <   upTerm('_+_['1.NzN, '1.NzN]) has-sort 'GroundTerm`{MYINT`}
+                   ;;; upTerm('_+_['1.NzN, 'X:NzN]) has-sort 'Term`{MYINT`}
+                   >
+        )
+      ]
 
-  op tt : Term -> Term .
-  ----------------------
-  eq tt(GT`{MYINT`}) = '0.N .
-endfm
+.
