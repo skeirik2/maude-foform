@@ -22,7 +22,6 @@ reduce
 claim [ ( modules < .ModuleEnv >
           strategy < load-module('TEST-MODULE)
                    ; set-module('TEST-MODULE-LIST, ('TEST-MODULE deriving LIST))
-                   ; show-module('TEST-MODULE)
                    ; show-module('TEST-MODULE-LIST)
                    >
           output < .Output >
@@ -32,41 +31,29 @@ claim [ ( modules < .ModuleEnv >
 
         ( modules < 'TEST-MODULE |-> 'TEST-MODULE 'TEST-MODULE-LIST |-> ('TEST-MODULE deriving LIST)>
           strategy < .Program >
-          output <   show-module( fmod 'TEST-MODULE is
-                                    nil
-                                    sorts 'A ; 'B .
-                                    subsort 'A < 'B .
-                                    op 'a : nil -> 'A [none] .
-                                    op 'b : nil -> 'B [none] .
-                                    op 'f : 'B  -> 'A [none] .
-                                    none
-                                    eq 'f['b.B] = 'a.A [none] .
-                                    none
-                                  endfm
-                                )
-                 ;;; show-module( fmod 'TEST-MODULE is
-                                    nil
-                                    sorts 'A ; 'B ; 'List`{A`} ; 'List`{B`} ; 'NeList`{A`} ; 'NeList`{B`} .
-                                    subsort 'A < 'B .
-                                    subsort 'A < 'NeList`{A`} .
-                                    subsort 'B < 'NeList`{B`} .
-                                    subsort 'List`{A`} < 'List`{B`} .
-                                    subsort 'NeList`{A`} < 'List`{A`} .
-                                    subsort 'NeList`{A`} < 'NeList`{B`} .
-                                    subsort 'NeList`{B`} < 'List`{B`} .
-                                    op '.List : nil -> 'List`{A`} [ctor] .
-                                    op '.List : nil -> 'List`{B`} [ctor] .
-                                    op '_`,_ : 'List`{A`} 'List`{A`} -> 'List`{A`} [assoc ctor id('.List.List`{A`})] .
-                                    op '_`,_ : 'List`{A`} 'NeList`{A`} -> 'NeList`{A`} [assoc ctor id('.List.List`{A`})] .
-                                    op '_`,_ : 'List`{B`} 'List`{B`} -> 'List`{B`} [assoc ctor id('.List.List`{B`})] .
-                                    op '_`,_ : 'List`{B`} 'NeList`{B`} -> 'NeList`{B`} [assoc ctor id('.List.List`{B`})] .
-                                    op 'a : nil -> 'A [none] .
-                                    op 'b : nil -> 'B [none] .
-                                    op 'f : 'B -> 'A [none] .
-                                    none
-                                    eq 'f['b.B] = 'a.A [none] .
-                                  endfm
-                                )
+          output < show-module( fmod 'TEST-MODULE is
+                                  nil
+                                  sorts 'A ; 'B ; 'List`{A`} ; 'List`{B`} ; 'NeList`{A`} ; 'NeList`{B`} .
+                                  subsort 'A < 'B .
+                                  subsort 'A < 'NeList`{A`} .
+                                  subsort 'B < 'NeList`{B`} .
+                                  subsort 'List`{A`} < 'List`{B`} .
+                                  subsort 'NeList`{A`} < 'List`{A`} .
+                                  subsort 'NeList`{A`} < 'NeList`{B`} .
+                                  subsort 'NeList`{B`} < 'List`{B`} .
+                                  op '.List : nil -> 'List`{A`} [ctor] .
+                                  op '.List : nil -> 'List`{B`} [ctor] .
+                                  op '_`,_ : 'List`{A`} 'List`{A`} -> 'List`{A`} [assoc ctor id('.List.List`{A`})] .
+                                  op '_`,_ : 'List`{A`} 'NeList`{A`} -> 'NeList`{A`} [assoc ctor id('.List.List`{A`})] .
+                                  op '_`,_ : 'List`{B`} 'List`{B`} -> 'List`{B`} [assoc ctor id('.List.List`{B`})] .
+                                  op '_`,_ : 'List`{B`} 'NeList`{B`} -> 'NeList`{B`} [assoc ctor id('.List.List`{B`})] .
+                                  op 'a : nil -> 'A [none] .
+                                  op 'b : nil -> 'B [none] .
+                                  op 'f : 'B -> 'A [none] .
+                                  none
+                                  eq 'f['b.B] = 'a.A [none] .
+                                endfm
+                              )
                  >
         )
       ]
@@ -78,7 +65,6 @@ reduce
 claim [ ( modules < .ModuleEnv >
           strategy < load-module('TEST-MODULE)
                    ; set-module('TEST-MODULE-SET, ('TEST-MODULE deriving SET))
-                   ; show-module('TEST-MODULE)
                    ; show-module('TEST-MODULE-SET)
                    >
           output < .Output >
@@ -88,43 +74,31 @@ claim [ ( modules < .ModuleEnv >
 
         ( modules < 'TEST-MODULE |-> 'TEST-MODULE 'TEST-MODULE-SET |-> ('TEST-MODULE deriving SET)>
           strategy < .Program >
-          output <   show-module( fmod 'TEST-MODULE is
-                                    nil
-                                    sorts 'A ; 'B .
-                                    subsort 'A < 'B .
-                                    op 'a : nil -> 'A [none] .
-                                    op 'b : nil -> 'B [none] .
-                                    op 'f : 'B  -> 'A [none] .
-                                    none
-                                    eq 'f['b.B] = 'a.A [none] .
-                                    none
-                                  endfm
-                                )
-                 ;;; show-module( fmod 'TEST-MODULE is
-                                    nil
-                                    sorts 'A ; 'B ; 'NeSet`{A`} ; 'NeSet`{B`} ; 'Set`{A`} ; 'Set`{B`} .
-                                    subsort 'A < 'B .
-                                    subsort 'A < 'NeSet`{A`} .
-                                    subsort 'B < 'NeSet`{B`} .
-                                    subsort 'NeSet`{A`} < 'NeSet`{B`} .
-                                    subsort 'NeSet`{A`} < 'Set`{A`} .
-                                    subsort 'NeSet`{B`} < 'Set`{B`} .
-                                    subsort 'Set`{A`} < 'Set`{B`} .
-                                    op '.Set : nil -> 'Set`{A`} [ctor] .
-                                    op '.Set : nil -> 'Set`{B`} [ctor] .
-                                    op '_;_ : 'Set`{A`} 'NeSet`{A`} -> 'NeSet`{A`} [assoc comm ctor id('.Set.Set`{A`})] .
-                                    op '_;_ : 'Set`{A`} 'Set`{A`} -> 'Set`{A`} [assoc comm ctor id('.Set.Set`{A`})] .
-                                    op '_;_ : 'Set`{B`} 'NeSet`{B`} -> 'NeSet`{B`} [assoc comm ctor id('.Set.Set`{B`})] .
-                                    op '_;_ : 'Set`{B`} 'Set`{B`} -> 'Set`{B`} [assoc comm ctor id('.Set.Set`{B`})] .
-                                    op 'a : nil -> 'A [none] .
-                                    op 'b : nil -> 'B [none] .
-                                    op 'f : 'B -> 'A [none] .
-                                    none
-                                    eq '_;_['NeS`{A`}:NeSet`{A`},'NeS`{A`}:NeSet`{A`}] = 'NeS`{A`}:NeSet`{A`} [none] .
-                                    eq '_;_['NeS`{B`}:NeSet`{B`},'NeS`{B`}:NeSet`{B`}] = 'NeS`{B`}:NeSet`{B`} [none] .
-                                    eq 'f['b.B] = 'a.A [none] .
-                                  endfm
-                                )
+          output < show-module( fmod 'TEST-MODULE is
+                                  nil
+                                  sorts 'A ; 'B ; 'NeSet`{A`} ; 'NeSet`{B`} ; 'Set`{A`} ; 'Set`{B`} .
+                                  subsort 'A < 'B .
+                                  subsort 'A < 'NeSet`{A`} .
+                                  subsort 'B < 'NeSet`{B`} .
+                                  subsort 'NeSet`{A`} < 'NeSet`{B`} .
+                                  subsort 'NeSet`{A`} < 'Set`{A`} .
+                                  subsort 'NeSet`{B`} < 'Set`{B`} .
+                                  subsort 'Set`{A`} < 'Set`{B`} .
+                                  op '.Set : nil -> 'Set`{A`} [ctor] .
+                                  op '.Set : nil -> 'Set`{B`} [ctor] .
+                                  op '_;_ : 'Set`{A`} 'NeSet`{A`} -> 'NeSet`{A`} [assoc comm ctor id('.Set.Set`{A`})] .
+                                  op '_;_ : 'Set`{A`} 'Set`{A`} -> 'Set`{A`} [assoc comm ctor id('.Set.Set`{A`})] .
+                                  op '_;_ : 'Set`{B`} 'NeSet`{B`} -> 'NeSet`{B`} [assoc comm ctor id('.Set.Set`{B`})] .
+                                  op '_;_ : 'Set`{B`} 'Set`{B`} -> 'Set`{B`} [assoc comm ctor id('.Set.Set`{B`})] .
+                                  op 'a : nil -> 'A [none] .
+                                  op 'b : nil -> 'B [none] .
+                                  op 'f : 'B -> 'A [none] .
+                                  none
+                                  eq '_;_['NeS`{A`}:NeSet`{A`},'NeS`{A`}:NeSet`{A`}] = 'NeS`{A`}:NeSet`{A`} [none] .
+                                  eq '_;_['NeS`{B`}:NeSet`{B`},'NeS`{B`}:NeSet`{B`}] = 'NeS`{B`}:NeSet`{B`} [none] .
+                                  eq 'f['b.B] = 'a.A [none] .
+                                endfm
+                              )
                  >
         )
       ]
@@ -171,7 +145,6 @@ claim [ ( modules  < .ModuleEnv >
 
 .
 
-
 reduce
 
 claim [ ( modules  < .ModuleEnv >
@@ -187,23 +160,108 @@ claim [ ( modules  < .ModuleEnv >
         ( modules  < 'TEST-MODULE |-> 'TEST-MODULE 'TEST-MODULE-META-THEORY |-> ('TEST-MODULE deriving META-THEORY) >
           strategy < .Program >
           output   < show-module( fmod 'TEST-MODULE is
+                                    protecting 'QID .
                                     extending 'META-LEVEL .
-                                    sorts 'A ; 'B ; 'Term`{TEST-MODULE;A`} ; 'Term`{TEST-MODULE;B`} ; 'Term`{TEST-MODULE`} .
+                                    sorts 'A ; 'Assignment ; 'Assignment`{TEST-MODULE`} ; 'B ; 'Constant ; 'Constant`{TEST-MODULE`} ; 'Context ; 'Context`{TEST-MODULE`}
+                                        ; 'GTermList ; 'GTermList`{TEST-MODULE`} ; 'GroundTerm ; 'GroundTermList ; 'GroundTermList`{TEST-MODULE`} ; 'GroundTerm`{TEST-MODULE`}
+                                        ; 'Kind ; 'Kind`{TEST-MODULE`} ; 'NeCTermList ; 'NeCTermList`{TEST-MODULE`} ; 'NeGroundTermList ; 'NeGroundTermList`{TEST-MODULE`}
+                                        ; 'NeTermList ; 'NeTermList`{TEST-MODULE`} ; 'Sort ; 'Sort`{TEST-MODULE`} ; 'Substitution ; 'Substitution`{TEST-MODULE`} ; 'Term ; 'TermList
+                                        ; 'TermList`{TEST-MODULE`} ; 'TermQid ; 'TermQid`{TEST-MODULE`} ; 'Term`{TEST-MODULE`} ; 'Type ; 'Type`{TEST-MODULE`} ; 'Variable ; 'Variable`{TEST-MODULE`} .
                                     subsort 'A < 'B .
-                                    subsort 'Term`{TEST-MODULE;A`} < 'Term`{TEST-MODULE;B`} .
-                                    subsort 'Term`{TEST-MODULE;A`} < 'Term`{TEST-MODULE`} .
-                                    subsort 'Term`{TEST-MODULE;B`} < 'Term`{TEST-MODULE`} .
+                                    subsort 'Assignment < 'Substitution .
+                                    subsort 'Assignment`{TEST-MODULE`} < 'Assignment .
+                                    subsort 'Assignment`{TEST-MODULE`} < 'Substitution`{TEST-MODULE`} .
+                                    subsort 'Constant < 'GroundTerm .
+                                    subsort 'Constant < 'TermQid .
+                                    subsort 'Constant`{TEST-MODULE`} < 'Constant .
+                                    subsort 'Constant`{TEST-MODULE`} < 'GroundTerm`{TEST-MODULE`} .
+                                    subsort 'Constant`{TEST-MODULE`} < 'TermQid`{TEST-MODULE`} .
+                                    subsort 'Context < 'NeCTermList .
+                                    subsort 'Context`{TEST-MODULE`} < 'Context .
+                                    subsort 'Context`{TEST-MODULE`} < 'NeCTermList`{TEST-MODULE`} .
+                                    subsort 'GTermList`{TEST-MODULE`} < 'GTermList .
+                                    subsort 'GroundTerm < 'NeGroundTermList .
+                                    subsort 'GroundTerm < 'Term .
+                                    subsort 'GroundTermList < 'TermList .
+                                    subsort 'GroundTermList`{TEST-MODULE`} < 'GroundTermList .
+                                    subsort 'GroundTermList`{TEST-MODULE`} < 'TermList`{TEST-MODULE`} .
+                                    subsort 'GroundTerm`{TEST-MODULE`} < 'GroundTerm .
+                                    subsort 'GroundTerm`{TEST-MODULE`} < 'NeGroundTermList`{TEST-MODULE`} .
+                                    subsort 'GroundTerm`{TEST-MODULE`} < 'Term`{TEST-MODULE`} .
+                                    subsort 'Kind < 'Type .
+                                    subsort 'Kind`{TEST-MODULE`} < 'Kind .
+                                    subsort 'Kind`{TEST-MODULE`} < 'Type`{TEST-MODULE`} .
+                                    subsort 'NeCTermList < 'GTermList .
+                                    subsort 'NeCTermList`{TEST-MODULE`} < 'GTermList`{TEST-MODULE`} .
+                                    subsort 'NeCTermList`{TEST-MODULE`} < 'NeCTermList .
+                                    subsort 'NeGroundTermList < 'GroundTermList .
+                                    subsort 'NeGroundTermList < 'NeTermList .
+                                    subsort 'NeGroundTermList`{TEST-MODULE`} < 'GroundTermList`{TEST-MODULE`} .
+                                    subsort 'NeGroundTermList`{TEST-MODULE`} < 'NeGroundTermList .
+                                    subsort 'NeGroundTermList`{TEST-MODULE`} < 'NeTermList`{TEST-MODULE`} .
+                                    subsort 'NeTermList < 'TermList .
+                                    subsort 'NeTermList`{TEST-MODULE`} < 'NeTermList .
+                                    subsort 'NeTermList`{TEST-MODULE`} < 'TermList`{TEST-MODULE`} .
+                                    subsort 'Sort < 'Type .
+                                    subsort 'Sort`{TEST-MODULE`} < 'Sort .
+                                    subsort 'Sort`{TEST-MODULE`} < 'Type`{TEST-MODULE`} .
+                                    subsort 'Substitution`{TEST-MODULE`} < 'Substitution .
+                                    subsort 'Term < 'NeTermList .
+                                    subsort 'TermList < 'GTermList .
+                                    subsort 'TermList`{TEST-MODULE`} < 'GTermList`{TEST-MODULE`} .
+                                    subsort 'TermList`{TEST-MODULE`} < 'TermList .
+                                    subsort 'TermQid < 'Qid .
+                                    subsort 'TermQid < 'Term .
+                                    subsort 'TermQid`{TEST-MODULE`} < 'TermQid .
+                                    subsort 'TermQid`{TEST-MODULE`} < 'Term`{TEST-MODULE`} .
+                                    subsort 'Term`{TEST-MODULE`} < 'NeTermList`{TEST-MODULE`} .
                                     subsort 'Term`{TEST-MODULE`} < 'Term .
+                                    subsort 'Type < 'Qid .
+                                    subsort 'Type`{TEST-MODULE`} < 'Type .
+                                    subsort 'Variable < 'TermQid .
+                                    subsort 'Variable`{TEST-MODULE`} < 'TermQid`{TEST-MODULE`} .
+                                    subsort 'Variable`{TEST-MODULE`} < 'Variable .
+                                    op '<Qids> : nil -> 'Constant [special(id-hook('QuotedIdentifierSymbol, 'constantQid))] .
+                                    op '<Qids> : nil -> 'Kind [special(id-hook('QuotedIdentifierSymbol, 'kindQid))] .
+                                    op '<Qids> : nil -> 'Sort [special(id-hook('QuotedIdentifierSymbol, 'sortQid))] .
+                                    op '<Qids> : nil -> 'Variable [special(id-hook('QuotedIdentifierSymbol, 'variableQid))] .
+                                    op '_;_ : 'Substitution 'Substitution -> 'Substitution [assoc comm ctor id('none.Substitution) prec(65)] .
+                                    op '_<-_ : 'Variable 'Term -> 'Assignment [ctor prec(63) format('nt 'd 'd 'd)] .
+                                    op '_`,_ : 'GTermList 'GTermList -> 'GTermList [assoc ctor id('empty.GroundTermList) prec(121) gather('e 'E)] .
+                                    op '_`,_ : 'GroundTermList 'GroundTermList -> 'GroundTermList [assoc ctor id('empty.GroundTermList) prec(121) gather('e 'E)] .
+                                    op '_`,_ : 'GroundTermList 'NeGroundTermList -> 'NeGroundTermList [assoc ctor id('empty.GroundTermList) prec(121) gather('e 'E)] .
+                                    op '_`,_ : 'NeCTermList 'TermList -> 'NeCTermList [assoc ctor id('empty.GroundTermList) prec(121) gather('e 'E)] .
+                                    op '_`,_ : 'NeGroundTermList 'GroundTermList -> 'NeGroundTermList [assoc ctor id('empty.GroundTermList) prec(121) gather('e 'E)] .
+                                    op '_`,_ : 'NeTermList 'TermList -> 'NeTermList [assoc ctor id('empty.GroundTermList) prec(121) gather('e 'E)] .
+                                    op '_`,_ : 'TermList 'NeCTermList -> 'NeCTermList [assoc ctor id('empty.GroundTermList) prec(121) gather('e 'E)] .
+                                    op '_`,_ : 'TermList 'NeTermList -> 'NeTermList [assoc ctor id('empty.GroundTermList) prec(121) gather('e 'E)] .
+                                    op '_`,_ : 'TermList 'TermList -> 'TermList [assoc ctor id('empty.GroundTermList) prec(121) gather('e 'E)] .
+                                    op '_`[_`] : 'Qid 'NeCTermList -> 'Context [ctor] .
+                                    op '_`[_`] : 'Qid 'NeGroundTermList -> 'GroundTerm [ctor] .
+                                    op '_`[_`] : 'Qid 'NeTermList -> 'Term [ctor] .
+                                    op '`[`] : nil -> 'Context [ctor] .
                                     op 'a : nil -> 'A [none] .
                                     op 'b : nil -> 'B [none] .
+                                    op 'empty : nil -> 'GroundTermList [ctor] .
                                     op 'f : 'B -> 'A [none] .
-                                    cmb 'T:Term : 'Term`{TEST-MODULE`} if 'true.Bool = 'wellFormed['upModule['TEST-MODULE.Qid,'true.Bool],'T:Term] [none] .
-                                    cmb 'T`{Term`{TEST-MODULE`}`}:Term`{TEST-MODULE`} : 'Term`{TEST-MODULE;A`} if 'true.Bool = 'sortLeq['upModule['TEST-MODULE.Qid,'true.Bool],'leastSort['upModule['TEST-MODULE.Qid,'true.Bool],'T`{Term`{TEST-MODULE`}`}:Term`{TEST-MODULE`}],'A.Sort] [none] .
-                                    cmb 'T`{Term`{TEST-MODULE`}`}:Term`{TEST-MODULE`} : 'Term`{TEST-MODULE;B`} if 'true.Bool = 'sortLeq['upModule['TEST-MODULE.Qid,'true.Bool],'leastSort['upModule['TEST-MODULE.Qid,'true.Bool],'T`{Term`{TEST-MODULE`}`}:Term`{TEST-MODULE`}],'B.Sort] [none] .
+                                    op 'getName : 'Constant -> 'Qid [none] .
+                                    op 'getName : 'Variable -> 'Qid [none] .
+                                    op 'getType : 'Constant -> 'Type [none] .
+                                    op 'getType : 'Variable -> 'Type [none] .
+                                    op 'none : nil -> 'Substitution [ctor] .
+                                    cmb 'C:Constant : 'Constant`{TEST-MODULE`} if 'wellFormed['upModule[''TEST-MODULE.Sort,'true.Bool],'C:Constant] = 'true.Bool [none] .
+                                    cmb 'GT:GroundTerm : 'GroundTerm`{TEST-MODULE`} if 'wellFormed['upModule[''TEST-MODULE.Sort,'true.Bool],'GT:GroundTerm] = 'true.Bool [none] .
+                                    cmb 'T:Term : 'Term`{TEST-MODULE`} if 'wellFormed['upModule[''TEST-MODULE.Sort,'true.Bool],'T:Term] = 'true.Bool [none] .
+                                    cmb 'V:Variable : 'Variable`{TEST-MODULE`} if 'wellFormed['upModule[''TEST-MODULE.Sort,'true.Bool],'V:Variable] = 'true.Bool [none] .
+                                    eq '_;_['A:Assignment,'A:Assignment] = 'A:Assignment [none] .
                                     eq 'f['b.B] = 'a.A [none] .
+                                    eq 'getName['C:Constant] = 'qid['substr['string['C:Constant],'0.Zero,'rfind['string['C:Constant],'".".Char,'length['string['C:Constant]]]]] [none] .
+                                    eq 'getName['V:Variable] = 'qid['substr['string['V:Variable],'0.Zero,'rfind['string['V:Variable],'":".Char,'length['string['V:Variable]]]]] [none] .
+                                    eq 'getType['C:Constant] = 'qid['substr['string['C:Constant],'_+_['s_['0.Zero],'rfind['string['C:Constant],'".".Char,'length['string['C:Constant]]]],'length['string['C:Constant]]]] [none] .
+                                    eq 'getType['V:Variable] = 'qid['substr['string['V:Variable],'_+_['s_['0.Zero],'rfind['string['V:Variable],'":".Char,'length['string['V:Variable]]]],'length['string['V:Variable]]]] [none] .
                                   endfm
                                 )
-                   >
+                 >
         )
       ]
 
