@@ -39,11 +39,11 @@ fmod CTERM-SET is
   op _<<_ : CTerm Substitution -> CTerm .
   op _<<_ : CTerm SubstitutionSet -> CTermSet .
   ---------------------------------------------
-  eq (T | F)       << S  = (T << S) | (F << S) .
-  eq .CTermSet     << SS = .CTermSet .
-  eq (CT ;; NeCTS) << SS = (CT << SS) ;; (NeCTS << SS) .
-  eq CT << empty         = .CTermSet .
-  eq CT << (S | S' | SS) = (CT << S) ;; (CT << S') ;; (CT << SS) .
+  ceq (T | F)       << S  = (T << S) | (F << S) if not (F == tt) .
+  eq  .CTermSet     << SS = .CTermSet .
+  eq  (CT ;; NeCTS) << SS = (CT << SS) ;; (NeCTS << SS) .
+  eq  CT << empty         = .CTermSet .
+  eq  CT << (S | S' | SS) = (CT << S) ;; (CT << S') ;; (CT << SS) .
 
   op .CTermSet : -> CTermSet .
   op _;;_ : CTermSet CTermSet   -> CTermSet   [ctor assoc comm id: .CTermSet prec 60] .
