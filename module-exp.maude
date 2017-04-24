@@ -497,10 +497,10 @@ fmod MODULE-EXPRESSION is
                                         ; 'Term       ; 'Term       < svar('MOD) > .
                                   )
                            exists ( sorts none . )
-                                  ( --- cmb 'C:Constant    : 'Constant   < svar('MOD) > if 'wellFormed['upModule[upTerm(Q), 'true.Bool], 'C:Constant]    = 'true.Bool [none] .
-                                    cmb 'V:Variable    : 'Variable   < svar('MOD) > if 'wellFormed['upModule[upTerm(Q), 'true.Bool], 'V:Variable]    = 'true.Bool [none] .
-                                    cmb 'GT:GroundTerm : 'GroundTerm < svar('MOD) > if 'wellFormed['upModule[upTerm(Q), 'true.Bool], 'GT:GroundTerm] = 'true.Bool [none] .
-                                    cmb 'T:Term        : 'Term       < svar('MOD) > if 'wellFormed['upModule[upTerm(Q), 'true.Bool], 'T:Term]        = 'true.Bool [none] .
+                                  ( --- cmb 'C:Constant    : 'Constant   < svar('MOD) > if 'wellFormed['upModule[upTerm(Q), 'false.Bool], 'C:Constant]    = 'true.Bool [none] .
+                                    cmb 'V:Variable    : 'Variable   < svar('MOD) > if 'wellFormed['upModule[upTerm(Q), 'false.Bool], 'V:Variable]    = 'true.Bool [none] .
+                                    cmb 'GT:GroundTerm : 'GroundTerm < svar('MOD) > if 'wellFormed['upModule[upTerm(Q), 'false.Bool], 'GT:GroundTerm] = 'true.Bool [none] .
+                                    cmb 'T:Term        : 'Term       < svar('MOD) > if 'wellFormed['upModule[upTerm(Q), 'false.Bool], 'T:Term]        = 'true.Bool [none] .
                                   ) .
 
   op _deriving_ : Module FreeConstruction -> [Module] [prec 80] .
