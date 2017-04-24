@@ -115,17 +115,42 @@ fmod MODULE-TEMPLATE is
   protecting STRUCTURED-QID .
   protecting CTERM-SET .
 
+  sort SortPoset .
+  subsort SortSet < SortPoset .
   sorts SortTemplate SubsortTemplate OpTemplate MembAxTemplate EqTemplate RuleTemplate ModuleTemplate .
   subsort SortTemplate < SubsortTemplate < OpTemplate < MembAxTemplate < EqTemplate < RuleTemplate < ModuleTemplate .
 
-  vars H H' : Header . vars I I' : Import . vars IL IL' IL'' : ImportList . vars S S' : Sort . vars SS SS' : SortSet . vars SSDS SSDS' : SubsortDeclSet .
+  vars H H' : Header . vars I I' : Import . vars IL IL' IL'' : ImportList . vars S S' S'' : Sort . vars SS SS' SS'' : SortSet . var SPS : SortPoset . vars SSDS SSDS' : SubsortDeclSet .
   vars OPDS OPDS' : OpDeclSet . vars MAS MAS' : MembAxSet . vars EQS EQS' : EquationSet . vars RLS RLS' : RuleSet .
   var AS : AttrSet . vars A A' : Attr . var EQC : EqCondition . vars C C' : Condition . vars MT MT' : ModuleTemplate .
-  var MOD : Module . var Q : Qid . var TL : TypeList . var TYPE : Type . vars T T' : Term .
+  vars MOD MOD' : Module . var Q : Qid . var TL : TypeList . var TYPE : Type . vars T T' : Term .
   vars SU SU' : Substitution . var SUBSTS : SubstitutionSet .
   var ST : SortTemplate . var SST : SubsortTemplate . var OPT : OpTemplate . var MAT : MembAxTemplate . var EQT : EqTemplate . var RLT : RuleTemplate .
   vars NeTL NeTL' : NeTypeList .
   vars OP OP' : OpDecl . vars EQ EQ' : Equation . vars MB MB' : MembAx . vars RL RL' : Rule .
+
+  op _<_ : SortPoset SortPoset -> SortPoset [assoc id: none prec 122] .
+  op (subsorts_.) : SortPoset -> SubsortDeclSet .
+  -----------------------------------------------
+  eq ( subsorts SS . )
+   = none .
+  eq ( subsorts S < S' . )
+   = ( subsort S < S' . ) .
+  eq ( subsorts S < S' ; S'' ; SS' . )
+   = ( subsorts S < S' .
+       subsorts S < S'' .
+       subsorts S < SS' .
+     ) .
+  eq ( subsorts S ; S' ; SS < S'' ; SS' . )
+   = ( subsorts S  < S'' ; SS' .
+       subsorts S' < S'' ; SS' .
+       subsorts SS < S'' ; SS' .
+     ) .
+  eq ( subsorts S ; SS < S' ; SS' < SPS . )
+   = ( subsorts S  < S' ; SS' .
+       subsorts SS < S' ; SS' .
+       subsorts      S' ; SS'  < SPS .
+     ) .
 
   op (sorts_.) : SortSet -> SortTemplate [format(d d d d) prec 60] .
   op __ : SortTemplate    SubsortDeclSet -> SubsortTemplate [right id: none format(d ni d) prec 61] .
@@ -144,6 +169,10 @@ fmod MODULE-TEMPLATE is
   op _++_ : Module ModuleTemplate -> Module [prec 72] .
   -----------------------------------------------------
   eq MOD ++ MT = fromTemplate(getName(MOD), asTemplate(MOD) ++ MT) .
+
+  op _++_ : Module Module -> Module [assoc prec 73] .
+  ---------------------------------------------------
+  eq MOD ++ MOD' = MOD ++ asTemplate(MOD') .
 
   op asTemplate : Module -> [ModuleTemplate] .
   --------------------------------------------
@@ -168,13 +197,13 @@ fmod MODULE-TEMPLATE is
 
   op #varExtendTemplate : ModuleTemplate -> [ModuleTemplate] .
   ------------------------------------------------------------
-  eq #varExtendTemplate(IL sorts SS . SSDS OPDS MAS EQS RLS) = ( (IL                      importlistvar('##MTCTXILIST##))
-                                                                 (sorts SS ;              ssetvar('##MTMTXSORTS##) .)
-                                                                 (SSDS                    subsvar('##MTCTXSUBSORT##))
-                                                                 (#varExtendOpDecls(OPDS) opsetvar('##MTCTXOPSET##))
-                                                                 (#varExtendMembAxs(MAS)  membaxsetvar('##MTCTXMEMBAXSET##))
-                                                                 (#varExtendEqs(EQS)      eqsetvar('##MTCTXEQSET##))
-                                                                 (#varExtendRules(RLS)    rulesetvar('##MTCTXRULESET##))
+  eq #varExtendTemplate(IL sorts SS . SSDS OPDS MAS EQS RLS) = ( (IL         importlistvar('##MTCTXILIST##))
+                                                                 (sorts SS ; ssetvar('##MTMTXSORTS##) .)
+                                                                 (SSDS       subsvar('##MTCTXSUBSORT##))
+                                                                 (OPDS       opsetvar('##MTCTXOPSET##))
+                                                                 (MAS        membaxsetvar('##MTCTXMEMBAXSET##))
+                                                                 (EQS        eqsetvar('##MTCTXEQSET##))
+                                                                 (RLS        rulesetvar('##MTCTXRULESET##))
                                                                ) .
 
   --- TODO: All of these variables need to be made actually fresh.
@@ -292,17 +321,33 @@ fmod FREE-CONSTRUCTION is
   sorts FreeConstruction ModFreeConstruction .
   subsort ModFreeConstruction < FreeConstruction .
 
-  var SUBSTS : SubstitutionSet . var MOD : Module . vars MT MT' : ModuleTemplate .
-  vars S NeS : Sort . vars Op Nil Q : Qid . var AS : AttrSet . var NES : Variable .
+  var SUBSTS : SubstitutionSet . var MOD : Module . vars MT MT' : ModuleTemplate . vars FC FC' FC'' : FreeConstruction .
+  vars S S' NeS : Sort . vars SS : SortSet . vars Op Nil Q : Qid . var AS : AttrSet . var NES : Variable .
+  vars SUB SUB' : Substitution . var SUBS : SubstitutionSet .
 
   op _<_> : ModFreeConstruction Qid -> FreeConstruction [ctor] .
   --------------------------------------------------------------
 
-  op _;_ : FreeConstruction FreeConstruction -> FreeConstruction [ctor assoc prec 76 format(d n d d)] .
-  -----------------------------------------------------------------------------------------------------
-
   op forall_exists_ : ModuleTemplate ModuleTemplate -> FreeConstruction [ctor prec 75 format(d n++i n ni-- d)] .
   --------------------------------------------------------------------------------------------------------------
+
+  op exists_ : ModuleTemplate -> FreeConstruction [ctor prec 75 format(d n d)] .
+  ------------------------------------------------------------------------------
+  eq exists MT = forall (sorts none .) exists MT .
+
+  op _;_ : FreeConstruction FreeConstruction -> FreeConstruction [ctor assoc prec 76 format(d n d d)] .
+  op _|_ : FreeConstruction FreeConstruction -> FreeConstruction [ctor assoc comm prec 77 format(d n d d)] .
+  ----------------------------------------------------------------------------------------------------------
+  eq FC | FC = FC .
+  eq (FC | FC') ; FC''         = (FC ; FC'') | (FC' ; FC'') .
+  eq         FC ; (FC' | FC'') = (FC ; FC')  | (FC  ; FC'') .
+
+  op _<<_ : FreeConstruction SubstitutionSet -> FreeConstruction [right id: empty] .
+  ----------------------------------------------------------------------------------
+  eq (forall MT exists MT') << SUB = forall (MT << SUB) exists (MT' << SUB) | forall MT exists MT' .
+  eq FC << (SUB | SUB' | SUBS)     = (FC << SUB) | (FC << SUB') | (FC << SUBS) .
+  eq (FC | FC') << SUB             = (FC << SUB) | (FC' << SUB) .
+  eq (FC ; FC') << SUB             = (FC << SUB) ; (FC' << SUB) .
 ```
 
 Covariant Data
@@ -315,11 +360,9 @@ Covariant data are data-structures that follow the normal
 ```{.maude .module-exp}
   op covariant-data : Sort -> FreeConstruction .
   ----------------------------------------------
-  ceq covariant-data(S) = ( forall sorts svar('X) .
+  ceq covariant-data(S) =   forall sorts svar('X) .
                             exists ( sorts S < svar('X) > ; NeS < svar('X) > . )
-                                   ( subsort       svar('X)   < NeS < svar('X) > .
-                                     subsort NeS < svar('X) > <   S < svar('X) > .
-                                   )
+                                   ( subsorts svar('X) < (NeS < svar('X) >) < (S < svar('X) >) . )
                           ; forall ( sorts svar('X) ; S < svar('X) > ; NeS < svar('X) >
                                          ; svar('Y) ; S < svar('Y) > ; NeS < svar('Y) > .
                                    )
@@ -328,22 +371,18 @@ Covariant data are data-structures that follow the normal
                                    ( subsort   S < svar('X) > <   S < svar('Y) > .
                                      subsort NeS < svar('X) > < NeS < svar('Y) > .
                                    )
-                          )
                         if NeS := qid("Ne" + string(S)) .
 
   op covariant-data-binary : Sort Qid AttrSet -> FreeConstruction .
   -----------------------------------------------------------------
-  ceq covariant-data-binary(S, Op, AS) = ( covariant-data(S)
+  ceq covariant-data-binary(S, Op, AS) =   covariant-data(S)
                                          ; forall ( sorts svar('X) ; S < svar('X) > ; NeS < svar('X) > . )
-                                                  ( subsort       svar('X)   < NeS < svar('X) > .
-                                                    subsort NeS < svar('X) > <   S < svar('X) > .
-                                                  )
+                                                  ( subsorts svar('X) < (NeS < svar('X) >) < (S < svar('X) >) . )
                                            exists ( sorts none . )
                                                   ( op Nil : nil -> S < svar('X) > [ctor] .
                                                     op Op : S < svar('X) >   S < svar('X) > ->   S < svar('X) > [ctor id(Nil . S < svar('X) >) AS] .
                                                     op Op : S < svar('X) > NeS < svar('X) > -> NeS < svar('X) > [ctor id(Nil . S < svar('X) >) AS] .
                                                   )
-                                         )
                                        if NeS := qid("Ne" + string(S))
                                        /\ Nil := qid("." + string(S)) .
 ```
@@ -362,41 +401,63 @@ The free constructions for data-types `LIST` and `SET` are provided here.
           if NES := var('NeS < svar('X) >, 'NeSet < svar('X) >) .
 ```
 
-Meta Level
-----------
+Signature Refinement
+--------------------
+
+Signature refinements add subsorts to every sort (adding the annotation that
+they are refined), as well as copying operators over only the refined sorts
+down. Right now only operators up to arity 2 are handled (until we have a better
+way to generate them).
+
+```{.maude .module-exp}
+  op sort-refinement : Qid -> FreeConstruction .
+  ----------------------------------------------
+  eq sort-refinement(Q) =   forall ( sorts svar('X) . )
+                            exists ( sorts (svar('X) < Q >) . )
+                                   ( subsort (svar('X) < Q >) < svar('X) . )
+                          ; forall ( sorts svar('X) ; svar('Y) ; (svar('X) < Q >) ; (svar('Y) < Q >) . )
+                                   ( subsort svar('X) < svar('Y) . )
+                            exists ( sorts none . )
+                                   ( subsort (svar('X) < Q >) < (svar('Y) < Q >) . ) .
+
+  op signature-refinement : Qid -> FreeConstruction .
+  ---------------------------------------------------
+  eq signature-refinement(Q) =   sort-refinement(Q)
+                               ; signature-refinement(0, Q)
+                               ; signature-refinement(1, Q)
+                               ; signature-refinement(2, Q) .
+
+  op signature-refinement : Nat Qid -> FreeConstruction .
+  ---------------------------------------------------
+  eq signature-refinement(0, Q) = forall ( sorts svar('X) ; (svar('X) < Q >) . )
+                                         ( op qvar('OP) : nil -> svar('X) [attrsetvar('AS)] . )
+                                  exists ( sorts none . )
+                                         ( op qvar('OP) : nil -> (svar('X) < Q >) [attrsetvar('AS)] . ) .
+  eq signature-refinement(1, Q) = ( forall ( sorts svar('X) ; (svar('X) < Q >) ; svar('Y) ; (svar('Y) < Q >). )
+                                           ( op qvar('OP) : svar('Y) -> svar('X) [attrsetvar('AS)] . )
+                                    exists ( sorts none . )
+                                           ( op qvar('OP) : (svar('Y) < Q >) -> (svar('X) < Q >) [attrsetvar('AS)] . )
+                                  ) << ('X:Sort <- 'Y:Sort) .
+  eq signature-refinement(2, Q) = ( forall ( sorts svar('X) ; (svar('X) < Q >) ; svar('Y) ; (svar('Y) < Q >) ; svar('Z) ; (svar('Z) < Q >) . )
+                                           ( op qvar('OP) : svar('Y) svar('Z) -> svar('X) [attrsetvar('AS)] . )
+                                    exists ( sorts none . )
+                                           ( op qvar('OP) : (svar('Y) < Q >) (svar('Z) < Q >) -> (svar('X) < Q >) [attrsetvar('AS)] . )
+                                  ) << (('X:Sort <- 'Y:Sort) | ('X:Sort <- 'Z:Sort) | ('Y:Sort <- 'Z:Sort) | ('Y:Sort <- 'X:Sort ; 'Z:Sort <- 'X:Sort)) .
+endfm
+```
+
+Meta Theory
+-----------
 
 Sometimes you want a "meta theory" specific to your module. For example, you may
 want to express using just a sort that a meta-level `Term` is a well-formed term
 in your theory, or that it is a well-formed term of a specific sort in your
 theory. This free construction will extend your module with its meta-theory, so
-that this can be done.
+that this can be done. This is a construction that refines the module
+`META-TERM` and adds it to your module, as well as adding in conditional
+memberships which push elements of the sort `Term` into the subsort of
+`Term{MYMOD}` when appropriate.
 
-```{.maude .module-exp}
-  vars SMOD SMODX : Sort . vars T TMOD TMODX : Term . var CMOD : Constant .
-
-  op META-THEORY : -> ModFreeConstruction .
-  ----------------------------------------
-  ceq META-THEORY < Q > =   forall ( sorts svar('X) . )
-                            exists ( extending 'META-LEVEL . )
-                                   ( sorts SMOD ; SMODX . )
-                                   ( subsort SMOD < 'Term .
-                                     subsort SMODX < SMOD .
-                                   )
-                                   ( cmb T    : SMOD  if 'true.Bool = 'wellFormed['upModule[CMOD, 'true.Bool], T] [none] .
-                                     cmb TMOD : SMODX if 'true.Bool = 'sortLeq['upModule[CMOD, 'true.Bool], 'leastSort['upModule[CMOD, 'true.Bool], TMOD], svar('X) . 'Sort] [none] .
-                                   )
-                          ; forall ( sorts svar('X) ; svar('Y) ; 'Term < Q svar('X) > ; 'Term < Q svar('Y) > . )
-                                   ( subsort svar('X) < svar('Y) . )
-                            exists ( sorts none . )
-                                   ( subsort 'Term < Q svar('X) > < 'Term < Q svar('Y) > . )
-                        if CMOD  := Q . 'Qid
-                        /\ SMOD  := 'Term < Q >
-                        /\ SMODX := 'Term < Q svar('X) >
-                        /\ T     := var('T, 'Term)
-                        /\ TMOD  := var( 'T < SMOD >,  SMOD)
-                        /\ TMODX := var('TM < SMODX >, SMODX) .
-endfm
-```
 
 Module Expressions
 ==================
@@ -417,16 +478,36 @@ fmod MODULE-EXPRESSION is
 
   op #upModule : ModuleExpression -> Module [memo] .
   --------------------------------------------------
-  eq #upModule(ME) = upModule(ME, true) [owise] .
+  eq #upModule(ME) = upModule(ME, false) [owise] .
 
   op _deriving_ : ModuleExpression FreeConstruction -> ModuleExpression [prec 80] .
   ---------------------------------------------------------------------------------
   eq #upModule(ME deriving FC) = #upModule(ME) deriving FC .
 
+  var Q : Qid .
+
+  op META-THEORY : -> ModFreeConstruction .
+  -----------------------------------------
+  eq META-THEORY < Q > =   exists ( extending 'META-LEVEL . )
+                                  ( sorts none . )
+                         ; exists asTemplate(#upModule('META-TERM deriving sort-refinement(Q)))
+                         ; forall ( sorts 'Constant   ; 'Constant   < svar('MOD) >
+                                        ; 'Variable   ; 'Variable   < svar('MOD) >
+                                        ; 'GroundTerm ; 'GroundTerm < svar('MOD) >
+                                        ; 'Term       ; 'Term       < svar('MOD) > .
+                                  )
+                           exists ( sorts none . )
+                                  ( cmb 'C:Constant    : 'Constant   < svar('MOD) > if 'wellFormed['upModule[upTerm(Q), 'true.Bool], 'C:Constant]    = 'true.Bool [none] .
+                                    cmb 'V:Variable    : 'Variable   < svar('MOD) > if 'wellFormed['upModule[upTerm(Q), 'true.Bool], 'V:Variable]    = 'true.Bool [none] .
+                                    cmb 'GT:GroundTerm : 'GroundTerm < svar('MOD) > if 'wellFormed['upModule[upTerm(Q), 'true.Bool], 'GT:GroundTerm] = 'true.Bool [none] .
+                                    cmb 'T:Term        : 'Term       < svar('MOD) > if 'wellFormed['upModule[upTerm(Q), 'true.Bool], 'T:Term]        = 'true.Bool [none] .
+                                  ) .
+
   op _deriving_ : Module FreeConstruction -> [Module] [prec 80] .
   ---------------------------------------------------------------
-  eq  MOD deriving (FC ; FC')           = (MOD deriving FC) deriving FC' .
-  eq  MOD deriving MFC                  = MOD deriving MFC < getName(MOD) > .
   ceq MOD deriving forall MT exists MT' = MOD ++ (MT' << SUBSTS) if SUBSTS := match MT with asTemplate(MOD) .
+  eq  MOD deriving MFC                  = MOD deriving MFC < getName(MOD) > .
+  eq  MOD deriving (FC ; FC')           = (MOD deriving FC) deriving FC' .
+  eq  MOD deriving (FC | FC')           = (MOD deriving FC) ++ (MOD deriving FC') .
 endfm
 ```
