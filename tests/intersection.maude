@@ -1,0 +1,122 @@
+---- Given two order-sorted signatures (as Modules),
+---- calculate the intersection of those. 
+
+fmod INTERSECTION is
+  protecting META-LEVEL .
+  protecting STRING .
+  protecting CONVERSION .
+  
+  op intersect : FModule FModule -> FModule .
+  op intersect : SortSet SortSet -> SortSet .
+  op intersect : SubsortDeclSet SubsortDeclSet -> SubsortDeclSet .
+  op intersect : OpDeclSet OpDeclSet -> OpDeclSet .
+  
+  vars Header1 Header2 : Qid .
+  vars ImportList1 ImportList2 : ImportList .
+  vars SortSet1 SortSet2 : SortSet .
+  vars SubsortDeclSet1 SubsortDeclSet2 : SubsortDeclSet .
+  vars OpDeclSet1 OpDeclSet2 : OpDeclSet .
+  vars MembAxSet1 MembAxSet2 : MembAxSet .
+  vars EquationSet1 EquationSet2 : EquationSet .
+  
+  eq intersect(none, SortSet2) = none .
+  eq intersect((S:Sort ; SortSet1), 
+               (S:Sort ; SortSet2))
+   = S:Sort ; intersect(SortSet1, SortSet2) .
+  eq intersect(SortSet1, SortSet2) = none [owise] .
+  
+  eq intersect(none, SubsortDeclSet2) = none .
+  eq intersect((D:SubsortDecl SubsortDeclSet1),
+               (D:SubsortDecl SubsortDeclSet2))
+   = D:SubsortDecl intersect(SubsortDeclSet1, SubsortDeclSet2) .
+  eq intersect(SubsortDeclSet1, SubsortDeclSet2) = none [owise] .
+  
+  eq intersect(none, OpDeclSet2) = none .
+  eq intersect((D:OpDecl OpDeclSet1),
+               (D:OpDecl OpDeclSet2))
+   = D:OpDecl intersect(OpDeclSet1, OpDeclSet2) .
+  eq intersect(OpDeclSet1, OpDeclSet2) = none [owise] . 
+   
+  eq intersect(
+      (fmod Header1 is
+         ImportList1
+         sorts SortSet1 .
+         SubsortDeclSet1
+         OpDeclSet1
+         MembAxSet1
+         EquationSet1
+       endfm),
+      (fmod Header2 is
+         ImportList2
+         sorts SortSet2 .
+         SubsortDeclSet2
+         OpDeclSet2
+         MembAxSet2
+         EquationSet2
+       endfm))
+  =   (fmod qid(string(Header1) + " intersect " + string(Header2)) is
+         nil
+         sorts intersection(SortSet1, SortSet2) .
+         intersection(SubsortDeclSet1, SubsortDeclSet2)
+         intersection(OpDeclSet1, OpDeclSet2)
+         none
+         none
+       endfm) .  
+endfm
+
+set include BOOL off .
+  
+fmod MYINT is
+  sorts N NzN .
+  sorts I NzI .
+  subsort NzN < NzI N < I .
+
+  op 0 : -> N [ctor] .
+  op 1 : -> NzN [ctor] .
+  op _+_ : N NzN -> NzN [ctor assoc comm id: 0 prec 26] .
+  op _+_ : N N   -> N   [ctor ditto] .
+  op _+_ : I I   -> I   [ctor ditto] .
+
+  op _*_ : NzN NzN -> NzN [assoc comm id: 1 prec 24] .
+  op _*_ : NzI NzI -> NzI [ditto] .
+  op _*_ : N   N   -> N   [ditto] .
+  op _*_ : I   I   -> I   [ditto] .
+endfm
+
+fmod MYINT-RAT is
+  protecting MYINT .
+
+  sorts R NzR .
+  subsorts NzI < NzR < R .
+  subsort I < R .
+
+  op _+_ : R   R   -> R   [ctor ditto] .
+  op _*_ : R   R   -> R   [ditto] .
+  op _*_ : NzR NzR -> NzR [ditto] .
+
+  op _/_ : R NzR -> R [ctor right id: 1 prec 25] .
+endfm
+
+fmod MYINT-LIST is
+  protecting MYINT .
+
+  sorts NeList List .
+  subsort NeList < List .
+
+  op nil : -> List .
+  op _,_ : I List -> NeList [ctor prec 27] .
+endfm
+
+select INTERSECTION .
+
+reduce upModule('MYINT-LIST, true) .
+reduce upModule('MYINT-RAT, true) .
+
+set trace on .
+                 
+reduce intersect(upModule('MYINT-LIST, true),
+                 upModule('MYINT-RAT, true)) .
+
+
+
+quit
