@@ -298,6 +298,10 @@ fmod MODULE-EXPRESSION-EXP is
                             ( subsort svar('Y) < svar('Z) . )
                      exists ( sorts none . )
                             ( subsort '=> < svar('X) svar('Y) > < '=> < svar('X) svar('Z) > . )
+                   ; forall ( sorts svar('X) ; svar('Y) ; svar('W) ; '=> < svar('X) svar('Y) > ; '=> < svar('W) svar('Y) > . )
+                            ( subsort svar('W) < svar('X) . )
+                     exists ( sorts none . )
+                            ( subsort '=> < svar('X) svar('Y) > < '=> < svar('W) svar('Y) > . )
                    ; forall ( sorts svar('X) ; svar('Y) ; ('=> < svar('XY) >) ; ('=> < svar('YZ) >) . )
                             ( op qvar('OP1) : svar('X) -> svar('Y) [none] .
                               op qvar('OP2) : svar('Y) -> svar('Z) [none] . )
