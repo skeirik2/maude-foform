@@ -290,15 +290,14 @@ claim [ ( modules  < .ModuleEnv >
 fmod MODULE-EXPRESSION-EXP is
   protecting MODULE-EXPRESSION .
 
-  op EXPONENTIAL : -> FreeConstruction .
+  op EXPONENTIAL : -> UniversalConstruction .
   ----------------------------------------------
   eq EXPONENTIAL =   forall ( sorts svar('X) ; svar('Y) . )
                      exists ( sorts '=> < svar('X) svar('Y) > . )
-                   ; forall ( sorts svar('X) ; svar('Y) ; svar('Z) ; svar('W) ;
-                              '=> < svar('XY) > ; '=> < svar('ZW) > . )
-                            ( subsorts svar('Y) < svar('W) ; svar('Z) < svar('X) . )
+                   ; forall ( sorts svar('X) ; svar('Y) ; svar('Z) ; '=> < svar('X) svar('Y) > ; '=> < svar('X) svar('Z) > . )
+                            ( subsort svar('Y) < svar('Z) . )
                      exists ( sorts none . )
-                            ( subsort '=> < svar('XY) > < '=> < svar('ZW) > . )
+                            ( subsort '=> < svar('X) svar('Y) > < '=> < svar('X) svar('Z) > . )
                    ; forall ( sorts svar('X) ; svar('Y) ; ('=> < svar('XY) >) ; ('=> < svar('YZ) >) . )
                             ( op qvar('OP1) : svar('X) -> svar('Y) [none] .
                               op qvar('OP2) : svar('Y) -> svar('Z) [none] . )
@@ -315,7 +314,7 @@ fmod PURIFICATION is
     protecting MSH .
     protecting MODULE-EXPRESSION .
 
-    op PURIFICATION : ModuleExpression ModuleExpression -> FreeConstruction .
+    op PURIFICATION : ModuleExpression ModuleExpression -> UniversalConstruction .
 
     vars M1 M2          : ModuleExpression .
     vars TM TM' TM1 TM2 : Variable .
