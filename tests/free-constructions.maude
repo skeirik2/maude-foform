@@ -14,6 +14,20 @@ fmod TEST-MODULE is
   eq f(b) = a .
 endfm
 
+fmod TEST-MODULE2 is
+  sorts C D .
+  subsort C < D .
+
+  op c : -> C .
+  op d : -> D .
+
+  op g : C -> D .
+  ---------------
+  eq g(c) = d .
+endfm
+
+fmod EMPTY is endfm
+
 select MSH .
 set print color on .
 
@@ -266,3 +280,94 @@ claim [ ( modules  < .ModuleEnv >
       ]
 
 .
+
+--- todo:
+--- fix arrow sorts, add qid construct for arrows
+--- covariance/contravariance separately
+--- subsorts arent what i think they are
+--- do everything at double arrow level
+
+fmod MODULE-EXPRESSION-EXP is
+  protecting MODULE-EXPRESSION .
+
+  op EXPONENTIAL : -> FreeConstruction .
+  ----------------------------------------------
+  eq EXPONENTIAL =   forall ( sorts svar('X) ; svar('Y) . )
+                     exists ( sorts '=> < svar('X) svar('Y) > . )
+                   ; forall ( sorts svar('X) ; svar('Y) ; svar('Z) ; svar('W) ;
+                              '=> < svar('XY) > ; '=> < svar('ZW) > . )
+                            ( subsorts svar('Y) < svar('W) ; svar('Z) < svar('X) . )
+                     exists ( sorts none . )
+                            ( subsort '=> < svar('XY) > < '=> < svar('ZW) > . )
+                   ; forall ( sorts svar('X) ; svar('Y) ; ('=> < svar('XY) >) ; ('=> < svar('YZ) >) . )
+                            ( op qvar('OP1) : svar('X) -> svar('Y) [none] .
+                              op qvar('OP2) : svar('Y) -> svar('Z) [none] . )
+                     exists ( sorts '=> < svar('XZ) > . )
+                            ( op qvar('OP12) : svar('X) -> svar('Z) [none] . ) .
+
+endfm
+
+--- reduce #upModule('TEST-MODULE deriving EXPONENTIAL) .
+
+
+
+fmod PURIFICATION is
+    protecting MSH .
+    protecting MODULE-EXPRESSION .
+
+    op PURIFICATION : ModuleExpression ModuleExpression -> FreeConstruction .
+
+    vars M1 M2          : ModuleExpression .
+    vars TM TM' TM1 TM2 : Variable .
+
+    ceq PURIFICATION(M1, M2)
+      =   META-THEORY < M1 >
+        ; META-THEORY < M2 >
+        ; exists ( extending 'FOFORM .
+                   extending M1 .
+                   extending M2 . )
+                 ( sorts none . )
+                 ( op 'purify : 'EqAtom -> 'EqConj [none] .
+                   op 'fvar   : 'Term 'Term -> 'Variable [none] . )
+        ; forall ( sorts 'Term ; 'Term < svar('M) > . )
+                 ( subsort 'Term < svar('M) > < 'Term . )
+          exists ( sorts none . )
+                 ( eq 'purify['_?=_[TM, TM']] = '_?=_[TM, TM'] [none] . )
+        ; forall ( sorts 'Term ; 'Term < svar('M1) > ; 'Term < svar('M2) > . )
+                 ( subsorts ('Term < svar('M1) >) ; ('Term < svar('M2) >) < 'Term . )
+          exists ( sorts none . )
+                 ( eq 'purify['_?=_[TM1, TM2]] = '_/\_['_?=_['fvar[TM1, TM2], TM1], '_?=_['fvar[TM1, TM2], TM2]] [none] . )
+
+      if TM  := var('TM,  'Term < svar('M) >)
+      /\ TM' := var('TM', 'Term < svar('M) >)
+      /\ TM1 := var('TM1, 'Term < svar('M1) >)
+      /\ TM2 := var('TM2, 'Term < svar('M2) >) .
+endfm
+
+reduce #resolveModule(#upModule('EMPTY deriving PURIFICATION('TEST-MODULE, 'TEST-MODULE2))) .
+reduce wellFormed(#resolveModule(#upModule('EMPTY deriving PURIFICATION('TEST-MODULE, 'TEST-MODULE2)))) .
+
+--- reduce reduce < #resolveModule(#upModule('EMPTY deriving PURIFICATION('TEST-MODULE, 'TEST-MODULE2))) > ['f['b.B]] .
+
+--- set trace on .
+
+reduce
+
+claim [ ( modules  < .ModuleEnv >
+          strategy < set-module('STATE, 'EMPTY deriving PURIFICATION('TEST-MODULE, 'TEST-MODULE2))
+                   ; reduce
+                   >
+          state    < 'f['b.B] ;; 'g['c.C] ;; 'purify[upTerm('f['B:B] ?= 'f['A:A])] >
+        )
+
+      reduces-to
+
+          ( modules  < 'STATE |-> ('EMPTY deriving PURIFICATION('TEST-MODULE, 'TEST-MODULE2)) >
+          strategy < .Program >
+          state    < 'a.A ;; 'd.D ;; '_?=_['_`[_`][''f.Sort, ''A:A.Variable`{TEST-MODULE`}], '_`[_`][''f.Sort, ''B:B.Variable`{TEST-MODULE`}]] >
+        )
+      ]
+
+.
+
+--- set trace off .    
