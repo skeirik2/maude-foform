@@ -261,7 +261,7 @@ fmod MODULE-TEMPLATE-DATA is
   ---------------------------------------------
   eq ++(.ModuleTemplateSet) = (sorts none .) .
   eq ++(MT)                 = MT .
-  eq ++(MT | MT' | NeMTS)   = MT ++ MT' ++ ++(NeMTS) .
+  eq ++(MT | NeMTS)         = MT ++ ++(NeMTS) .
 
   op moduleTemplateError? : -> [ModuleTemplate] .
   op _<<_ : ModuleTemplateSet SubstitutionSet -> ModuleTemplateSet .
@@ -346,7 +346,8 @@ fmod MODULE-TEMPLATE is
   protecting META-LEVEL .
 
   var H : Header . var IL : ImportList . var SS : SortSet . var SSDS : SubsortDeclSet . var OPDS : OpDeclSet .
-  var MAS : MembAxSet . var EQS : EquationSet . var RLS : RuleSet . vars MOD MOD' : Module . var MT : ModuleTemplate .
+  var MAS : MembAxSet . var EQS : EquationSet . var RLS : RuleSet . vars MOD MOD' : Module .
+  var MT : ModuleTemplate . var NeMTS : NeModuleTemplateSet .
 
   op asTemplate : Module -> [ModuleTemplate] .
   --------------------------------------------
@@ -358,9 +359,9 @@ fmod MODULE-TEMPLATE is
   eq fromTemplate(H, IL sorts SS . SSDS OPDS MAS EQS)     = (fmod H is IL sorts SS . SSDS OPDS MAS EQS     endfm) .
   eq fromTemplate(H, IL sorts SS . SSDS OPDS MAS EQS RLS) = (mod  H is IL sorts SS . SSDS OPDS MAS EQS RLS endm) .
 
-  op _++_ : Module ModuleTemplate -> Module [prec 72] .
-  -----------------------------------------------------
-  eq MOD ++ MT = fromTemplate(getName(MOD), asTemplate(MOD) ++ MT) .
+  op _++_ : Module ModuleTemplateSet -> [Module] [prec 72] .
+  ----------------------------------------------------------
+  eq MOD ++ NeMTS = fromTemplate(getName(MOD), asTemplate(MOD) ++ ++(NeMTS)) .
 
   op _++_ : Module Module -> Module [assoc prec 73] .
   ---------------------------------------------------
