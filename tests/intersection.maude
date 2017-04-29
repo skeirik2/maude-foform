@@ -56,13 +56,24 @@ fmod INTERSECTION is
        endfm))
   =   (fmod qid(string(Header1) + " intersect " + string(Header2)) is
          nil
-         sorts intersection(SortSet1, SortSet2) .
-         intersection(SubsortDeclSet1, SubsortDeclSet2)
-         intersection(OpDeclSet1, OpDeclSet2)
+         sorts intersect(SortSet1, SortSet2) .
+         intersect(SubsortDeclSet1, SubsortDeclSet2)
+         intersect(OpDeclSet1, OpDeclSet2)
          none
          none
        endfm) .  
 endfm
+
+load ../msh.maude
+
+fmod PURIFICATION is
+  protecting FOFORM .
+  
+  ---- purify the equality Term1 = Term2 ----
+  
+endfm
+
+---- Testing ----
 
 set include BOOL off .
   
@@ -107,15 +118,17 @@ fmod MYINT-LIST is
   op _,_ : I List -> NeList [ctor prec 27] .
 endfm
 
-select INTERSECTION .
+fmod MYINT-COMBINED is
+  protecting MYINT-LIST + MYINT-RAT .
+endfm
 
-reduce upModule('MYINT-LIST, true) .
-reduce upModule('MYINT-RAT, true) .
+select MSH .
 
-set trace on .
-                 
-reduce intersect(upModule('MYINT-LIST, true),
-                 upModule('MYINT-RAT, true)) .
+reduce #resolveModule(#upModule('MYINT-COMBINED deriving META-THEORY)) .
+
+
+
+
 
 
 
