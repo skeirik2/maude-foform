@@ -1,4 +1,4 @@
-load ../msh.maude
+load ../src/msh.maude
 
 set include BOOL off .
 

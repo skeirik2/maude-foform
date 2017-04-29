@@ -1,4 +1,4 @@
-load ../test-foform.maude
+load ../src/test-foform.maude
 
 fmod FOFORM-SUBSTITUTION-TEST is
   protecting FOFORM-SUBSTITUTION .

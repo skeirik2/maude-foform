@@ -45,7 +45,7 @@ fmod MYINT-LIST is
 endfm
 
 --- It should be the case that intersect(MYINT-LIST, MYINT-RAT) == MYINT
-load ../msh.maude
+load ../src/msh.maude
 select MSH .
 
 set print color on .

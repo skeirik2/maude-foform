@@ -1,6 +1,6 @@
-load ../msh.maude
-load ../state-space.maude
-load ../systems/all-systems.maude
+load ../src/msh.maude
+load ../src/state-space.maude
+load ../src/systems/all-systems.maude
 
 select STATE-EXPLORE .
 set print color on .

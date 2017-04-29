@@ -49,7 +49,7 @@ endfm
 --- things about modules for us.
 
 
-load module-exp.maude
+load univ.maude
 
 fmod MODULE-DATABASE is
   protecting MODULE-EXPRESSION  .

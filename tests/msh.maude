@@ -1,4 +1,4 @@
-load ../msh.maude
+load ../src/msh.maude
 
 set print color on .
 select MSH .
