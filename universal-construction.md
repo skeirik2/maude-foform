@@ -56,27 +56,27 @@ Covariant data are data-structures that follow the normal
   op covariant-data : Sort -> UniversalConstruction .
   ---------------------------------------------------
   ceq covariant-data(S) =   forall sorts svar('X) .
-                            exists ( sorts S < svar('X) > ; NeS < svar('X) > . )
-                                   ( subsorts svar('X) < (NeS < svar('X) >) < (S < svar('X) >) . )
-                          ; forall ( sorts svar('X) ; S < svar('X) > ; NeS < svar('X) >
-                                         ; svar('Y) ; S < svar('Y) > ; NeS < svar('Y) > .
+                            exists ( sorts S{svar('X)} ; NeS{svar('X)} . )
+                                   ( subsorts svar('X) < NeS{svar('X)} < S{svar('X)} . )
+                          ; forall ( sorts svar('X) ; S{svar('X)} ; NeS{svar('X)}
+                                         ; svar('Y) ; S{svar('Y)} ; NeS{svar('Y)} .
                                    )
                                    ( subsort svar('X) < svar('Y) . )
                             exists ( sorts none . )
-                                   ( subsort   S < svar('X) > <   S < svar('Y) > .
-                                     subsort NeS < svar('X) > < NeS < svar('Y) > .
+                                   ( subsort   S{svar('X)} <   S{svar('Y)} .
+                                     subsort NeS{svar('X)} < NeS{svar('Y)} .
                                    )
                         if NeS := qid("Ne" + string(S)) .
 
   op covariant-data-binary : Sort Qid AttrSet -> UniversalConstruction .
   ----------------------------------------------------------------------
   ceq covariant-data-binary(S, Op, AS) =   covariant-data(S)
-                                         ; forall ( sorts svar('X) ; S < svar('X) > ; NeS < svar('X) > . )
-                                                  ( subsorts svar('X) < (NeS < svar('X) >) < (S < svar('X) >) . )
+                                         ; forall ( sorts svar('X) ; S{svar('X)} ; NeS{svar('X)} . )
+                                                  ( subsorts svar('X) < NeS{svar('X)} < S{svar('X)} . )
                                            exists ( sorts none . )
-                                                  ( op Nil : nil -> S < svar('X) > [ctor] .
-                                                    op Op : S < svar('X) >   S < svar('X) > ->   S < svar('X) > [ctor id(Nil . S < svar('X) >) AS] .
-                                                    op Op : S < svar('X) > NeS < svar('X) > -> NeS < svar('X) > [ctor id(Nil . S < svar('X) >) AS] .
+                                                  ( op Nil : nil -> S{svar('X)} [ctor] .
+                                                    op Op : (S{svar('X)})   (S{svar('X)}) ->   S{svar('X)} [ctor id(const(Nil, S{svar('X)})) AS] .
+                                                    op Op : (S{svar('X)}) (NeS{svar('X)}) -> NeS{svar('X)} [ctor id(const(Nil, S{svar('X)})) AS] .
                                                   )
                                        if NeS := qid("Ne" + string(S))
                                        /\ Nil := qid("." + string(S)) .
@@ -85,15 +85,15 @@ Covariant data are data-structures that follow the normal
 The universal constructions for data-types `LIST` and `SET` are provided here.
 
 ```{.maude .module-exp}
-  ops LIST SET QFML : -> UniversalConstruction .
-  ----------------------------------------------
+  ops LIST SET : -> UniversalConstruction .
+  -----------------------------------------
   eq LIST = covariant-data-binary('List, '_`,_, assoc) .
   ceq SET = ( covariant-data-binary('Set, '_;_, assoc comm)
-            ; forall ( sorts 'NeSet < svar('X) > . )
+            ; forall ( sorts 'NeSet{svar('X)} . )
               exists ( sorts none . )
                      ( eq '_;_[NES, NES] = NES [none] . )
             )
-          if NES := var('NeS < svar('X) >, 'NeSet < svar('X) >) .
+          if NES := var('NeS, 'NeSet{svar('X)}) .
 ```
 
 Signature Refinement
@@ -108,12 +108,12 @@ way to generate them).
   op sort-refinement : Qid -> UniversalConstruction .
   ---------------------------------------------------
   eq sort-refinement(Q) =   forall ( sorts svar('X) . )
-                            exists ( sorts (svar('X) < Q >) . )
-                                   ( subsort (svar('X) < Q >) < svar('X) . )
-                          ; forall ( sorts svar('X) ; svar('Y) ; (svar('X) < Q >) ; (svar('Y) < Q >) . )
+                            exists ( sorts svar('X){Q} . )
+                                   ( subsort svar('X){Q} < svar('X) . )
+                          ; forall ( sorts svar('X) ; svar('Y) ; svar('X){Q} ; svar('Y){Q} . )
                                    ( subsort svar('X) < svar('Y) . )
                             exists ( sorts none . )
-                                   ( subsort (svar('X) < Q >) < (svar('Y) < Q >) . ) .
+                                   ( subsort svar('X){Q} < svar('Y){Q} . ) .
 
   op signature-refinement : Qid -> UniversalConstruction .
   --------------------------------------------------------
@@ -124,19 +124,19 @@ way to generate them).
 
   op signature-refinement : Nat Qid -> UniversalConstruction .
   ------------------------------------------------------------
-  eq signature-refinement(0, Q) = forall ( sorts svar('X) ; (svar('X) < Q >) . )
+  eq signature-refinement(0, Q) = forall ( sorts svar('X) ; svar('X){Q} . )
                                          ( op qvar('OP) : nil -> svar('X) [attrsetvar('AS)] . )
                                   exists ( sorts none . )
-                                         ( op qvar('OP) : nil -> (svar('X) < Q >) [attrsetvar('AS)] . ) .
-  eq signature-refinement(1, Q) = ( forall ( sorts svar('X) ; (svar('X) < Q >) ; svar('Y) ; (svar('Y) < Q >). )
+                                         ( op qvar('OP) : nil -> svar('X){Q} [attrsetvar('AS)] . ) .
+  eq signature-refinement(1, Q) = ( forall ( sorts svar('X) ; svar('X){Q} ; svar('Y) ; svar('Y){Q}. )
                                            ( op qvar('OP) : svar('Y) -> svar('X) [attrsetvar('AS)] . )
                                     exists ( sorts none . )
-                                           ( op qvar('OP) : (svar('Y) < Q >) -> (svar('X) < Q >) [attrsetvar('AS)] . )
+                                           ( op qvar('OP) : svar('Y){Q} -> svar('X){Q} [attrsetvar('AS)] . )
                                   ) << ('X:Sort <- 'Y:Sort) .
-  eq signature-refinement(2, Q) = ( forall ( sorts svar('X) ; (svar('X) < Q >) ; svar('Y) ; (svar('Y) < Q >) ; svar('Z) ; (svar('Z) < Q >) . )
+  eq signature-refinement(2, Q) = ( forall ( sorts svar('X) ; svar('X){Q} ; svar('Y) ; svar('Y){Q} ; svar('Z) ; svar('Z){Q} . )
                                            ( op qvar('OP) : svar('Y) svar('Z) -> svar('X) [attrsetvar('AS)] . )
                                     exists ( sorts none . )
-                                           ( op qvar('OP) : (svar('Y) < Q >) (svar('Z) < Q >) -> (svar('X) < Q >) [attrsetvar('AS)] . )
+                                           ( op qvar('OP) : (svar('Y){Q}) (svar('Z){Q}) -> svar('X){Q} [attrsetvar('AS)] . )
                                   ) << (('X:Sort <- 'Y:Sort) | ('X:Sort <- 'Z:Sort) | ('Y:Sort <- 'Z:Sort) | ('Y:Sort <- 'X:Sort ; 'Z:Sort <- 'X:Sort)) .
 endfm
 ```
@@ -184,16 +184,16 @@ fmod MODULE-EXPRESSION is
   eq META-THEORY < Q > =   exists ( extending 'META-LEVEL . )
                                   ( sorts none . )
                          ; exists asTemplate(#upModule('META-TERM deriving sort-refinement(Q)))
-                         ; forall ( sorts 'Constant   ; 'Constant   < svar('MOD) >
-                                        ; 'Variable   ; 'Variable   < svar('MOD) >
-                                        ; 'GroundTerm ; 'GroundTerm < svar('MOD) >
-                                        ; 'Term       ; 'Term       < svar('MOD) > .
+                         ; forall ( sorts 'Constant   ; 'Constant{svar('MOD)}
+                                        ; 'Variable   ; 'Variable{svar('MOD)}
+                                        ; 'GroundTerm ; 'GroundTerm{svar('MOD)}
+                                        ; 'Term       ; 'Term{svar('MOD)} .
                                   )
                            exists ( sorts none . )
-                                  ( cmb 'C:Constant    : 'Constant   < svar('MOD) > if 'wellFormed['upModule[upTerm(Q), 'false.Bool], 'C:Constant]    = 'true.Bool [none] .
-                                    cmb 'V:Variable    : 'Variable   < svar('MOD) > if 'wellFormed['upModule[upTerm(Q), 'false.Bool], 'V:Variable]    = 'true.Bool [none] .
-                                    cmb 'GT:GroundTerm : 'GroundTerm < svar('MOD) > if 'wellFormed['upModule[upTerm(Q), 'false.Bool], 'GT:GroundTerm] = 'true.Bool [none] .
-                                    cmb 'T:Term        : 'Term       < svar('MOD) > if 'wellFormed['upModule[upTerm(Q), 'false.Bool], 'T:Term]        = 'true.Bool [none] .
+                                  ( cmb 'C:Constant    : 'Constant{svar('MOD)}   if 'wellFormed['upModule[upTerm(Q), 'false.Bool], 'C:Constant]    = 'true.Bool [none] .
+                                    cmb 'V:Variable    : 'Variable{svar('MOD)}   if 'wellFormed['upModule[upTerm(Q), 'false.Bool], 'V:Variable]    = 'true.Bool [none] .
+                                    cmb 'GT:GroundTerm : 'GroundTerm{svar('MOD)} if 'wellFormed['upModule[upTerm(Q), 'false.Bool], 'GT:GroundTerm] = 'true.Bool [none] .
+                                    cmb 'T:Term        : 'Term{svar('MOD)}       if 'wellFormed['upModule[upTerm(Q), 'false.Bool], 'T:Term]        = 'true.Bool [none] .
                                   ) .
 
   op _deriving_ : Module UniversalConstruction -> [Module] [prec 80] .

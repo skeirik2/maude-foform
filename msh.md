@@ -66,7 +66,7 @@ fmod MODULE-DATABASE is
 
   op _[_] : Qid ModuleEnv -> Module .
   -----------------------------------
-  eq Q [ Q |-> ME MENV ] = #resolveModule(#upModule(ME)) .
+  eq Q [ Q |-> ME MENV ] = resolveModule(#upModule(ME)) .
 
   op modules <_> : ModuleEnv -> NeAnalysis [ctor format(d d n n d)] .
   -------------------------------------------------------------------

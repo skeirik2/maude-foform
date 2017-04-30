@@ -108,8 +108,8 @@ claim [ ( modules < .ModuleEnv >
                                   op 'b : nil -> 'B [none] .
                                   op 'f : 'B -> 'A [none] .
                                   none
-                                  eq '_;_['NeS`{A`}:NeSet`{A`},'NeS`{A`}:NeSet`{A`}] = 'NeS`{A`}:NeSet`{A`} [none] .
-                                  eq '_;_['NeS`{B`}:NeSet`{B`},'NeS`{B`}:NeSet`{B`}] = 'NeS`{B`}:NeSet`{B`} [none] .
+                                  eq '_;_['NeS:NeSet`{A`},'NeS:NeSet`{A`}] = 'NeS:NeSet`{A`} [none] .
+                                  eq '_;_['NeS:NeSet`{B`},'NeS:NeSet`{B`}] = 'NeS:NeSet`{B`} [none] .
                                   eq 'f['b.B] = 'a.A [none] .
                                 endfm
                               )
@@ -347,8 +347,8 @@ fmod PURIFICATION is
       /\ TM2 := var('TM2, 'Term < svar('M2) >) .
 endfm
 
-reduce #resolveModule(#upModule('EMPTY deriving PURIFICATION('TEST-MODULE, 'TEST-MODULE2))) .
-reduce wellFormed(#resolveModule(#upModule('EMPTY deriving PURIFICATION('TEST-MODULE, 'TEST-MODULE2)))) .
+reduce resolveModule(#upModule('EMPTY deriving PURIFICATION('TEST-MODULE, 'TEST-MODULE2))) .
+reduce wellFormed(resolveModule(#upModule('EMPTY deriving PURIFICATION('TEST-MODULE, 'TEST-MODULE2)))) .
 
 --- reduce reduce < #resolveModule(#upModule('EMPTY deriving PURIFICATION('TEST-MODULE, 'TEST-MODULE2))) > ['f['b.B]] .
 
