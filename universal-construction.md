@@ -138,6 +138,39 @@ way to generate them).
                                     exists ( sorts none . )
                                            ( op qvar('OP) : (svar('Y){Q}) (svar('Z){Q}) -> svar('X){Q} [attrsetvar('AS)] . )
                                   ) << (('X:Sort <- 'Y:Sort) | ('X:Sort <- 'Z:Sort) | ('Y:Sort <- 'Z:Sort) | ('Y:Sort <- 'X:Sort ; 'Z:Sort <- 'X:Sort)) .
+```
+
+Exponential Objects
+-------------------
+
+For functional-style programming (including higher-order functional
+programming), it's necessary to reify arrows between sorts (functions) as
+objects themselves. This `EXPONENTIAL` universal construction does that.
+
+```{.maude .univ}
+--- todo:
+--- fix arrow sorts, add qid construct for arrows
+--- covariance/contravariance separately
+--- subsorts arent what i think they are
+--- do everything at double arrow level
+
+  op EXPONENTIAL : -> UniversalConstruction .
+  ----------------------------------------------
+  eq EXPONENTIAL =   forall ( sorts svar('X) ; svar('Y) . )
+                     exists ( sorts svar('X) ==> svar('Y) . )
+                   ; forall ( sorts svar('X) ; svar('Y) ; svar('Z) ; svar('X) ==> svar('Y) ; svar('X) ==> svar('Z) . )
+                            ( subsort svar('Y) < svar('Z) . )
+                     exists ( sorts none . )
+                            ( subsort svar('X) ==> svar('Y) < svar('X) ==> svar('Z) . )
+                   ; forall ( sorts svar('X) ; svar('Y) ; svar('W) ; svar('X) ==> svar('Y) ; svar('W) ==> svar('Y) . )
+                            ( subsort svar('W) < svar('X) . )
+                     exists ( sorts none . )
+                            ( subsort svar('X) ==> svar('Y) < svar('W) ==> svar('Y) . )
+                   ; forall ( sorts svar('X) ; svar('Y) ; svar('X) ==> svar('Y) ; svar('Y) ==> svar('Z) . )
+                            ( op qvar('OP1) : svar('X) -> svar('Y) [none] .
+                              op qvar('OP2) : svar('Y) -> svar('Z) [none] . )
+                     exists ( sorts svar('X) ==> svar('Z) . )
+                            ( op qvar('OP12) : svar('X) -> svar('Z) [none] . ) .
 endfm
 ```
 
@@ -152,7 +185,6 @@ that this can be done. This is a construction that refines the module
 `META-TERM` and adds it to your module, as well as adding in conditional
 memberships which push elements of the sort `Term` into the subsort of
 `Term{MYMOD}` when appropriate.
-
 
 Module Expressions
 ==================
@@ -195,6 +227,35 @@ fmod MODULE-EXPRESSION is
                                     cmb 'GT:GroundTerm : 'GroundTerm{svar('MOD)} if 'wellFormed['upModule[upTerm(Q), 'false.Bool], 'GT:GroundTerm] = 'true.Bool [none] .
                                     cmb 'T:Term        : 'Term{svar('MOD)}       if 'wellFormed['upModule[upTerm(Q), 'false.Bool], 'T:Term]        = 'true.Bool [none] .
                                   ) .
+
+
+    op PURIFICATION : ModuleExpression ModuleExpression -> UniversalConstruction .
+
+    vars M1 M2          : ModuleExpression .
+    vars TM TM' TM1 TM2 : Variable .
+
+    ceq PURIFICATION(M1, M2)
+      =   META-THEORY < M1 >
+        ; META-THEORY < M2 >
+        ; exists ( extending 'FOFORM .
+                   extending M1 .
+                   extending M2 . )
+                 ( sorts none . )
+                 ( op 'purify : 'EqAtom -> 'EqConj [none] .
+                   op 'fvar   : 'Term 'Term -> 'Variable [none] . )
+        ; forall ( sorts 'Term ; 'Term{svar('M)} . )
+                 ( subsort 'Term{svar('M)} < 'Term . )
+          exists ( sorts none . )
+                 ( eq 'purify['_?=_[TM, TM']] = '_?=_[TM, TM'] [none] . )
+        ; forall ( sorts 'Term ; 'Term{svar('M1)} ; 'Term{svar('M2)} . )
+                 ( subsorts 'Term{svar('M1)} ; 'Term{svar('M2)} < 'Term . )
+          exists ( sorts none . )
+                 ( eq 'purify['_?=_[TM1, TM2]] = '_/\_['_?=_['fvar[TM1, TM2], TM1], '_?=_['fvar[TM1, TM2], TM2]] [none] . )
+
+      if TM  := var('TM,  'Term{svar('M)})
+      /\ TM' := var('TM', 'Term{svar('M)})
+      /\ TM1 := var('TM1, 'Term{svar('M1)})
+      /\ TM2 := var('TM2, 'Term{svar('M2)}) .
 
   op _deriving_ : Module UniversalConstruction -> [Module] [prec 80] .
   --------------------------------------------------------------------
