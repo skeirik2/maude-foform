@@ -97,7 +97,7 @@ endfm
 --- given by the sort `CTermSet`.
 
 
-load cterm.maude
+load constrained-terms.maude
 
 fmod STATE is
   protecting MODULE-DATABASE .

@@ -8,8 +8,8 @@ to instantiate `FMOD{X :: FTH}`, and the resulting module is
 `MOD + FMOD{X :: FTH}`. For this, we'll heavily use the machinery of
 `MODULE-TEMPLATE`.
 
-```{.maude .module-exp}
-load mod-template.maude
+```{.maude .univ}
+load module-template.maude
 
 fmod UNIVERSAL-CONSTRUCTION is
   protecting MODULE-TEMPLATE .
@@ -52,7 +52,7 @@ Covariant data are data-structures that follow the normal
 `subsorts X < NeData{X} < Data{X} .` pattern. The universal construction
 `covariant-data` will build the sort-structure for you.
 
-```{.maude .module-exp}
+```{.maude .univ}
   op covariant-data : Sort -> UniversalConstruction .
   ---------------------------------------------------
   ceq covariant-data(S) =   forall sorts svar('X) .
@@ -84,7 +84,7 @@ Covariant data are data-structures that follow the normal
 
 The universal constructions for data-types `LIST` and `SET` are provided here.
 
-```{.maude .module-exp}
+```{.maude .univ}
   ops LIST SET : -> UniversalConstruction .
   -----------------------------------------
   eq LIST = covariant-data-binary('List, '_`,_, assoc) .
@@ -104,7 +104,7 @@ they are refined), as well as copying operators over only the refined sorts
 down. Right now only operators up to arity 2 are handled (until we have a better
 way to generate them).
 
-```{.maude .module-exp}
+```{.maude .univ}
   op sort-refinement : Qid -> UniversalConstruction .
   ---------------------------------------------------
   eq sort-refinement(Q) =   forall ( sorts svar('X) . )
@@ -163,7 +163,7 @@ extensions. In addition, free constructions are provided. Universal construction
 provide a module template with variables to determine anonymous views, and a
 second module template to determine the associated parameterized module.
 
-```{.maude .module-exp}
+```{.maude .univ}
 fmod MODULE-EXPRESSION is
   extending UNIVERSAL-CONSTRUCTION .
 

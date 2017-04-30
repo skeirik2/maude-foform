@@ -9,7 +9,7 @@
 --- `MODULE-TEMPLATE`.
 
 
-load mod-template.maude
+load module-template.maude
 
 fmod UNIVERSAL-CONSTRUCTION is
   protecting MODULE-TEMPLATE .

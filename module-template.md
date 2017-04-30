@@ -12,7 +12,7 @@ writing all our syntax at the meta-level can be a pain. Additionally, we'll need
 a way to have "structured" sort names and operator names. For this, a few
 constructors are provided.
 
-```{.maude .module-template}
+```{.maude .mod-template}
 fmod STRUCTURED-NAME is
   extending META-LEVEL .
 
@@ -71,7 +71,7 @@ We'll also need ways to "resolve" these names into proper Maude names, so that
 we can do execution in Maude with the results. Here we provide the "base"
 resolution, as well as lifting it over the various meta-level data.
 
-```{.maude .module-template}
+```{.maude .mod-template}
   op #resolveTypeList : TypeList -> TypeList .
   --------------------------------------------
   eq #resolveTypeList(nil)        = nil .
@@ -188,8 +188,8 @@ Module templates serve as more flexible module data-structures than what the
     give all the substitutions which make elements of the second module template
     set instances of an element of the first module template set.
 
-```{.maude .module-template}
-load cterm.maude
+```{.maude .mod-template}
+load constrained-terms.maude
 
 fmod MODULE-TEMPLATE-DATA is
   protecting STRUCTURED-NAME .
@@ -360,7 +360,7 @@ functions to convert between `Module` and `ModuleTemplate`.
 -   `resolveModule: ModuleTemplate -> ModuleTemplate` resolves the structured
     names of a module into proper Core Maude names.
 
-```{.maude .module-template}
+```{.maude .mod-template}
 fmod MODULE-TEMPLATE is
   protecting MODULE-TEMPLATE-DATA .
   protecting META-LEVEL .

@@ -97,7 +97,7 @@ The current state (over which we will call commands like `metaReduce` and
 given by the sort `CTermSet`.
 
 ```{.maude .msh}
-load cterm.maude
+load constrained-terms.maude
 
 fmod STATE is
   protecting MODULE-DATABASE .

@@ -191,7 +191,7 @@ endfm
 --- 
 
 
-load cterm.maude
+load constrained-terms.maude
 
 fmod MODULE-TEMPLATE-DATA is
   protecting STRUCTURED-NAME .
