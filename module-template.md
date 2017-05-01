@@ -260,6 +260,13 @@ fmod MODULE-TEMPLATE-DATA is
        subsorts      S' ; SS'  < SPS .
      ) .
 
+  op sortsFromPoset : SortPoset -> SortSet .
+  ------------------------------------------
+  eq sortsFromPoset(none)        = none .
+  eq sortsFromPoset(S)           = S .
+  eq sortsFromPoset(S ; S' ; SS) = S ; S' ; sortsFromPoset(SS) .
+  eq sortsFromPoset((S ; SS < S' ; SS' < SPS)) = sortsFromPoset(S ; SS) ; sortsFromPoset(S' ; SS') ; sortsFromPoset(SPS) .
+
   op (sorts_.) : SortSet -> SortTemplate [format(d d d d) prec 60] .
   op __ : SortTemplate    SubsortDeclSet -> SubsortTemplate [right id: none format(d ni d) prec 61] .
   op __ : SubsortTemplate OpDeclSet      -> OpTemplate      [right id: none format(d ni d) prec 62] .

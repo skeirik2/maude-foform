@@ -161,145 +161,72 @@ claim [ ( modules  < .ModuleEnv >
 
 reduce
 
-claim [ ( modules  < .ModuleEnv >
-          strategy < load-module('TEST-MODULE)
-                   ; set-module('TEST-MODULE-META-THEORY, 'TEST-MODULE deriving META-THEORY)
-                   ; show-module('TEST-MODULE-META-THEORY)
-                   >
-          output   < .Output >
-        )
+claim [ modules < 'STATE |-> ('TEST-MODULE deriving DOWN-TERM) >
 
-      reduces-to
+        ( ( strategy < show-module('STATE)
+                     ; reduce
+                     >
+            state    <  'downTerm<A>[''a.A.Constant] ;; 'downTerm<A>[''b.B.Constant]
+                     ;; 'downTerm<B>[''a.A.Constant] ;; 'downTerm<B>[''b.B.Constant]
+                     ;; '_==_['wellFormed<A>[''a.A.Constant], 'true.Bool] ;; '_==_['wellFormed<A>[''b.B.Constant], 'false.Bool]
+                     ;; '_==_['wellFormed<B>[''a.A.Constant], 'true.Bool] ;; '_==_['wellFormed<B>[''b.B.Constant], 'true.Bool]
+                     >
+            output   < .Output >
+          )
 
-        ( modules  < 'TEST-MODULE |-> 'TEST-MODULE 'TEST-MODULE-META-THEORY |-> ('TEST-MODULE deriving META-THEORY) >
-          strategy < .Program >
-          output   < show-module( fmod 'TEST-MODULE is
-                                    protecting 'QID .
-                                    extending 'META-LEVEL .
-                                    sorts 'A ; 'Assignment ; 'Assignment`{TEST-MODULE`} ; 'B ; 'Constant ; 'Constant`{TEST-MODULE`} ; 'Context ; 'Context`{TEST-MODULE`}
-                                        ; 'GTermList ; 'GTermList`{TEST-MODULE`} ; 'GroundTerm ; 'GroundTermList ; 'GroundTermList`{TEST-MODULE`} ; 'GroundTerm`{TEST-MODULE`}
-                                        ; 'Kind ; 'Kind`{TEST-MODULE`} ; 'NeCTermList ; 'NeCTermList`{TEST-MODULE`} ; 'NeGroundTermList ; 'NeGroundTermList`{TEST-MODULE`}
-                                        ; 'NeTermList ; 'NeTermList`{TEST-MODULE`} ; 'Sort ; 'Sort`{TEST-MODULE`} ; 'Substitution ; 'Substitution`{TEST-MODULE`} ; 'Term ; 'TermList
-                                        ; 'TermList`{TEST-MODULE`} ; 'TermQid ; 'TermQid`{TEST-MODULE`} ; 'Term`{TEST-MODULE`} ; 'Type ; 'Type`{TEST-MODULE`} ; 'Variable ; 'Variable`{TEST-MODULE`} .
-                                    subsort 'A < 'B .
-                                    subsort 'Assignment < 'Substitution .
-                                    subsort 'Assignment`{TEST-MODULE`} < 'Assignment .
-                                    subsort 'Assignment`{TEST-MODULE`} < 'Substitution`{TEST-MODULE`} .
-                                    subsort 'Constant < 'GroundTerm .
-                                    subsort 'Constant < 'TermQid .
-                                    subsort 'Constant`{TEST-MODULE`} < 'Constant .
-                                    subsort 'Constant`{TEST-MODULE`} < 'GroundTerm`{TEST-MODULE`} .
-                                    subsort 'Constant`{TEST-MODULE`} < 'TermQid`{TEST-MODULE`} .
-                                    subsort 'Context < 'NeCTermList .
-                                    subsort 'Context`{TEST-MODULE`} < 'Context .
-                                    subsort 'Context`{TEST-MODULE`} < 'NeCTermList`{TEST-MODULE`} .
-                                    subsort 'GTermList`{TEST-MODULE`} < 'GTermList .
-                                    subsort 'GroundTerm < 'NeGroundTermList .
-                                    subsort 'GroundTerm < 'Term .
-                                    subsort 'GroundTermList < 'TermList .
-                                    subsort 'GroundTermList`{TEST-MODULE`} < 'GroundTermList .
-                                    subsort 'GroundTermList`{TEST-MODULE`} < 'TermList`{TEST-MODULE`} .
-                                    subsort 'GroundTerm`{TEST-MODULE`} < 'GroundTerm .
-                                    subsort 'GroundTerm`{TEST-MODULE`} < 'NeGroundTermList`{TEST-MODULE`} .
-                                    subsort 'GroundTerm`{TEST-MODULE`} < 'Term`{TEST-MODULE`} .
-                                    subsort 'Kind < 'Type .
-                                    subsort 'Kind`{TEST-MODULE`} < 'Kind .
-                                    subsort 'Kind`{TEST-MODULE`} < 'Type`{TEST-MODULE`} .
-                                    subsort 'NeCTermList < 'GTermList .
-                                    subsort 'NeCTermList`{TEST-MODULE`} < 'GTermList`{TEST-MODULE`} .
-                                    subsort 'NeCTermList`{TEST-MODULE`} < 'NeCTermList .
-                                    subsort 'NeGroundTermList < 'GroundTermList .
-                                    subsort 'NeGroundTermList < 'NeTermList .
-                                    subsort 'NeGroundTermList`{TEST-MODULE`} < 'GroundTermList`{TEST-MODULE`} .
-                                    subsort 'NeGroundTermList`{TEST-MODULE`} < 'NeGroundTermList .
-                                    subsort 'NeGroundTermList`{TEST-MODULE`} < 'NeTermList`{TEST-MODULE`} .
-                                    subsort 'NeTermList < 'TermList .
-                                    subsort 'NeTermList`{TEST-MODULE`} < 'NeTermList .
-                                    subsort 'NeTermList`{TEST-MODULE`} < 'TermList`{TEST-MODULE`} .
-                                    subsort 'Sort < 'Type .
-                                    subsort 'Sort`{TEST-MODULE`} < 'Sort .
-                                    subsort 'Sort`{TEST-MODULE`} < 'Type`{TEST-MODULE`} .
-                                    subsort 'Substitution`{TEST-MODULE`} < 'Substitution .
-                                    subsort 'Term < 'NeTermList .
-                                    subsort 'TermList < 'GTermList .
-                                    subsort 'TermList`{TEST-MODULE`} < 'GTermList`{TEST-MODULE`} .
-                                    subsort 'TermList`{TEST-MODULE`} < 'TermList .
-                                    subsort 'TermQid < 'Qid .
-                                    subsort 'TermQid < 'Term .
-                                    subsort 'TermQid`{TEST-MODULE`} < 'TermQid .
-                                    subsort 'TermQid`{TEST-MODULE`} < 'Term`{TEST-MODULE`} .
-                                    subsort 'Term`{TEST-MODULE`} < 'NeTermList`{TEST-MODULE`} .
-                                    subsort 'Term`{TEST-MODULE`} < 'Term .
-                                    subsort 'Type < 'Qid .
-                                    subsort 'Type`{TEST-MODULE`} < 'Type .
-                                    subsort 'Variable < 'TermQid .
-                                    subsort 'Variable`{TEST-MODULE`} < 'TermQid`{TEST-MODULE`} .
-                                    subsort 'Variable`{TEST-MODULE`} < 'Variable .
-                                    op '<Qids> : nil -> 'Constant [special(id-hook('QuotedIdentifierSymbol, 'constantQid))] .
-                                    op '<Qids> : nil -> 'Kind [special(id-hook('QuotedIdentifierSymbol, 'kindQid))] .
-                                    op '<Qids> : nil -> 'Sort [special(id-hook('QuotedIdentifierSymbol, 'sortQid))] .
-                                    op '<Qids> : nil -> 'Variable [special(id-hook('QuotedIdentifierSymbol, 'variableQid))] .
-                                    op '_;_ : 'Substitution 'Substitution -> 'Substitution [assoc comm ctor id('none.Substitution) prec(65)] .
-                                    op '_<-_ : 'Variable 'Term -> 'Assignment [ctor prec(63) format('nt 'd 'd 'd)] .
-                                    op '_`,_ : 'GTermList 'GTermList -> 'GTermList [assoc ctor id('empty.GroundTermList) prec(121) gather('e 'E)] .
-                                    op '_`,_ : 'GroundTermList 'GroundTermList -> 'GroundTermList [assoc ctor id('empty.GroundTermList) prec(121) gather('e 'E)] .
-                                    op '_`,_ : 'GroundTermList 'NeGroundTermList -> 'NeGroundTermList [assoc ctor id('empty.GroundTermList) prec(121) gather('e 'E)] .
-                                    op '_`,_ : 'NeCTermList 'TermList -> 'NeCTermList [assoc ctor id('empty.GroundTermList) prec(121) gather('e 'E)] .
-                                    op '_`,_ : 'NeGroundTermList 'GroundTermList -> 'NeGroundTermList [assoc ctor id('empty.GroundTermList) prec(121) gather('e 'E)] .
-                                    op '_`,_ : 'NeTermList 'TermList -> 'NeTermList [assoc ctor id('empty.GroundTermList) prec(121) gather('e 'E)] .
-                                    op '_`,_ : 'TermList 'NeCTermList -> 'NeCTermList [assoc ctor id('empty.GroundTermList) prec(121) gather('e 'E)] .
-                                    op '_`,_ : 'TermList 'NeTermList -> 'NeTermList [assoc ctor id('empty.GroundTermList) prec(121) gather('e 'E)] .
-                                    op '_`,_ : 'TermList 'TermList -> 'TermList [assoc ctor id('empty.GroundTermList) prec(121) gather('e 'E)] .
-                                    op '_`[_`] : 'Qid 'NeCTermList -> 'Context [ctor] .
-                                    op '_`[_`] : 'Qid 'NeGroundTermList -> 'GroundTerm [ctor] .
-                                    op '_`[_`] : 'Qid 'NeTermList -> 'Term [ctor] .
-                                    op '`[`] : nil -> 'Context [ctor] .
-                                    op 'a : nil -> 'A [none] .
-                                    op 'b : nil -> 'B [none] .
-                                    op 'empty : nil -> 'GroundTermList [ctor] .
-                                    op 'f : 'B -> 'A [none] .
-                                    op 'getName : 'Constant -> 'Qid [none] .
-                                    op 'getName : 'Variable -> 'Qid [none] .
-                                    op 'getType : 'Constant -> 'Type [none] .
-                                    op 'getType : 'Variable -> 'Type [none] .
-                                    op 'none : nil -> 'Substitution [ctor] .
-                                    cmb 'C:Constant : 'Constant`{TEST-MODULE`} if 'wellFormed['upModule[''TEST-MODULE.Sort,'true.Bool],'C:Constant] = 'true.Bool [none] .
-                                    cmb 'GT:GroundTerm : 'GroundTerm`{TEST-MODULE`} if 'wellFormed['upModule[''TEST-MODULE.Sort,'true.Bool],'GT:GroundTerm] = 'true.Bool [none] .
-                                    cmb 'T:Term : 'Term`{TEST-MODULE`} if 'wellFormed['upModule[''TEST-MODULE.Sort,'true.Bool],'T:Term] = 'true.Bool [none] .
-                                    cmb 'V:Variable : 'Variable`{TEST-MODULE`} if 'wellFormed['upModule[''TEST-MODULE.Sort,'true.Bool],'V:Variable] = 'true.Bool [none] .
-                                    eq '_;_['A:Assignment,'A:Assignment] = 'A:Assignment [none] .
-                                    eq 'f['b.B] = 'a.A [none] .
-                                    eq 'getName['C:Constant] = 'qid['substr['string['C:Constant],'0.Zero,'rfind['string['C:Constant],'".".Char,'length['string['C:Constant]]]]] [none] .
-                                    eq 'getName['V:Variable] = 'qid['substr['string['V:Variable],'0.Zero,'rfind['string['V:Variable],'":".Char,'length['string['V:Variable]]]]] [none] .
-                                    eq 'getType['C:Constant] = 'qid['substr['string['C:Constant],'_+_['s_['0.Zero],'rfind['string['C:Constant],'".".Char,'length['string['C:Constant]]]],'length['string['C:Constant]]]] [none] .
-                                    eq 'getType['V:Variable] = 'qid['substr['string['V:Variable],'_+_['s_['0.Zero],'rfind['string['V:Variable],'":".Char,'length['string['V:Variable]]]],'length['string['V:Variable]]]] [none] .
-                                  endfm
-                                )
-                 >
+        reduces-to
+
+          ( strategy < .Program >
+            state    < 'a.A ;; 'downTerm<A>[''b.B.Constant] ;; 'a.A ;; 'b.B ;; 'true.Bool >
+            output   < show-module( fmod 'TEST-MODULE is
+                                        extending 'META-LEVEL .
+                                        sorts 'A ; 'A? ; 'B ; 'B? .
+                                        subsort 'A < 'A? .
+                                        subsort 'A < 'B .
+                                        subsort 'A? < 'B? .
+                                        subsort 'B < 'B? .
+                                        op 'a : nil -> 'A [none] .
+                                        op 'b : nil -> 'B [none] .
+                                        op 'downTerm<A> : 'Term -> 'A? [none] .
+                                        op 'downTerm<B> : 'Term -> 'B? [none] .
+                                        op 'downTermError<A> : nil -> 'A? [ctor] .
+                                        op 'downTermError<B> : nil -> 'B? [ctor] .
+                                        op 'f : 'B -> 'A [none] .
+                                        op 'wellFormed<A> : 'Term -> 'Bool [none] .
+                                        op 'wellFormed<B> : 'Term -> 'Bool [none] .
+                                        none
+                                        eq 'f['b.B] = 'a.A [none] .
+                                        eq 'wellFormed<A>['T:Term] = 'false.Bool [owise] .
+                                        eq 'wellFormed<B>['T:Term] = 'false.Bool [owise] .
+                                        ceq 'downTerm<A>['T:Term] = 'X:A if 'X:A := 'downTerm['T:Term,'downTermError<A>.A?] [none] .
+                                        ceq 'downTerm<B>['T:Term] = 'X:B if 'X:B := 'downTerm['T:Term,'downTermError<B>.B?] [none] .
+                                        ceq 'wellFormed<A>['T:Term] = 'true.Bool if 'X:A := 'downTerm<A>['T:Term] [none] .
+                                        ceq 'wellFormed<B>['T:Term] = 'true.Bool if 'X:B := 'downTerm<B>['T:Term] [none] .
+                                    endfm
+                                  )
+                     >
+          )
         )
-      ]
+]
 
 .
 
-reduce
 
-claim [ ( modules  < .ModuleEnv >
-          strategy < set-module('STATE, 'EMPTY deriving PURIFICATION('TEST-MODULE, 'TEST-MODULE2))
-                   ; reduce
-                   >
-          state    < 'f['b.B] ;; 'g['c.C] ;; 'purify[upTerm('f['B:B] ?= 'f['A:A])] >
-        )
-
-      reduces-to
-
-          ( modules  < 'STATE |-> ('EMPTY deriving PURIFICATION('TEST-MODULE, 'TEST-MODULE2)) >
-          strategy < .Program >
-          state    < 'a.A ;; 'd.D ;; '_?=_['_`[_`][''f.Sort, ''A:A.Variable`{TEST-MODULE`}], '_`[_`][''f.Sort, ''B:B.Variable`{TEST-MODULE`}]] >
-        )
-      ]
-
-.
-
-reduce #upModule('TEST-MODULE deriving META-THEORY2) .
-reduce resolveModule(#upModule('TEST-MODULE deriving META-THEORY2)) .
-reduce wellFormed(resolveModule(#upModule('TEST-MODULE deriving META-THEORY2))) .
+---reduce
+---
+---claim [ ( modules  < .ModuleEnv >
+---          strategy < set-module('STATE, 'EMPTY deriving PURIFICATION('TEST-MODULE, 'TEST-MODULE2))
+---                   ; reduce
+---                   >
+---          state    < 'f['b.B] ;; 'g['c.C] ;; 'purify[upTerm('f['B:B] ?= 'f['A:A])] >
+---        )
+---
+---      reduces-to
+---
+---          ( modules  < 'STATE |-> ('EMPTY deriving PURIFICATION('TEST-MODULE, 'TEST-MODULE2)) >
+---          strategy < .Program >
+---          state    < 'a.A ;; 'd.D ;; '_?=_['_`[_`][''f.Sort, ''A:A.Variable`{TEST-MODULE`}], '_`[_`][''f.Sort, ''B:B.Variable`{TEST-MODULE`}]] >
+---        )
+---      ]
+---
+---.
