@@ -20,15 +20,21 @@ fmod UNIVERSAL-CONSTRUCTION is
   var SUBSTS : SubstitutionSet . var MOD : Module . vars MT MT' : ModuleTemplate . vars FC FC' FC'' : UniversalConstruction .
   vars S S' NeS : Sort . vars SS : SortSet . vars Op Nil Q : Qid . var AS : AttrSet . var NES : Variable .
   vars SUB SUB' : Substitution . var SUBS : SubstitutionSet . vars NeMTS NeMTS' : NeModuleTemplateSet . var SPS : SortPoset .
+  var SSDS : SubsortDeclSet .
 
   op _<_> : ModUniversalConstruction Qid -> UniversalConstruction [ctor] .
   ------------------------------------------------------------------------
 
-  op exists_        : ModuleTemplate                   -> UniversalConstruction [ctor prec 75] .
-  op forall_exists_ : ModuleTemplateSet ModuleTemplate -> UniversalConstruction [ctor prec 75] .
+  op exists_        : ModuleTemplate                   -> UniversalConstruction [prec 75] .
+  op forall_exists_ : ModuleTemplateSet ModuleTemplate -> UniversalConstruction [prec 75] .
+  op forall_exists_ : ModuleTemplate    ModuleTemplate -> UniversalConstruction [ctor prec 75] .
   ----------------------------------------------------------------------------------------------
   eq exists MT                       = forall (sorts none .) exists MT .
   eq forall NeMTS | NeMTS' exists MT = forall NeMTS exists MT | forall NeMTS' exists MT .
+
+  op univ_ : SubsortDeclSet -> UniversalConstruction [prec 75] .
+  --------------------------------------------------------------
+  eq univ SSDS = forall #extractParametersSSDS(SSDS) exists ( sorts none . ) SSDS .
 
   op _;_ : UniversalConstruction UniversalConstruction -> UniversalConstruction [ctor assoc prec 76 format(d n d d)] .
   op _|_ : UniversalConstruction UniversalConstruction -> UniversalConstruction [ctor assoc comm prec 77 format(d n d d)] .
@@ -57,10 +63,6 @@ fmod UNIVERSAL-CONSTRUCTION is
 ---     subsort structure. The first sort serves as a template for which sorts to
 ---     copy, and the secord sort serves as a template for the sort to build.
 --- 
---- -   `subsort : Sort Sort -> UniversalConstruction` takes two sort templates and
----     adds the subsort relationship to any pair of sorts which match
----     the templates.
---- 
 --- -   `covariant-data-up : Sort Sort -> UniversalConstruction` creates a copy of
 ---     the sort structure and makes the copy super-sorts of the original.
 --- 
@@ -80,21 +82,15 @@ fmod UNIVERSAL-CONSTRUCTION is
                           exists ( sorts none . )
                                  ( subsort S' < prime(S') . ) .
 
-  op univ-subsorts_. : SortPoset -> UniversalConstruction .
-  ----------------------------------------------------
-  eq univ-subsorts SPS . = forall ( sorts sortsFromPoset(SPS) . )
-                           exists ( sorts none . )
-                                  ( subsorts SPS . ) .
-
   op covariant-data-up : Sort Sort -> UniversalConstruction .
   -----------------------------------------------------------
   eq covariant-data-up(S, S') =   covariant(S, S')
-                                ; ( univ-subsorts S < S' . ) .
+                                ; univ ( subsorts S < S' . ) .
 
   op covariant-data-down : Sort Sort -> UniversalConstruction .
   -------------------------------------------------------------
   eq covariant-data-down(S, S') =   covariant(S, S')
-                                  ; ( univ-subsorts S' < S . ) .
+                                  ; univ ( subsorts S' < S . ) .
 
 
 --- A common idiom is to create the subsort-chain `X < NeF{X} < F{X}`, where `F` is
@@ -259,30 +255,7 @@ fmod UNIVERSAL-CONSTRUCTION is
                             eq  'wellFormed < svar('X) > [var('T, 'Term)] = 'false.Bool [owise] .
                           ) .
 
-  op META-TERM : -> ModUniversalConstruction .
-  --------------------------------------------
-  eq META-TERM < Q > =   exists ( extending 'META-LEVEL . )
-                                ( sorts 'Constant{Q} ; 'Variable{Q} ; 'GroundTerm{Q} ; 'Term{Q} . )
-                       ; forall ( sorts svar('X) . )
-                         exists ( sorts 'Constant{Q @ svar('X)} ; 'Variable{Q @ svar('X)} ; 'GroundTerm{Q @ svar('X)} ; 'Term{Q @ svar('X)} . )
-                       ; forall ( sorts svar('X) ; svar('T){Q @ svar('X)}
-                                      ; svar('Y) ; svar('T){Q @ svar('Y)} .
-                                )
-                                ( subsort svar('X) < svar('Y) . )
-                         exists ( sorts none . )
-                                ( subsort svar('T){Q @ svar('X)} < svar('T){Q @ svar('Y)} . )
-                       ; forall top-sorts(svar('T){Q @ svar('X)})
-                         exists ( sorts none . )
-                                ( subsorts svar('T){Q @ svar('X)} < svar('T){Q} < svar('T) . )
-                       ; ( univ-subsorts 'Constant{svar('X)} < 'GroundTerm{svar('X)} < 'Term{svar('X)} . )
-                       ; ( univ-subsorts 'Variable{svar('X)} < 'Term{svar('X)} . ) .
 
-  op META-THEORY : -> ModUniversalConstruction .
-  ----------------------------------------------
-  eq META-THEORY < Q > =   ( DOWN-TERM | META-TERM )
-                         ; forall ( sorts svar('X) ; svar('X) ? ; svar('T){Q @ svar('X)} ; svar('T){Q} . )
-                           exists ( sorts none . )
-                                  ( cmb-pred( svar('T) , svar('T){Q @ svar('X)} , 'wellFormed < svar('X) > ) ) .
 endfm
 
 
@@ -311,6 +284,24 @@ fmod MODULE-EXPRESSION is
   op _deriving_ : ModuleExpression UniversalConstruction -> ModuleExpression [prec 80] .
   --------------------------------------------------------------------------------------
   eq #upModule(ME deriving FC) = #upModule(ME) deriving FC .
+
+  op META-TERM : -> ModUniversalConstruction .
+  --------------------------------------------
+  eq META-TERM < Q > =   exists ( extending 'META-LEVEL . )
+                                ( sorts none . )
+                       ; forall ( sorts svar('X) . )
+                         exists asTemplate(#upModule('META-TERM deriving ( covariant-data-down(svar('T),    svar('T){Q})
+                                                                         ; covariant-data-down(svar('T){Q}, svar('T){Q @ svar('X)})
+                                                                         )
+                                                    )
+                                          ) .
+
+  op META-THEORY : -> ModUniversalConstruction .
+  ----------------------------------------------
+  eq META-THEORY < Q > =   ( DOWN-TERM | META-TERM )
+                         ; forall ( sorts svar('X) ; svar('X) ? ; svar('T){Q @ svar('X)} ; svar('T){Q} . )
+                           exists ( sorts none . )
+                                  ( cmb-pred( svar('T) , svar('T){Q @ svar('X)} , 'wellFormed < svar('X) > ) ) .
 
     vars M1 M2          : ModuleExpression .
     vars TM TM' TM1 TM2 : Variable .

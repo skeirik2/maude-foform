@@ -260,13 +260,6 @@ fmod MODULE-TEMPLATE-DATA is
        subsorts      S' ; SS'  < SPS .
      ) .
 
-  op sortsFromPoset : SortPoset -> SortSet .
-  ------------------------------------------
-  eq sortsFromPoset(none)        = none .
-  eq sortsFromPoset(S)           = S .
-  eq sortsFromPoset(S ; S' ; SS) = S ; S' ; sortsFromPoset(SS) .
-  eq sortsFromPoset((S ; SS < S' ; SS' < SPS)) = sortsFromPoset(S ; SS) ; sortsFromPoset(S' ; SS') ; sortsFromPoset(SPS) .
-
   op (sorts_.) : SortSet -> SortTemplate [format(d d d d) prec 60] .
   op __ : SortTemplate    SubsortDeclSet -> SubsortTemplate [right id: none format(d ni d) prec 61] .
   op __ : SubsortTemplate OpDeclSet      -> OpTemplate      [right id: none format(d ni d) prec 62] .
@@ -340,6 +333,39 @@ fmod MODULE-TEMPLATE-DATA is
   ceq not-instance-with?(MTS, MT, SU)                  = if SUBSTS == empty then SU else empty fi if SUBSTS := match (MTS << SU) with MT .
   eq  not-instance-with?(MTS, MT, (SU | SU' | SUBSTS)) = not-instance-with?(MTS, MT, SU) | not-instance-with?(MTS, MT, SU') | not-instance-with?(MTS, MT, SUBSTS) .
 
+  op resolveNames : ModuleTemplate -> ModuleTemplate .
+  ----------------------------------------------------
+  eq  resolveNames(sorts SS .) = (sorts #resolveSorts(SS) .) .
+  ceq resolveNames(ST   SSDS)  = resolveNames(ST)    #resolveSubsorts(SSDS)   if not (SSDS == none) .
+  ceq resolveNames(SST  OPDS)  = resolveNames(SST)   #resolveOps(OPDS)        if not (OPDS == none) .
+  ceq resolveNames(OPT  MAS)   = resolveNames(OPT)   #resolveMemberships(MAS) if not (MAS  == none) .
+  ceq resolveNames(MAT  EQS)   = resolveNames(MAT)   #resolveEquations(EQS)   if not (EQS  == none) .
+  ceq resolveNames(EQT  RLS)   = resolveNames(EQT)   #resolveRules(RLS)       if not (RLS  == none) .
+  ceq resolveNames(IL   RLT)   = #resolveImports(IL) resolveNames(RLT)        if not (IL   == nil) .
+
+  op extractParameters : ModuleTemplate -> ModuleTemplate .
+  ---------------------------------------------------------
+  eq  extractParameters(sorts SS .) = #extractParametersSS(SS) .
+  ceq extractParameters(ST   SSDS)  = extractParameters(ST)    ++ #extractParametersSSDS(SSDS) if not (SSDS == none) .
+  ceq extractParameters(SST  OPDS)  = extractParameters(SST)   ++ #extractParametersOPDS(OPDS) if not (OPDS == none) .
+  ceq extractParameters(OPT  MAS)   = extractParameters(OPT)   ++ #extractParametersMAS(MAS)   if not (MAS  == none) .
+  ceq extractParameters(MAT  EQS)   = extractParameters(MAT)   ++ #extractParametersEQS(EQS)   if not (EQS  == none) .
+  ceq extractParameters(EQT  RLS)   = extractParameters(EQT)   ++ #extractParametersRLS(RLS)   if not (RLS  == none) .
+  ceq extractParameters(IL   RLT)   = #extractParametersIL(IL) ++ extractParameters(RLT)       if not (IL   == nil) .
+
+  op #extractParametersIL   : ImportList     -> ModuleTemplate .
+  op #extractParametersSS   : SortSet        -> ModuleTemplate .
+  op #extractParametersSSDS : SubsortDeclSet -> ModuleTemplate .
+  op #extractParametersOPDS : OpDeclSet      -> ModuleTemplate .
+  op #extractParametersMAS  : MembAxSet      -> ModuleTemplate .
+  op #extractParametersEQS  : EquationSet    -> ModuleTemplate .
+  op #extractParametersRLS  : RuleSet        -> ModuleTemplate .
+  --------------------------------------------------------------
+---  eq #extractParameters(IL) = nil .
+  eq #extractParametersSS(SS) = ( sorts none . ) .
+  eq #extractParametersSSDS( none )                  = ( sorts none . ) .
+  eq #extractParametersSSDS( subsort S < S' . SSDS ) = ( sorts S ; S' . ) .
+
   var T : Term .
   op #varCleanSubst  : Substitution    -> [Substitution] .
   op #varCleanSubsts : SubstitutionSet -> [SubstitutionSet] .
@@ -367,16 +393,6 @@ fmod MODULE-TEMPLATE-DATA is
                                                                  (EQS        eqsetvar('##MTCTXEQSET##))
                                                                  (RLS        rulesetvar('##MTCTXRULESET##))
                                                                ) .
-
-  op resolveNames : ModuleTemplate -> ModuleTemplate .
-  ----------------------------------------------------
-  eq  resolveNames(sorts SS .) = (sorts #resolveSorts(SS) .) .
-  ceq resolveNames(ST   SSDS)  = resolveNames(ST)    #resolveSubsorts(SSDS)   if not (SSDS == none) .
-  ceq resolveNames(SST  OPDS)  = resolveNames(SST)   #resolveOps(OPDS)        if not (OPDS == none) .
-  ceq resolveNames(OPT  MAS)   = resolveNames(OPT)   #resolveMemberships(MAS) if not (MAS  == none) .
-  ceq resolveNames(MAT  EQS)   = resolveNames(MAT)   #resolveEquations(EQS)   if not (EQS  == none) .
-  ceq resolveNames(EQT  RLS)   = resolveNames(EQT)   #resolveRules(RLS)       if not (RLS  == none) .
-  ceq resolveNames(IL   RLT)   = #resolveImports(IL) resolveNames(RLT)        if not (IL   == nil) .
 endfm
 ```
 
