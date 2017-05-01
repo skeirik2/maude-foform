@@ -110,7 +110,8 @@ fmod UNIVERSAL-CONSTRUCTION is
   eq sort-refinement(Q) =   forall ( sorts svar('X) . )
                             exists ( sorts svar('X){Q} . )
                                    ( subsort svar('X){Q} < svar('X) . )
-                          ; forall ( sorts svar('X) ; svar('Y) ; svar('X){Q} ; svar('Y){Q} . )
+                          ; forall ( sorts svar('X) ; svar('X){Q}
+                                         ; svar('Y) ; svar('Y){Q} . )
                                    ( subsort svar('X) < svar('Y) . )
                             exists ( sorts none . )
                                    ( subsort svar('X){Q} < svar('Y){Q} . ) .
@@ -202,7 +203,7 @@ fmod MODULE-EXPRESSION is
 
   var MOD : Module . var ME : ModuleExpression . var SUBSTS : SubstitutionSet .
   vars FC FC' : UniversalConstruction . var MFC : ModUniversalConstruction .
-  vars MT MT' : ModuleTemplate . var Q : Qid .
+  vars MT MT' : ModuleTemplate . var Q : Qid . vars S S' : Sort . var SS : SortSet .
 
   op #upModule : ModuleExpression -> Module [memo] .
   --------------------------------------------------
@@ -212,21 +213,73 @@ fmod MODULE-EXPRESSION is
   --------------------------------------------------------------------------------------
   eq #upModule(ME deriving FC) = #upModule(ME) deriving FC .
 
+  op top-sorts : Sort -> ModuleTemplate .
+  ---------------------------------------
+  eq top-sorts(S) = (sorts S .) \ (sorts S ; svar('##SOMEOTHERSORT##) . subsort S < svar('##SOMEOTHERSORT##) .) .
+
+  op DOWN-TERM : -> UniversalConstruction .
+  ---------------------------------------------
+  eq DOWN-TERM =   exists ( extending 'META-LEVEL . )
+                          ( sorts none . )
+                 ; forall ( sorts svar('X) . )
+                   exists ( sorts svar('X) ? . )
+                          ( subsort svar('X) < svar('X) ? . )
+                          ( op 'downTerm < svar('X) > : 'Term -> svar('X) ? [none] .
+                            op 'wellFormed < svar('X) > : 'Term -> 'Bool [none] . )
+                          ( ceq 'downTerm < svar('X) > [var('T, 'Term)] = var('X, svar('X)) if var('X, svar('X)) := 'downTerm[var('T, 'Term), 'downTerm < svar('X) > [var('T, 'Term)]] [none] .
+                            ceq 'wellFormed < svar('X) > [var('T, 'Term)] = 'true.Bool if var('X, svar('X)) := 'downTerm < svar('X) > [var('T, 'Term)] [none] .
+                            eq  'wellFormed < svar('X) > [var('T, 'Term)] = 'false.Bool [owise] . )
+                 ; forall ( sorts svar('X) ; svar('X) ?
+                                ; svar('Y) ; svar('Y) ? . )
+                          ( subsort svar('X) < svar('Y) . )
+                   exists ( sorts none . )
+                          ( subsort svar('X) ? < svar('Y) ? . ) .
+
+  op META-TERM : -> ModUniversalConstruction .
+  --------------------------------------------
+  eq META-TERM < Q > =   exists ( extending 'META-LEVEL . )
+                                ( sorts none . )
+                       ; forall ( sorts svar('X) . )
+                         exists ( sorts 'Constant{Q @ svar('X)} ; 'Variable{Q @ svar('X)} ; 'GroundTerm{Q @ svar('X)} ; 'Term{Q @ svar('X)}
+                                      ; 'Constant{Q}            ; 'Variable{Q}            ; 'GroundTerm{Q}            ; 'Term{Q} . )
+                                ( subsorts 'Constant{Q} < 'GroundTerm{Q} < 'Term{Q} .
+                                  subsort 'Variable{Q} < 'Term{Q} . )
+                       ; forall ( sorts svar('X) ; svar('T){Q @ svar('X)}
+                                      ; svar('Y) ; svar('T){Q @ svar('Y)} . )
+                                ( subsort svar('X) < svar('Y) . )
+                         exists ( sorts none . )
+                                ( subsort svar('T){Q @ svar('X)} < svar('T){Q @ svar('Y)} . )
+                       ; forall top-sorts(svar('T){Q @ svar('X)})
+                         exists ( sorts none . )
+                                ( subsorts svar('T){Q @ svar('X)} < svar('T){Q} < svar('T) . )
+                       ; forall ( sorts svar('T1){Q} ; svar('T1){Q @ svar('X)}
+                                      ; svar('T2){Q} ; svar('T2){Q @ svar('X)} . )
+                                ( subsort svar('T1){Q} < svar('T2){Q} . )
+                         exists ( sorts none . )
+                                ( subsort svar('T1){Q @ svar('X)} < svar('T2){Q @ svar('X)} . ) .
+
+  op META-THEORY2 : -> ModUniversalConstruction .
+  -----------------------------------------------
+  eq META-THEORY2 < Q > =   ( DOWN-TERM | META-TERM )
+                          ; forall ( sorts svar('X) ; svar('X) ? ; svar('T){Q @ svar('X)} ; svar('T){Q} . )
+                            exists ( sorts none . )
+                                   ( cmb var('TERM, svar('T)) : svar('T){Q @ svar('X)} if 'wellFormed < svar('X) > [var('TERM, svar('T))] = 'true.Bool [none] . ) .
+
   op META-THEORY : -> ModUniversalConstruction .
   ----------------------------------------------
   eq META-THEORY < Q > =   exists ( extending 'META-LEVEL . )
                                   ( sorts none . )
-                         ; exists asTemplate(#upModule('META-TERM deriving sort-refinement(Q)))
-                         ; forall ( sorts 'Constant   ; 'Constant{svar('MOD)}
-                                        ; 'Variable   ; 'Variable{svar('MOD)}
-                                        ; 'GroundTerm ; 'GroundTerm{svar('MOD)}
-                                        ; 'Term       ; 'Term{svar('MOD)} .
-                                  )
+                         ; forall ( sorts svar('X) . )
+                           exists asTemplate(#upModule('META-TERM deriving sort-refinement(Q @ svar('X))))
+                         ; forall ( sorts 'Constant   ; 'Constant{Q}
+                                        ; 'Variable   ; 'Variable{Q}
+                                        ; 'GroundTerm ; 'GroundTerm{Q}
+                                        ; 'Term       ; 'Term{Q} . )
                            exists ( sorts none . )
-                                  ( cmb 'C:Constant    : 'Constant{svar('MOD)}   if 'wellFormed['upModule[upTerm(Q), 'false.Bool], 'C:Constant]    = 'true.Bool [none] .
-                                    cmb 'V:Variable    : 'Variable{svar('MOD)}   if 'wellFormed['upModule[upTerm(Q), 'false.Bool], 'V:Variable]    = 'true.Bool [none] .
-                                    cmb 'GT:GroundTerm : 'GroundTerm{svar('MOD)} if 'wellFormed['upModule[upTerm(Q), 'false.Bool], 'GT:GroundTerm] = 'true.Bool [none] .
-                                    cmb 'T:Term        : 'Term{svar('MOD)}       if 'wellFormed['upModule[upTerm(Q), 'false.Bool], 'T:Term]        = 'true.Bool [none] .
+                                  ( cmb 'C:Constant    : 'Constant{Q}   if 'wellFormed['upModule[upTerm(Q), 'false.Bool], 'C:Constant]    = 'true.Bool [none] .
+                                    cmb 'V:Variable    : 'Variable{Q}   if 'wellFormed['upModule[upTerm(Q), 'false.Bool], 'V:Variable]    = 'true.Bool [none] .
+                                    cmb 'GT:GroundTerm : 'GroundTerm{Q} if 'wellFormed['upModule[upTerm(Q), 'false.Bool], 'GT:GroundTerm] = 'true.Bool [none] .
+                                    cmb 'T:Term        : 'Term{Q}       if 'wellFormed['upModule[upTerm(Q), 'false.Bool], 'T:Term]        = 'true.Bool [none] .
                                   ) .
 
 

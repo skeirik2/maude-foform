@@ -25,6 +25,8 @@ fmod STRUCTURED-NAME is
 
   op _<_>  : Qid  TypeList -> Qid      [prec 23] .
   op _{_}  : Sort TypeList -> Sort     [prec 23] .
+  op _@_   : Qid  Sort     -> Sort     [prec 23] .
+  op _?    : Sort          -> Sort     [prec 23] .
   op _==>_ : Sort Sort     -> Sort     [prec 25] .
   op const : Qid  Sort     -> Constant .
   op var   : Qid  Sort     -> Variable .
@@ -108,7 +110,9 @@ resolution, as well as lifting it over the various meta-level data.
   ---------------------------------------
   eq #resolveSorts(none)        = none .
   eq #resolveSorts(S { TL })    = qid(string(#resolveSorts(S)) + "{" + #string(#resolveTypeList(TL)) + "}") .
+  eq #resolveSorts(Q @ S)       = qid(string(#resolveQid(Q)) + "@" + string(#resolveSorts(S))) .
   eq #resolveSorts(S ==> S')    = qid(string(#resolveSorts(S)) + "==>" + string(#resolveSorts(S'))) .
+  eq #resolveSorts(S ?)         = qid(string(#resolveSorts(S)) + "?") .
   eq #resolveSorts(S ; S' ; SS) = #resolveSorts(S) ; #resolveSorts(S') ; #resolveSorts(SS) .
   eq #resolveSorts(S)           = S [owise] .
 
@@ -276,13 +280,14 @@ fmod MODULE-TEMPLATE-DATA is
   eq  (MT | NeMTS)       << (SU | SUBSTS) = (MT  << (SU | SUBSTS)) | (NeMTS  << (SU | SUBSTS)) .
   eq  (MTS \ NeMTS')     << (SU | SUBSTS) = (MTS << (SU | SUBSTS)) \ (NeMTS' << (SU | SUBSTS)) .
 
+  --- TODO: ORDER HERE MATTERS!!! AAAGGHHHH!
   op match_with_ : ModuleTemplateSet ModuleTemplate -> [SubstitutionSet] .
   ------------------------------------------------------------------------
-  eq  match .ModuleTemplateSet with MT       = empty .
-  ceq match MT \ .ModuleTemplateSet with MT' = #varCleanSubsts(SUBSTS) if SUBSTS := #subsumesWith(upModule('MODULE-TEMPLATE, true), upTerm(#varExtendTemplate(MT)), upTerm(MT')) .
-  ceq match MT \ NeMTS              with MT' = SUBSTS if SUBSTS := not-instance-with?(NeMTS, MT', (match MT with MT')) .
+  eq  match .ModuleTemplateSet with MT  = empty .
+  eq  match NeMTS | NeMTS'     with MT' = (match NeMTS with MT') | (match NeMTS' with MT') .
+  ceq match MT \ NeMTS         with MT' = SUBSTS if SUBSTS := not-instance-with?(NeMTS, MT', (match MT with MT')) .
+  ceq match MT                 with MT' = #varCleanSubsts(SUBSTS) if SUBSTS := #subsumesWith(upModule('MODULE-TEMPLATE, true), upTerm(#varExtendTemplate(MT)), upTerm(MT')) .
   --- eq match MT \ NeMTS               with MT' = { subvar('##SUBVAR##) in match MT with MT' | empty?(match NeMTS << subvar('##SUBVAR##) with MT') } .
-  eq match NeMTS | NeMTS'           with MT' = (match NeMTS with MT') | (match NeMTS' with MT') .
 
   var B : [Bool] .
   op {_in_|_} : Substitution SubstitutionSet [Bool] -> SubstitutionSet [strat(2 0)] .
@@ -391,4 +396,3 @@ fmod MODULE-TEMPLATE is
   eq resolveModule(MOD) = fromTemplate(getName(MOD), resolveNames(asTemplate(MOD))) .
 endfm
 ```
-
