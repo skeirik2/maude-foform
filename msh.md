@@ -49,7 +49,7 @@ We'll need a module data-base to work with. It should compute all sorts of nice
 things about modules for us.
 
 ```{.maude .msh}
-load univ.maude
+load universal-construction.maude
 
 fmod MODULE-DATABASE is
   protecting MODULE-EXPRESSION  .
@@ -66,7 +66,7 @@ fmod MODULE-DATABASE is
 
   op _[_] : Qid ModuleEnv -> Module .
   -----------------------------------
-  eq Q [ Q |-> ME MENV ] = #resolveModule(#upModule(ME)) .
+  eq Q [ Q |-> ME MENV ] = resolveModule(#upModule(ME)) .
 
   op modules <_> : ModuleEnv -> NeAnalysis [ctor format(d d n n d)] .
   -------------------------------------------------------------------
@@ -97,7 +97,7 @@ The current state (over which we will call commands like `metaReduce` and
 given by the sort `CTermSet`.
 
 ```{.maude .msh}
-load cterm.maude
+load constrained-terms.maude
 
 fmod STATE is
   protecting MODULE-DATABASE .

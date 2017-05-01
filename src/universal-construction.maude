@@ -1,14 +1,14 @@
-Universal Constructions
-=======================
+--- Universal Constructions
+--- =======================
 
-Universal constructions are a pair of a theory `FTH` and a parametized module
-`FMOD{X :: FTH}` such that deciding if some module `MOD` has a view from `FTH`
-can be done purely with matching. If so, then the resulting substitution is used
-to instantiate `FMOD{X :: FTH}`, and the resulting module is
-`MOD + FMOD{X :: FTH}`. For this, we'll heavily use the machinery of
-`MODULE-TEMPLATE`.
+--- Universal constructions are a pair of a theory `FTH` and a parametized module
+--- `FMOD{X :: FTH}` such that deciding if some module `MOD` has a view from `FTH`
+--- can be done purely with matching. If so, then the resulting substitution is used
+--- to instantiate `FMOD{X :: FTH}`, and the resulting module is
+--- `MOD + FMOD{X :: FTH}`. For this, we'll heavily use the machinery of
+--- `MODULE-TEMPLATE`.
 
-```{.maude .univ}
+
 load module-template.maude
 
 fmod UNIVERSAL-CONSTRUCTION is
@@ -55,27 +55,28 @@ fmod UNIVERSAL-CONSTRUCTION is
   eq UC << (SUB | SUB' | SUBS)     = (UC << SUB) | (UC << SUB') | (UC << SUBS) .
   eq (UC | UC') << SUB             = (UC << SUB) | (UC' << SUB) .
   eq (UC ; UC') << SUB             = (UC << SUB) ; (UC' << SUB) .
-```
 
-Covariant Constructions
------------------------
 
-Covariant constructions copy sort structure and subsort relations, preserving
-the ordering. In general, you may want to just copy the sort structure with a
-new name, or copy the sort structure and then make the copies subsorts (or
-supersorts) of the original.
+--- Covariant Constructions
+--- -----------------------
 
--   `covariant : Sort Sort -> UniversalConstruction` will just copy the sort and
-    subsort structure. The first sort serves as a template for which sorts to
-    copy, and the secord sort serves as a template for the sort to build.
+--- Covariant constructions copy sort structure and subsort relations, preserving
+--- the ordering. In general, you may want to just copy the sort structure with a
+--- new name, or copy the sort structure and then make the copies subsorts (or
+--- supersorts) of the original.
 
--   `covariant-data-up : Sort Sort -> UniversalConstruction` creates a copy of
-    the sort structure and makes the copy super-sorts of the original.
+--- -   `covariant : Sort Sort -> UniversalConstruction` will just copy the sort and
+---     subsort structure. The first sort serves as a template for which sorts to
+---     copy, and the secord sort serves as a template for the sort to build.
+--- 
+--- -   `covariant-data-up : Sort Sort -> UniversalConstruction` creates a copy of
+---     the sort structure and makes the copy super-sorts of the original.
+--- 
+--- -   `covariant-data-down : Sort Sort -> UniversalConstruction` creates a copy of
+---     the sort structure and makes the copy subsorts of the original.
+--- 
 
--   `covariant-data-down : Sort Sort -> UniversalConstruction` creates a copy of
-    the sort structure and makes the copy subsorts of the original.
 
-```{.maude .univ}
   op covariant : Sort Sort -> UniversalConstruction .
   ---------------------------------------------------
   eq covariant(S, S') =   forall ( sorts S . )
@@ -96,18 +97,18 @@ supersorts) of the original.
   -------------------------------------------------------------
   eq covariant-data-down(S, S') =   covariant(S, S')
                                   ; univ ( subsorts S' < S . ) .
-```
 
-A common idiom is to create the subsort-chain `X < NeF{X} < F{X}`, where `F` is
-some data-structure and `NeF` is the non-empty version. These data-structures
-are often over binary operators with given axioms. Here, `covariant-data-up` is
-used twice to build the desired sort structure, then the appropriate binary
-operators with unit are declared.
 
--   `covariant-data-binary : Sort Qid AttrSet -> UniversalConstruction` makes a
-    covariant data-structure with a binary operator as constructor.
+--- A common idiom is to create the subsort-chain `X < NeF{X} < F{X}`, where `F` is
+--- some data-structure and `NeF` is the non-empty version. These data-structures
+--- are often over binary operators with given axioms. Here, `covariant-data-up` is
+--- used twice to build the desired sort structure, then the appropriate binary
+--- operators with unit are declared.
 
-```{.maude .univ}
+--- -   `covariant-data-binary : Sort Qid AttrSet -> UniversalConstruction` makes a
+---     covariant data-structure with a binary operator as constructor.
+
+
   op covariant-data-binary : Sort Qid AttrSet -> UniversalConstruction .
   ----------------------------------------------------------------------
   ceq covariant-data-binary(S, Op, AS) =   covariant-data-up(svar('X), NeS{svar('X)})
@@ -121,25 +122,26 @@ operators with unit are declared.
                                                   )
                                        if NeS := qid("Ne" + string(S))
                                        /\ Nil := qid("." + string(S)) .
-```
 
-The universal constructions for the list and set data-types are provided here in
-terms of `covariant-binary-data`.
 
--   `LIST : -> UniversalConstruction` constructs the sorts
-    `X < NeList{X} < List{X}` for every `X` in the module, using `_,_` as the
-    associative constructor and `.List` as the empty list.
+--- The universal constructions for the list and set data-types are provided here in
+--- terms of `covariant-binary-data`.
 
--   `MSET : -> UniversalConstruction` constructs the sorts
-    `X < NeMSet{X} < MSet{X}` for every `X` in the module, using `_;_` as the
-    associative-commutative constructor and `.MSet` as the empty set.
+--- -   `LIST : -> UniversalConstruction` constructs the sorts
+---     `X < NeList{X} < List{X}` for every `X` in the module, using `_,_` as the
+---     associative constructor and `.List` as the empty list.
+--- 
+--- -   `MSET : -> UniversalConstruction` constructs the sorts
+---     `X < NeMSet{X} < MSet{X}` for every `X` in the module, using `_;_` as the
+---     associative-commutative constructor and `.MSet` as the empty set.
+--- 
+--- -   `SET : -> UniversalConstruction` constructs the sorts
+---     `X < NeSet{X} < Set{X}` for every `X` in the module, using `_;_` as the
+---     associative-commutative constructor and `.Set` as the empty set.
+---     Additionally, the set-idempotency equation is added.
+--- 
 
--   `SET : -> UniversalConstruction` constructs the sorts
-    `X < NeSet{X} < Set{X}` for every `X` in the module, using `_;_` as the
-    associative-commutative constructor and `.Set` as the empty set.
-    Additionally, the set-idempotency equation is added.
 
-```{.maude .univ}
   ops LIST MSET SET : -> UniversalConstruction .
   ----------------------------------------------
   eq  LIST = covariant-data-binary('List, '_`,_, assoc) .
@@ -149,17 +151,17 @@ terms of `covariant-binary-data`.
                exists ( sorts none . )
                       ( eq '_;_[NES, NES] = NES [none] . )
            if NES := var('NeS, 'NeSet{svar('X)}) .
-```
 
-Signature Refinement
---------------------
 
-Signature refinements add subsorts to every sort (adding the annotation that
-they are refined), as well as copying operators over only the refined sorts
-down. Right now only operators up to arity 2 are handled (until we have a better
-way to generate them).
+--- Signature Refinement
+--- --------------------
 
-```{.maude .univ}
+--- Signature refinements add subsorts to every sort (adding the annotation that
+--- they are refined), as well as copying operators over only the refined sorts
+--- down. Right now only operators up to arity 2 are handled (until we have a better
+--- way to generate them).
+
+
   op signature-refinement : Qid -> UniversalConstruction .
   --------------------------------------------------------
   eq signature-refinement(Q) =   covariant-data-down(svar('X), svar('X){Q})
@@ -183,16 +185,16 @@ way to generate them).
                                     exists ( sorts none . )
                                            ( op qvar('OP) : (svar('Y){Q}) (svar('Z){Q}) -> svar('X){Q} [attrsetvar('AS)] . )
                                   ) << (('X:Sort <- 'Y:Sort) | ('X:Sort <- 'Z:Sort) | ('Y:Sort <- 'Z:Sort) | ('Y:Sort <- 'X:Sort ; 'Z:Sort <- 'X:Sort)) .
-```
 
-Exponential Objects
--------------------
 
-For functional-style programming (including higher-order functional
-programming), it's necessary to reify arrows between sorts (functions) as
-objects themselves. This `EXPONENTIAL` universal construction does that.
+--- Exponential Objects
+--- -------------------
 
-```{.maude .univ}
+--- For functional-style programming (including higher-order functional
+--- programming), it's necessary to reify arrows between sorts (functions) as
+--- objects themselves. This `EXPONENTIAL` universal construction does that.
+
+
 --- todo:
 --- make identify functions actually behave like identity in composition
 
@@ -219,21 +221,21 @@ objects themselves. This `EXPONENTIAL` universal construction does that.
                             ( op '_._ : (svar('Y) ==> svar('Z)) (svar('X) ==> svar('Y)) -> svar('X) ==> svar('Z) [none] .
                               op '_;_ : (svar('X) ==> svar('Y)) (svar('Y) ==> svar('Z)) -> svar('X) ==> svar('Z) [none] .
                             ) .
-```
 
-Meta Theory
------------
 
-Sometimes you want a "meta theory" specific to your module. For example, you may
-want to express using just a sort that a meta-level `Term` is a well-formed term
-in your theory, or that it is a well-formed term of a specific sort in your
-theory. This universal construction will extend your module with its meta-theory, so
-that this can be done. This is a construction that refines the module
-`META-TERM` and adds it to your module, as well as adding in conditional
-memberships which push elements of the sort `Term` into the subsort of
-`Term{MYMOD}` when appropriate.
+--- Meta Theory
+--- -----------
 
-```{.maude .univ}
+--- Sometimes you want a "meta theory" specific to your module. For example, you may
+--- want to express using just a sort that a meta-level `Term` is a well-formed term
+--- in your theory, or that it is a well-formed term of a specific sort in your
+--- theory. This universal construction will extend your module with its
+--- meta-theory, so that this can be done. This is a construction that refines the
+--- module `META-TERM` and adds it to your module, as well as adding in conditional
+--- memberships which push elements of the sort `Term` into the subsort of
+--- `Term{MYMOD}` when appropriate.
+
+
   op cmb-pred : Sort Sort Qid -> MembAx .
   ---------------------------------------
   eq cmb-pred(S, S', Q) = ( cmb var('X, S) : S' if Q[var('X, S)] = 'true.Bool [none] . ) .
@@ -261,18 +263,19 @@ memberships which push elements of the sort `Term` into the subsort of
                                   eq  'wellFormed < svar('X) > [var('T, 'Term)] = 'false.Bool [owise] .
                                 ) .
 endfm
-```
 
-Module Expressions
-==================
 
-This module simply provides the hookup to our extension of the Meta-Level module
-expressions. A memo-ised version of `upModule` is provided too for the
-extensions. In addition, free constructions are provided. Universal constructions
-provide a module template with variables to determine anonymous views, and a
-second module template to determine the associated parameterized module.
+--- Module Expressions
+--- ==================
 
-```{.maude .univ}
+--- This module simply provides the hookup to our extension of the Meta-Level module
+--- expressions. A memo-ised version of `upModule` is provided too for the
+--- extensions. In addition, free constructions are provided. Universal
+--- constructions provide a module template with variables to determine anonymous
+--- views, and a second module template to determine the associated parameterized
+--- module.
+
+
 fmod MODULE-EXPRESSION is
   extending UNIVERSAL-CONSTRUCTION .
 
@@ -362,4 +365,4 @@ fmod MODULE-EXPRESSION is
   eq  MOD deriving (UC ; UC')           = (MOD deriving UC) deriving UC' .
   eq  MOD deriving (UC | UC')           = (MOD deriving UC) ++ (MOD deriving UC') .
 endfm
-```
+

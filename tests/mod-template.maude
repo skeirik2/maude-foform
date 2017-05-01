@@ -1,0 +1,55 @@
+load ../src/msh.maude
+
+---reduce
+---
+---match ( sorts svar('X) . )
+---with  ( sorts 'Nat ; 'Int .
+---        subsort 'Nat < 'Int .
+---      )
+---
+---.
+---
+---reduce
+---
+---{ subvar('##SUBVAR##) in ( match ( sorts svar('X) . )
+---                           with  ( sorts 'Nat ; 'Int .
+---                                   subsort 'Nat < 'Int .
+---                                 )
+---                         )
+---                      | empty?( match ( ( sorts svar('X) ; svar('Y) .
+---                                          subsort svar('X) < svar('Y) .
+---                                        ) << subvar('##SUBVAR##)
+---                                      )
+---                                with  ( sorts 'Nat ; 'Int .
+---                                        subsort 'Nat < 'Int .
+---                                      )
+---                              )
+---}
+---
+---.
+
+
+  --- eq match MT \ NeMTS               with MT' = { subvar('##SUBVAR##) in (match MT with MT') | empty?(match NeMTS << subvar('##SUBVAR##) with MT') } .
+
+reduce
+
+match ( sorts svar('X) . )
+    \ ( sorts svar('X) ; svar('Y) .
+        subsort svar('X) < svar('Y) .
+      )
+with  ( sorts 'Nat ; 'Int .
+        subsort 'Nat < 'Int .
+      )
+
+.
+
+reduce
+
+not-instance-with?( ( sorts svar('X) ; svar('Y) .
+                      subsort svar('X) < svar('Y) . )
+                  , ( sorts 'Nat ; 'Int .
+                      subsort 'Nat < 'Int . )
+                  , ( 'X:Sort <- ''Int.Sort )
+                  )
+
+.
