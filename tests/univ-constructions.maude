@@ -179,7 +179,8 @@ claim [ modules < 'STATE |-> ('TEST-MODULE deriving DOWN-TERM) >
           ( strategy < .Program >
             state    < 'a.A ;; 'downTerm<A>[''b.B.Constant] ;; 'a.A ;; 'b.B ;; 'true.Bool >
             output   < show-module( fmod 'TEST-MODULE is
-                                        extending 'META-LEVEL .
+                                        protecting 'META-LEVEL .
+                                        protecting 'TEST-MODULE .
                                         sorts 'A ; 'A? ; 'B ; 'B? .
                                         subsort 'A < 'A? .
                                         subsort 'A < 'B .
@@ -211,6 +212,27 @@ claim [ modules < 'STATE |-> ('TEST-MODULE deriving DOWN-TERM) >
 
 .
 
+
+reduce
+
+claim [ modules < 'current |-> ('TEST-MODULE deriving META-THEORY) >
+
+        ( ( strategy < sort(upTerm('a.A))
+                     --- ; sort(upTerm('b.B))
+                     --- ; sort(upTerm('f['a.A]))
+                     --- ; sort(upTerm('f['b.B]))
+                     >
+            output   < .Output >
+          )
+
+        reduces-to
+
+          ( strategy < .Program >
+            output   < (upTerm('a.A) has-sort 'Constant`{TEST-MODULE@A`}) >
+          )
+        )
+      ]
+.
 
 ---reduce
 ---
