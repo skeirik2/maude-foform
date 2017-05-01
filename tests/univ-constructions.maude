@@ -281,14 +281,6 @@ claim [ ( modules  < .ModuleEnv >
 
 .
 
-
-reduce resolveModule(#upModule('EMPTY deriving PURIFICATION('TEST-MODULE, 'TEST-MODULE2))) .
-reduce wellFormed(resolveModule(#upModule('EMPTY deriving PURIFICATION('TEST-MODULE, 'TEST-MODULE2)))) .
-
---- reduce reduce < #resolveModule(#upModule('EMPTY deriving PURIFICATION('TEST-MODULE, 'TEST-MODULE2))) > ['f['b.B]] .
-
---- set trace on .
-
 reduce
 
 claim [ ( modules  < .ModuleEnv >
@@ -308,4 +300,6 @@ claim [ ( modules  < .ModuleEnv >
 
 .
 
---- set trace off .    
+reduce #upModule('TEST-MODULE deriving META-THEORY2) .
+reduce resolveModule(#upModule('TEST-MODULE deriving META-THEORY2)) .
+reduce wellFormed(resolveModule(#upModule('TEST-MODULE deriving META-THEORY2))) .

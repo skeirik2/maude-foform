@@ -21,7 +21,7 @@ fmod STRUCTURED-NAME is
   vars OP OP' : OpDecl . var OPDS : OpDeclSet . vars MB MB' : MembAx . var MAS : MembAxSet .
   vars EQ EQ' : Equation . var EQS : EquationSet . vars RL RL' : Rule . var RLS : RuleSet .
   var TYPE : Type . vars NeTL NeTL' : NeTypeList . var TL : TypeList . vars C C' : Condition . vars EQC EQC' : EqCondition .
-  vars TERM TERM' : Term . var TERML : TermList . vars NeTERML NeTERML' : NeTermList .
+  vars TERM TERM' : Term . var TERML : TermList . vars NeTERML NeTERML' : NeTermList . var VAR : Variable . var CONST : Constant . var N : Nat .
 
   op _<_>  : Qid  TypeList -> Qid      [prec 23] .
   op _{_}  : Sort TypeList -> Sort     [prec 23] .
@@ -67,6 +67,31 @@ fmod STRUCTURED-NAME is
   ceq membaxsetvar(Q)  = MAS  if MAS  := downTerm(qid(string(Q) + ":MembAxSet"),      downMembAxSetError?) .
   ceq eqsetvar(Q)      = EQS  if EQS  := downTerm(qid(string(Q) + ":EquationSet"),    downEqSetError?) .
   ceq rulesetvar(Q)    = RLS  if RLS  := downTerm(qid(string(Q) + ":RuleSet"),        downRuleSetError?) .
+
+
+--- It's useful when building universal constructions to generate the same
+--- structure, but with incremented variable names.
+
+--- -   `prime` will prime every variable in a given term.
+
+
+  op prime :     Sort -> Sort .
+  op prime : Nat Sort -> Sort .
+  -----------------------------
+  eq  prime(S)    = prime(1, S) .
+  ceq prime(N, S) = S' if S' := downTerm(primeVars(N, upTerm(S)), downSortsError?) .
+
+  op primeVars : Nat TermList -> TermList .
+  -----------------------------------------
+  eq primeVars(N, VAR)                  = qid(string(getName(VAR)) + #primes(N) + ":" + string(getType(VAR))) .
+  eq primeVars(N, CONST)                = CONST .
+  eq primeVars(N, Q[NeTERML])           = Q[primeVars(N, NeTERML)] .
+  eq primeVars(N, (NeTERML , NeTERML')) = primeVars(N, NeTERML) , primeVars(N, NeTERML') .
+
+  op #primes : Nat -> String .
+  ----------------------------
+  eq #primes(0)    = "" .
+  eq #primes(s(N)) = "'" + #primes(N) .
 
 
 --- We'll also need ways to "resolve" these names into proper Maude names, so that

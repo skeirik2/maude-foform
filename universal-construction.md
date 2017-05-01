@@ -53,24 +53,31 @@ Covariant data are data-structures that follow the normal
 `covariant-data` will build the sort-structure for you.
 
 ```{.maude .univ}
-  op covariant-data : Sort -> UniversalConstruction .
+  op covariant : Sort Sort -> UniversalConstruction .
   ---------------------------------------------------
-  ceq covariant-data(S) =   forall sorts svar('X) .
-                            exists ( sorts S{svar('X)} ; NeS{svar('X)} . )
-                                   ( subsorts svar('X) < NeS{svar('X)} < S{svar('X)} . )
-                          ; forall ( sorts svar('X) ; S{svar('X)} ; NeS{svar('X)}
-                                         ; svar('Y) ; S{svar('Y)} ; NeS{svar('Y)} .
-                                   )
-                                   ( subsort svar('X) < svar('Y) . )
-                            exists ( sorts none . )
-                                   ( subsort   S{svar('X)} <   S{svar('Y)} .
-                                     subsort NeS{svar('X)} < NeS{svar('Y)} .
-                                   )
-                        if NeS := qid("Ne" + string(S)) .
+  eq covariant(S, S') =   forall ( sorts S . )
+                          exists ( sorts S' . )
+                        ; forall ( sorts S        ; S'
+                                       ; prime(S) ; prime(S') .
+                                 )
+                                 ( subsort S < prime(S) . )
+                          exists ( sorts none . )
+                                 ( subsort S' < prime(S') . ) .
+
+  op subsort : Sort Sort -> UniversalConstruction .
+  -------------------------------------------------
+  eq subsort(S, S') =   forall ( sorts S ; S' . )
+                        exists ( sorts none . )
+                               ( subsort S < S' . ) .
+
+  op covariant-data : Sort Sort -> UniversalConstruction .
+  --------------------------------------------------------
+  eq covariant-data(S, S') = covariant(S, S') ; subsort(S, S') .
 
   op covariant-data-binary : Sort Qid AttrSet -> UniversalConstruction .
   ----------------------------------------------------------------------
-  ceq covariant-data-binary(S, Op, AS) =   covariant-data(S)
+  ceq covariant-data-binary(S, Op, AS) =   covariant-data(svar('X), NeS{svar('X)})
+                                         ; covariant-data(NeS{svar('X)}, S{svar('X)})
                                          ; forall ( sorts svar('X) ; S{svar('X)} ; NeS{svar('X)} . )
                                                   ( subsorts svar('X) < NeS{svar('X)} < S{svar('X)} . )
                                            exists ( sorts none . )
@@ -224,10 +231,12 @@ fmod MODULE-EXPRESSION is
                    exists ( sorts svar('X) ? . )
                           ( subsort svar('X) < svar('X) ? . )
                           ( op 'downTerm < svar('X) > : 'Term -> svar('X) ? [none] .
-                            op 'wellFormed < svar('X) > : 'Term -> 'Bool [none] . )
+                            op 'wellFormed < svar('X) > : 'Term -> 'Bool [none] .
+                          )
                           ( ceq 'downTerm < svar('X) > [var('T, 'Term)] = var('X, svar('X)) if var('X, svar('X)) := 'downTerm[var('T, 'Term), 'downTerm < svar('X) > [var('T, 'Term)]] [none] .
                             ceq 'wellFormed < svar('X) > [var('T, 'Term)] = 'true.Bool if var('X, svar('X)) := 'downTerm < svar('X) > [var('T, 'Term)] [none] .
-                            eq  'wellFormed < svar('X) > [var('T, 'Term)] = 'false.Bool [owise] . )
+                            eq  'wellFormed < svar('X) > [var('T, 'Term)] = 'false.Bool [owise] .
+                          )
                  ; forall ( sorts svar('X) ; svar('X) ?
                                 ; svar('Y) ; svar('Y) ? . )
                           ( subsort svar('X) < svar('Y) . )
@@ -257,36 +266,22 @@ fmod MODULE-EXPRESSION is
                          exists ( sorts none . )
                                 ( subsort svar('T1){Q @ svar('X)} < svar('T2){Q @ svar('X)} . ) .
 
-  op META-THEORY2 : -> ModUniversalConstruction .
-  -----------------------------------------------
-  eq META-THEORY2 < Q > =   ( DOWN-TERM | META-TERM )
-                          ; forall ( sorts svar('X) ; svar('X) ? ; svar('T){Q @ svar('X)} ; svar('T){Q} . )
-                            exists ( sorts none . )
-                                   ( cmb var('TERM, svar('T)) : svar('T){Q @ svar('X)} if 'wellFormed < svar('X) > [var('TERM, svar('T))] = 'true.Bool [none] . ) .
+  op cmb-pred : Sort Sort Qid -> MembAx .
+  ---------------------------------------
+  eq cmb-pred(S, S', Q) = ( cmb var('X, S) : S' if Q[var('X, S)] = 'true.Bool [none] . ) .
 
   op META-THEORY : -> ModUniversalConstruction .
   ----------------------------------------------
-  eq META-THEORY < Q > =   exists ( extending 'META-LEVEL . )
-                                  ( sorts none . )
-                         ; forall ( sorts svar('X) . )
-                           exists asTemplate(#upModule('META-TERM deriving sort-refinement(Q @ svar('X))))
-                         ; forall ( sorts 'Constant   ; 'Constant{Q}
-                                        ; 'Variable   ; 'Variable{Q}
-                                        ; 'GroundTerm ; 'GroundTerm{Q}
-                                        ; 'Term       ; 'Term{Q} . )
+  eq META-THEORY < Q > =   ( DOWN-TERM | META-TERM )
+                         ; forall ( sorts svar('X) ; svar('X) ? ; svar('T){Q @ svar('X)} ; svar('T){Q} . )
                            exists ( sorts none . )
-                                  ( cmb 'C:Constant    : 'Constant{Q}   if 'wellFormed['upModule[upTerm(Q), 'false.Bool], 'C:Constant]    = 'true.Bool [none] .
-                                    cmb 'V:Variable    : 'Variable{Q}   if 'wellFormed['upModule[upTerm(Q), 'false.Bool], 'V:Variable]    = 'true.Bool [none] .
-                                    cmb 'GT:GroundTerm : 'GroundTerm{Q} if 'wellFormed['upModule[upTerm(Q), 'false.Bool], 'GT:GroundTerm] = 'true.Bool [none] .
-                                    cmb 'T:Term        : 'Term{Q}       if 'wellFormed['upModule[upTerm(Q), 'false.Bool], 'T:Term]        = 'true.Bool [none] .
-                                  ) .
+                                  ( cmb-pred( svar('T) , svar('T){Q @ svar('X)} , 'wellFormed < svar('X) > ) ) .
 
-
-    op PURIFICATION : ModuleExpression ModuleExpression -> UniversalConstruction .
 
     vars M1 M2          : ModuleExpression .
     vars TM TM' TM1 TM2 : Variable .
-
+    op PURIFICATION : ModuleExpression ModuleExpression -> UniversalConstruction .
+    ------------------------------------------------------------------------------
     ceq PURIFICATION(M1, M2)
       =   META-THEORY < M1 >
         ; META-THEORY < M2 >
