@@ -1,6 +1,9 @@
-load ../src/univ .
+load ../src/universal-construction .
 
----- Testing ----
+------------------------------------------------------------
+----              Testing Modules:                      ----
+----   MYINT, MYINT-RAT, MYINT-LIST, and MYINT-COMBINED ----
+------------------------------------------------------------
 
 fmod MYINT is
   sorts N NzN .
@@ -47,20 +50,33 @@ fmod MYINT-COMBINED is
   protecting MYINT-LIST + MYINT-RAT .
 endfm
 
-reduce in MODULE-EXPRESSION :
-#resolveModule(#upModule('MYINT-COMBINED deriving META-THEORY)) .
+----reduce in MODULE-EXPRESSION :
+----#resolveModule(#upModule('MYINT-COMBINED deriving META-THEORY)) .
+
+-----------------------------------------
+----     Concrete Module FVAR        ----
+---- upModule(FVAR-CONCRETE) is FVAR ----
+-----------------------------------------
 
 fmod FVAR-CONCRETE is
+
   protecting META-LEVEL .
   protecting STRING .
   protecting CONVERSION .
   
+  ---- Convert a list of terms to a string.
   op #string : TermList -> String .
   
   eq #string(Q:Qid) = string(Q:Qid) .
   eq #string(Q:Qid[TL:TermList]) = #string(Q:Qid) + "[" + #string(TL:TermList) + "]" .  
   eq #string((T:Term, TL:TermList)) = #string(T:Term) + ", " + #string(TL:TermList) .
-
+  
+  ---- Convert a list of terms to a qid.
+  op #qid : TermList -> Qid .
+  eq #qid(TL:TermList) = qid(#string(TL:TermList)) .
+  
+  ---- Generate fvar
+  op fvar(T:Term{M:Qid@S:Sort})
   
 endfm
 
@@ -68,6 +84,11 @@ reduce in META-LEVEL :
 upModule('FVAR-CONCRETE, false) .
 
 quit
+
+
+
+
+---- Module FVAR ----
 
 fmod FVAR is
   protecting MODULE-EXPRESSION .
