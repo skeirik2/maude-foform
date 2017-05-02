@@ -60,13 +60,13 @@ fmod MODULE-DATABASE is
   var Q : Qid . vars ME ME' : ModuleExpression . var MENV : ModuleEnv .
 
   op .ModuleEnv : -> ModuleEnv .
-  op _|->_ : Qid ModuleExpression -> ModuleEnv [ctor] .
-  op __ : ModuleEnv ModuleEnv -> ModuleEnv [ctor assoc comm id: .ModuleEnv prec 120 format(d n d)] .
-  --------------------------------------------------------------------------------------------------
+  op _|->_ : Qid ModuleExpression -> ModuleEnv [ctor strat(0)] .
+  op __ : ModuleEnv ModuleEnv -> ModuleEnv [ctor assoc comm id: .ModuleEnv prec 120] .
+  ------------------------------------------------------------------------------------
 
-  op _[_] : Qid ModuleEnv -> Module .
-  -----------------------------------
-  eq Q [ Q |-> ME MENV ] = resolveModule(#upModule(ME)) .
+  op _[_] : Qid ModuleEnv -> [Module] .
+  -------------------------------------
+  eq Q [ Q |-> ME MENV ] = resolveNames(#upModule(ME)) .
 
   op modules <_> : ModuleEnv -> NeAnalysis [ctor format(d d n n d)] .
   -------------------------------------------------------------------
@@ -78,12 +78,12 @@ fmod MODULE-DATABASE is
   --------------------------------------------
   eq clear-module-db [ MENV ] = .ModuleEnv .
 
-  op load-module : Qid -> Command{=>Modules} .
-  --------------------------------------------
+  op load-module : Qid -> Command{=>Modules} [strat(0)] .
+  -------------------------------------------------------
   eq load-module(Q) = set-module(Q, Q) .
 
-  op set-module : Qid ModuleExpression -> Command{=>Modules} .
-  ------------------------------------------------------------
+  op set-module : Qid ModuleExpression -> Command{=>Modules} [strat(0)] .
+  -----------------------------------------------------------------------
   eq set-module(Q, ME) [ Q |-> ME' MENV ] = Q |-> ME MENV .
   eq set-module(Q, ME) [           MENV ] = Q |-> ME MENV [owise] .
 endfm

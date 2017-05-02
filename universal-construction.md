@@ -15,46 +15,49 @@ fmod UNIVERSAL-CONSTRUCTION is
   protecting MODULE-TEMPLATE .
 
   sorts UniversalConstruction ModUniversalConstruction .
+  ------------------------------------------------------
   subsort ModUniversalConstruction < UniversalConstruction .
 
-  var SUBSTS : SubstitutionSet . var MOD : Module . vars MT MT' MT'' : ModuleTemplate . vars UC UC' UC'' : UniversalConstruction .
+  vars SU SU' : Substitution . var SUBSTS : SubstitutionSet . var MOD : Module .
+  vars MDS MDS' MDS'' : ModuleDeclSet . var MTS : ModuleTemplateSet . vars UC UC' UC'' : UniversalConstruction .
   vars S S' NeS : Sort . vars SS : SortSet . vars Op Nil Q : Qid . var AS : AttrSet . var NES : Variable .
-  vars SUB SUB' : Substitution . var SUBS : SubstitutionSet . vars NeMTS NeMTS' : NeModuleTemplateSet . var SPS : SortPoset .
-  var SSDS : SubsortDeclSet .
+  vars NeMTS NeMTS' : NeModuleTemplateSet . var SPS : SortPoset . var SSDS : SubsortDeclSet . vars X Y Z : Sort .
 
   op _<_> : ModUniversalConstruction Qid -> UniversalConstruction [ctor] .
   ------------------------------------------------------------------------
 
-  op exists_        : ModuleTemplate                   -> UniversalConstruction [prec 75] .
-  op forall_exists_ : ModuleTemplateSet ModuleTemplate -> UniversalConstruction [prec 75] .
-  op forall_exists_ : ModuleTemplate    ModuleTemplate -> UniversalConstruction [ctor prec 75] .
-  ----------------------------------------------------------------------------------------------
-  eq exists MT                       = forall (sorts none .) exists MT .
-  eq forall NeMTS | NeMTS' exists MT = forall NeMTS exists MT | forall NeMTS' exists MT .
+  op exists_        : ModuleDeclSet                   -> UniversalConstruction [prec 75] .
+  op forall_exists_ : ModuleTemplateSet ModuleDeclSet -> UniversalConstruction [ctor prec 75] .
+  ---------------------------------------------------------------------------------------------
+  eq exists MDS = forall none exists MDS .
 
-  op _over_ : UniversalConstruction ModuleTemplate -> UniversalConstruction [prec 76] .
-  -------------------------------------------------------------------------------------
-  eq (forall MT exists MT' | UC) over MT'' = (forall MT exists MT' over MT'') | (UC over MT'') .
-  eq (forall MT exists MT' ; UC) over MT'' = (forall MT exists MT' over MT'') ; (UC over MT'') .
-  eq forall MT exists MT' over MT'' = forall (MT \ (( sorts none . ) \ MT'')) exists MT' .
-
-  op univ_ : SubsortDeclSet -> UniversalConstruction [prec 75] .
-  --------------------------------------------------------------
-  eq univ SSDS = forall #extractParametersSSDS(SSDS) exists ( sorts none . ) SSDS .
-
-  op _;_ : UniversalConstruction UniversalConstruction -> UniversalConstruction [ctor assoc prec 76 format(d n d d)] .
   op _|_ : UniversalConstruction UniversalConstruction -> UniversalConstruction [ctor assoc comm prec 77 format(d n d d)] .
   -------------------------------------------------------------------------------------------------------------------------
   eq UC | UC = UC .
+  eq forall NeMTS | NeMTS' exists MDS = (forall NeMTS exists MDS) | (forall NeMTS' exists MDS) .
+
+  op _;_ : UniversalConstruction UniversalConstruction -> UniversalConstruction [ctor assoc prec 76 format(d n d d)] .
+  --------------------------------------------------------------------------------------------------------------------
   eq (UC | UC') ; UC''         = (UC ; UC'') | (UC' ; UC'') .
   eq         UC ; (UC' | UC'') = (UC ; UC')  | (UC  ; UC'') .
 
-  op _<<_ : UniversalConstruction SubstitutionSet -> UniversalConstruction [right id: empty] .
-  --------------------------------------------------------------------------------------------
-  eq (forall MT exists MT') << SUB = forall (MT << SUB) exists (MT' << SUB) | forall MT exists MT' .
-  eq UC << (SUB | SUB' | SUBS)     = (UC << SUB) | (UC << SUB') | (UC << SUBS) .
-  eq (UC | UC') << SUB             = (UC << SUB) | (UC' << SUB) .
-  eq (UC ; UC') << SUB             = (UC << SUB) ; (UC' << SUB) .
+---  op _over_ : UniversalConstruction ModuleTemplate -> UniversalConstruction [prec 76] .
+---  -------------------------------------------------------------------------------------
+---  eq (forall MT exists MT' | UC) over MT'' = (forall MT exists MT' over MT'') | (UC over MT'') .
+---  eq (forall MT exists MT' ; UC) over MT'' = (forall MT exists MT' over MT'') ; (UC over MT'') .
+---  eq forall MT exists MT' over MT'' = forall (MT \ (( sorts none . ) \ MT'')) exists MT' .
+
+  op univ_ : ModuleDeclSet -> UniversalConstruction [prec 75] .
+  -------------------------------------------------------------
+  eq univ MDS = forall ( sorts fv<Sort>(MDS) . ) exists MDS .
+
+  op _<<_ : UniversalConstruction SubstitutionSet -> UniversalConstruction .
+  --------------------------------------------------------------------------
+  eq UC << empty                   = UC .
+  eq UC << (SU | SU' | SUBSTS)     = (UC << SU) | (UC << SU') | (UC << SUBSTS) .
+  eq (UC | UC') << SU              = (UC << SU) | (UC' << SU) .
+  eq (UC ; UC') << SU              = (UC << SU) ; (UC' << SU) .
+  eq (forall MTS exists MDS) << SU = (forall (MTS << SU) exists (MDS << SU)) | (forall MTS exists MDS) .
 ```
 
 Covariant Constructions
@@ -80,22 +83,23 @@ supersorts) of the original.
   ---------------------------------------------------
   eq covariant(S, S') =   forall ( sorts S . )
                           exists ( sorts S' . )
-                        ; forall ( sorts S        ; S'
-                                       ; prime(S) ; prime(S') .
+                        ; forall ( sorts S  ; prime(S)
+                                       ; S' ; prime(S') .
                                  )
                                  ( subsort S < prime(S) . )
-                          exists ( sorts none . )
-                                 ( subsort S' < prime(S') . ) .
+                          exists ( subsort S' < prime(S') . ) .
 
   op covariant-data-up : Sort Sort -> UniversalConstruction .
   -----------------------------------------------------------
   eq covariant-data-up(S, S') =   covariant(S, S')
-                                ; univ ( subsorts S < S' . ) .
+                                ; forall ( sorts S ; S' . )
+                                  exists ( subsort S < S' . ) .
 
   op covariant-data-down : Sort Sort -> UniversalConstruction .
   -------------------------------------------------------------
   eq covariant-data-down(S, S') =   covariant(S, S')
-                                  ; univ ( subsorts S' < S . ) .
+                                  ; forall ( sorts S ; S' . )
+                                    exists ( subsort S < S' . ) .
 ```
 
 A common idiom is to create the subsort-chain `X < NeF{X} < F{X}`, where `F` is
@@ -110,17 +114,17 @@ operators with unit are declared.
 ```{.maude .univ}
   op covariant-data-binary : Sort Qid AttrSet -> UniversalConstruction .
   ----------------------------------------------------------------------
-  ceq covariant-data-binary(S, Op, AS) =   covariant-data-up(svar('X), NeS{svar('X)})
-                                         ; covariant-data-up(NeS{svar('X)}, S{svar('X)})
-                                         ; forall ( sorts svar('X) ; S{svar('X)} ; NeS{svar('X)} . )
-                                                  ( subsorts svar('X) < NeS{svar('X)} < S{svar('X)} . )
-                                           exists ( sorts none . )
-                                                  ( op Nil : nil -> S{svar('X)} [ctor] .
-                                                    op Op : (S{svar('X)})   (S{svar('X)}) ->   S{svar('X)} [ctor id(const(Nil, S{svar('X)})) AS] .
-                                                    op Op : (S{svar('X)}) (NeS{svar('X)}) -> NeS{svar('X)} [ctor id(const(Nil, S{svar('X)})) AS] .
+  ceq covariant-data-binary(S, Op, AS) =   covariant-data-up(X, NeS{X})
+                                         ; covariant-data-up(NeS{X}, S{X})
+                                         ; forall ( sorts X ; S{X} ; NeS{X} . )
+                                                  ( subsorts X < NeS{X} < S{X} . )
+                                           exists ( op Nil : nil -> S{X} [ctor] .
+                                                    op Op : (S{X})   (S{X}) ->   S{X} [ctor id(const(Nil, S{X})) AS] .
+                                                    op Op : (S{X}) (NeS{X}) -> NeS{X} [ctor id(const(Nil, S{X})) AS] .
                                                   )
                                        if NeS := qid("Ne" + string(S))
-                                       /\ Nil := qid("." + string(S)) .
+                                       /\ Nil := qid("." + string(S))
+                                       /\ X   := var<Sort>('X) .
 ```
 
 The universal constructions for the list and set data-types are provided here in
@@ -145,10 +149,10 @@ terms of `covariant-binary-data`.
   eq  LIST = covariant-data-binary('List, '_`,_, assoc) .
   eq  MSET = covariant-data-binary('MSet, '_;_, assoc comm) .
   ceq SET  =   covariant-data-binary('Set, '_;_, assoc comm)
-             ; forall ( sorts 'NeSet{svar('X)} . )
+             ; forall ( sorts 'NeSet{var<Sort>('X)} . )
                exists ( sorts none . )
                       ( eq '_;_[NES, NES] = NES [none] . )
-           if NES := var('NeS, 'NeSet{svar('X)}) .
+           if NES := var('NeS, 'NeSet{var<Sort>('X)}) .
 ```
 
 Signature Refinement
@@ -162,27 +166,30 @@ way to generate them).
 ```{.maude .univ}
   op signature-refinement : Qid -> UniversalConstruction .
   --------------------------------------------------------
-  eq signature-refinement(Q) =   covariant-data-down(svar('X), svar('X){Q})
+  eq signature-refinement(Q) =   covariant-data-down(var<Sort>('X), var<Sort>('X){Q})
                                ; signature-refinement(0, Q)
                                ; signature-refinement(1, Q)
                                ; signature-refinement(2, Q) .
 
   op signature-refinement : Nat Qid -> UniversalConstruction .
   ------------------------------------------------------------
-  eq signature-refinement(0, Q) = forall ( sorts svar('X) ; svar('X){Q} . )
-                                         ( op qvar('OP) : nil -> svar('X) [attrsetvar('AS)] . )
-                                  exists ( sorts none . )
-                                         ( op qvar('OP) : nil -> svar('X){Q} [attrsetvar('AS)] . ) .
-  eq signature-refinement(1, Q) = ( forall ( sorts svar('X) ; svar('X){Q} ; svar('Y) ; svar('Y){Q}. )
-                                           ( op qvar('OP) : svar('Y) -> svar('X) [attrsetvar('AS)] . )
-                                    exists ( sorts none . )
-                                           ( op qvar('OP) : svar('Y){Q} -> svar('X){Q} [attrsetvar('AS)] . )
-                                  ) << ('X:Sort <- 'Y:Sort) .
-  eq signature-refinement(2, Q) = ( forall ( sorts svar('X) ; svar('X){Q} ; svar('Y) ; svar('Y){Q} ; svar('Z) ; svar('Z){Q} . )
-                                           ( op qvar('OP) : svar('Y) svar('Z) -> svar('X) [attrsetvar('AS)] . )
-                                    exists ( sorts none . )
-                                           ( op qvar('OP) : (svar('Y){Q}) (svar('Z){Q}) -> svar('X){Q} [attrsetvar('AS)] . )
-                                  ) << (('X:Sort <- 'Y:Sort) | ('X:Sort <- 'Z:Sort) | ('Y:Sort <- 'Z:Sort) | ('Y:Sort <- 'X:Sort ; 'Z:Sort <- 'X:Sort)) .
+  ceq signature-refinement(0, Q) = forall ( sorts X ; X{Q} . )
+                                          ( op var<Qid>('OP) : nil -> X [var<AttrSet>('AS)] . )
+                                   exists ( op var<Qid>('OP) : nil -> X{Q} [var<AttrSet>('AS)] . )
+                                 if X := var<Sort>('X) .
+  ceq signature-refinement(1, Q) = ( forall ( sorts X ; X{Q} ; Y ; Y{Q}. )
+                                            ( op var<Qid>('OP) : Y -> X [var<AttrSet>('AS)] . )
+                                     exists ( op var<Qid>('OP) : Y{Q} -> X{Q} [var<AttrSet>('AS)] . )
+                                   ) << ('X:Sort <- 'Y:Sort)
+                                 if X := var<Sort>('X)
+                                 /\ Y := var<Sort>('Y) .
+  ceq signature-refinement(2, Q) = ( forall ( sorts X ; X{Q} ; Y ; Y{Q} ; Z ; Z{Q} . )
+                                            ( op var<Qid>('OP) : Y Z -> X [var<AttrSet>('AS)] . )
+                                     exists ( op var<Qid>('OP) : (Y{Q}) (Z{Q}) -> X{Q} [var<AttrSet>('AS)] . )
+                                   ) << (('X:Sort <- 'Y:Sort) | ('X:Sort <- 'Z:Sort) | ('Y:Sort <- 'Z:Sort) | ('Y:Sort <- 'X:Sort ; 'Z:Sort <- 'X:Sort))
+                                 if X := var<Sort>('X)
+                                 /\ Y := var<Sort>('Y)
+                                 /\ Z := var<Sort>('Z) .
 ```
 
 Exponential Objects
@@ -198,27 +205,26 @@ objects themselves. This `EXPONENTIAL` universal construction does that.
 
   op EXPONENTIAL : -> UniversalConstruction .
   -------------------------------------------
-  eq EXPONENTIAL =   ( forall ( sorts svar('X) ; svar('Y) . )
-                       exists ( sorts svar('X) ==> svar('Y) . )
-                              ( op '__ : (svar('X) ==> svar('Y)) svar('X) -> svar('Y) [none] . )
-                     ) << ('X:Sort <- 'Y:Sort)
-                   ; forall ( sorts svar('X) ==> svar('X) . )
-                     exists ( sorts none . )
-                            ( op 'id < svar('X) > : nil -> svar('X) ==> svar('X) [ctor] . )
-                            ( eq '__[const('id < svar('X) >, svar('X) ==> svar('X)), var('X, svar('X))] = var('X, svar('X)) [none] . )
-                   ; forall ( sorts svar('X) ; svar('Y) ; svar('Z) ; svar('X) ==> svar('Y) ; svar('X) ==> svar('Z) . )
-                            ( subsort svar('Y) < svar('Z) . )
-                     exists ( sorts none . )
-                            ( subsort svar('X) ==> svar('Y) < svar('X) ==> svar('Z) . )
-                   ; forall ( sorts svar('X) ; svar('Y) ; svar('W) ; svar('X) ==> svar('Y) ; svar('W) ==> svar('Y) . )
-                            ( subsort svar('W) < svar('X) . )
-                     exists ( sorts none . )
-                            ( subsort svar('X) ==> svar('Y) < svar('W) ==> svar('Y) . )
-                   ; forall ( sorts svar('X) ==> svar('Y) ; svar('Y) ==> svar('Z) ; svar('X) ==> svar('Z) . )
-                     exists ( sorts none . )
-                            ( op '_._ : (svar('Y) ==> svar('Z)) (svar('X) ==> svar('Y)) -> svar('X) ==> svar('Z) [none] .
-                              op '_;_ : (svar('X) ==> svar('Y)) (svar('Y) ==> svar('Z)) -> svar('X) ==> svar('Z) [none] .
-                            ) .
+  ceq EXPONENTIAL =   ( forall ( sorts X ; Y . )
+                        exists ( sorts X ==> Y . )
+                               ( op '__ : (X ==> Y) X -> Y [none] . )
+                      ) << ('Y:Sort <- 'X:Sort)
+                    ; forall ( sorts X ==> X . )
+                      exists ( op 'id < X > : nil -> X ==> X [ctor] . )
+                             ( eq '__[const('id < X >, X ==> X), var('X, X)] = var('X, X) [none] . )
+                    ; forall ( sorts X ; Y ; Z ; X ==> Y ; X ==> Z . )
+                             ( subsort Y < Z . )
+                      exists ( subsort X ==> Y < X ==> Z . )
+                    ; forall ( sorts X ; Y ; Z ; X ==> Y ; Z ==> Y . )
+                             ( subsort Z < X . )
+                      exists ( subsort X ==> Y < Z ==> Y . )
+                    ; forall ( sorts X ==> Y ; Y ==> Z ; X ==> Z . )
+                      exists ( op '_._ : (Y ==> Z) (X ==> Y) -> X ==> Z [none] .
+                               op '_;_ : (X ==> Y) (Y ==> Z) -> X ==> Z [none] .
+                             )
+                  if X := var<Sort>('X)
+                  /\ Y := var<Sort>('Y)
+                  /\ Z := var<Sort>('Z) .
 ```
 
 Meta Theory
@@ -238,28 +244,27 @@ memberships which push elements of the sort `Term` into the subsort of
   ---------------------------------------
   eq cmb-pred(S, S', Q) = ( cmb var('X, S) : S' if Q[var('X, S)] = 'true.Bool [none] . ) .
 
-  op top-sorts : Sort -> ModuleTemplate .
-  ---------------------------------------
-  eq top-sorts(S) = (sorts S .) \ (sorts S ; prime(S) . subsort S < prime(S) .) .
+  op top-sorts : Sort -> ModuleTemplateSet .
+  ------------------------------------------
+  eq top-sorts(S) = (sorts S .) \ ((sorts S ; prime(S) .) subsort S < prime(S) .) .
 
   op DOWN-TERM : -> ModUniversalConstruction .
   --------------------------------------------
-  eq DOWN-TERM < Q > =   exists ( protecting 'META-LEVEL .
-                                  protecting Q .
-                                )
-                                ( sorts none . )
-                       ; covariant-data-up(svar('X), svar('X) ?)
-                       ; forall ( sorts svar('X) ; svar('X) ? . )
-                                ( subsort svar('X) < svar('X) ? . )
-                         exists ( sorts none . )
-                                ( op 'downTermError < svar('X) > : nil   -> svar('X) ? [ctor] .
-                                  op 'downTerm      < svar('X) > : 'Term -> svar('X) ? [none] .
-                                  op 'wellFormed    < svar('X) > : 'Term -> 'Bool      [none] .
-                                )
-                                ( ceq 'downTerm   < svar('X) > [var('T, 'Term)] = var('X, svar('X)) if var('X, svar('X)) := 'downTerm[var('T, 'Term), const('downTermError < svar('X) >, svar('X) ?)] [none] .
-                                  ceq 'wellFormed < svar('X) > [var('T, 'Term)] = 'true.Bool        if var('X, svar('X)) := 'downTerm < svar('X) > [var('T, 'Term)] [none] .
-                                  eq  'wellFormed < svar('X) > [var('T, 'Term)] = 'false.Bool [owise] .
-                                ) .
+  ceq DOWN-TERM < Q > =   exists ( pr 'META-LEVEL .
+                                   pr Q .
+                                 )
+                        ; covariant-data-up(X, X ?)
+                        ; forall ( sorts X ; X ? . )
+                                 ( subsort X < X ? . )
+                          exists ( op 'downTermError < X > : nil   -> X ?   [ctor] .
+                                   op 'downTerm      < X > : 'Term -> X ?   [none] .
+                                   op 'wellFormed    < X > : 'Term -> 'Bool [none] .
+                                 )
+                                 ( ceq 'downTerm   < X > [var('T, 'Term)] = var('X, X) if var('X, X) := 'downTerm[var('T, 'Term), const('downTermError < X >, X ?)] [none] .
+                                   ceq 'wellFormed < X > [var('T, 'Term)] = 'true.Bool if var('X, X) := 'downTerm < X > [var('T, 'Term)] [none] .
+                                   eq  'wellFormed < X > [var('T, 'Term)] = 'false.Bool [owise] .
+                                 )
+                      if X := var<Sort>('X) .
 endfm
 ```
 
@@ -278,7 +283,8 @@ fmod MODULE-EXPRESSION is
 
   var MOD : Module . var ME : ModuleExpression . var SUBSTS : SubstitutionSet .
   vars UC UC' : UniversalConstruction . var MUC : ModUniversalConstruction .
-  vars MT MT' : ModuleTemplate . var Q : Qid . vars S S' : Sort . var SS : SortSet .
+  var MDS : ModuleDeclSet . var MTS : ModuleTemplateSet . var Q : Qid . vars S S' : Sort . var SS : SortSet .
+  vars X Y T : Sort .
 
   op #upModule : ModuleExpression -> Module [memo] .
   --------------------------------------------------
@@ -290,76 +296,76 @@ fmod MODULE-EXPRESSION is
 
   op META-TERM : -> ModUniversalConstruction .
   --------------------------------------------
-  eq META-TERM < Q > =   exists ( extending 'META-LEVEL . )
-                                ( sorts none . )
-                       ; forall ( sorts svar('X) . )
-                         exists asTemplate(#upModule('META-TERM deriving ( covariant-data-down(svar('T), svar('T){Q})
-                                                                         ; covariant(svar('T){Q}, svar('T){Q @ svar('X)})
-                                                                         )
-                                                    )
-                                          )
-                       ; forall ( sorts svar('X) ; svar('T){Q @ svar('X)}
-                                      ; svar('Y) ; svar('T){Q @ svar('Y)} .
-                                )
-                                ( subsort svar('X) < svar('Y) . )
-                         exists ( sorts none . )
-                                ( subsort svar('T){Q @ svar('X)} < svar('T){Q @ svar('Y)} . )
-                      ;  forall ( sorts svar('X) ; svar('T){Q @ svar('X)} ; svar('T){Q} . )
-                              \ ( sorts svar('X) ; svar('T){Q @ svar('X)}
-                                      ; svar('Y) ; svar('T){Q @ svar('Y)} .
-                                )
-                                ( subsort svar('X) < svar('Y) .
-                                  subsort svar('T){Q @ svar('X)} < svar('T){Q @ svar('X)} .
-                                )
-                         exists ( sorts none . )
-                                ( subsort svar('T){Q @ svar('X)} < svar('T){Q} . ) .
+  ceq META-TERM < Q > =   exists ( pr 'META-LEVEL . )
+                        ; forall ( sorts X . )
+                          exists asTemplate(#upModule('META-TERM deriving ( covariant-data-down(T, T{Q})
+                                                                          ; covariant(T{Q}, T{Q @ X})
+                                                                          )
+                                                     )
+                                           )
+                        ; forall ( sorts X ; T{Q @ X}
+                                       ; Y ; T{Q @ Y} .
+                                 )
+                                 ( subsort X < Y . )
+                          exists ( subsort T{Q @ X} < T{Q @ Y} . )
+                       ;  forall ( sorts X ; T{Q @ X} ; T{Q} . )
+                               \ ( sorts X ; T{Q @ X}
+                                       ; Y ; T{Q @ Y} .
+                                 )
+                                 ( subsort X < Y .
+                                   subsort T{Q @ X} < T{Q @ X} .
+                                 )
+                          exists ( subsort T{Q @ X} < T{Q} . )
+                      if X := var<Sort>('X)
+                      /\ Y := var<Sort>('Y)
+                      /\ T := var<Sort>('T) .
 
   op tmp-mb : Sort Sort Qid -> UniversalConstruction .
   ----------------------------------------------------
   eq tmp-mb(S, S', Q) = forall ( sorts S ; S ? ; S'{Q @ S} . )
-                        exists ( sorts none . )
-                               ( cmb-pred( S' , S'{Q @ S} , 'wellFormed < S > ) ) .
+                        exists ( cmb-pred( S' , S'{Q @ S} , 'wellFormed < S > ) ) .
 
   op META-THEORY : -> ModUniversalConstruction .
   ----------------------------------------------
-  eq META-THEORY < Q > =   ( DOWN-TERM | META-TERM < Q > )
-                         ; tmp-mb( svar('X) , 'Constant   , Q )
-                         ; tmp-mb( svar('X) , 'GroundTerm , Q )
-                         ; tmp-mb( svar('X) , 'Variable   , Q )
-                         ; tmp-mb( svar('X) , 'Term       , Q ) .
+  ceq META-THEORY < Q > =   ( DOWN-TERM | META-TERM < Q > )
+                          ; tmp-mb(X, 'Constant,   Q)
+                          ; tmp-mb(X, 'GroundTerm, Q)
+                          ; tmp-mb(X, 'Variable,   Q)
+                          ; tmp-mb(X, 'Term,       Q)
+                        if X := var<Sort>('X) .
 
-    vars M1 M2          : ModuleExpression .
-    vars TM TM' TM1 TM2 : Variable .
-    op PURIFICATION : ModuleExpression ModuleExpression -> UniversalConstruction .
-    ------------------------------------------------------------------------------
-    ceq PURIFICATION(M1, M2)
-      =   META-THEORY < M1 >
-        ; META-THEORY < M2 >
-        ; exists ( extending 'FOFORM .
-                   extending M1 .
-                   extending M2 . )
-                 ( sorts none . )
-                 ( op 'purify : 'EqAtom -> 'EqConj [none] .
-                   op 'fvar   : 'Term 'Term -> 'Variable [none] . )
-        ; forall ( sorts 'Term ; 'Term{svar('M)} . )
-                 ( subsort 'Term{svar('M)} < 'Term . )
-          exists ( sorts none . )
-                 ( eq 'purify['_?=_[TM, TM']] = '_?=_[TM, TM'] [none] . )
-        ; forall ( sorts 'Term ; 'Term{svar('M1)} ; 'Term{svar('M2)} . )
-                 ( subsorts 'Term{svar('M1)} ; 'Term{svar('M2)} < 'Term . )
-          exists ( sorts none . )
-                 ( eq 'purify['_?=_[TM1, TM2]] = '_/\_['_?=_['fvar[TM1, TM2], TM1], '_?=_['fvar[TM1, TM2], TM2]] [none] . )
-
-      if TM  := var('TM,  'Term{svar('M)})
-      /\ TM' := var('TM', 'Term{svar('M)})
-      /\ TM1 := var('TM1, 'Term{svar('M1)})
-      /\ TM2 := var('TM2, 'Term{svar('M2)}) .
+---    vars M1 M2          : ModuleExpression .
+---    vars TM TM' TM1 TM2 : Variable .
+---    op PURIFICATION : ModuleExpression ModuleExpression -> UniversalConstruction .
+---    ------------------------------------------------------------------------------
+---    ceq PURIFICATION(M1, M2)
+---      =   META-THEORY < M1 >
+---        ; META-THEORY < M2 >
+---        ; exists ( extending 'FOFORM .
+---                   extending M1 .
+---                   extending M2 . )
+---                 ( sorts none . )
+---                 ( op 'purify : 'EqAtom -> 'EqConj [none] .
+---                   op 'fvar   : 'Term 'Term -> 'Variable [none] . )
+---        ; forall ( sorts 'Term ; 'Term{svar('M)} . )
+---                 ( subsort 'Term{svar('M)} < 'Term . )
+---          exists ( sorts none . )
+---                 ( eq 'purify['_?=_[TM, TM']] = '_?=_[TM, TM'] [none] . )
+---        ; forall ( sorts 'Term ; 'Term{svar('M1)} ; 'Term{svar('M2)} . )
+---                 ( subsorts 'Term{svar('M1)} ; 'Term{svar('M2)} < 'Term . )
+---          exists ( sorts none . )
+---                 ( eq 'purify['_?=_[TM1, TM2]] = '_/\_['_?=_['fvar[TM1, TM2], TM1], '_?=_['fvar[TM1, TM2], TM2]] [none] . )
+---
+---      if TM  := var('TM,  'Term{svar('M)})
+---      /\ TM' := var('TM', 'Term{svar('M)})
+---      /\ TM1 := var('TM1, 'Term{svar('M1)})
+---      /\ TM2 := var('TM2, 'Term{svar('M2)}) .
 
   op _deriving_ : Module UniversalConstruction -> [Module] [prec 80] .
   --------------------------------------------------------------------
-  ceq MOD deriving forall MT exists MT' = MOD ++ (MT' << SUBSTS) if SUBSTS := match MT with asTemplate(MOD) .
-  eq  MOD deriving MUC                  = MOD deriving MUC < getName(MOD) > .
-  eq  MOD deriving (UC ; UC')           = (MOD deriving UC) deriving UC' .
-  eq  MOD deriving (UC | UC')           = (MOD deriving UC) ++ (MOD deriving UC') .
+  ceq MOD deriving forall MTS exists MDS = MOD ++ (MDS << SUBSTS) if SUBSTS := match MTS with asTemplate(MOD) .
+  eq  MOD deriving MUC                   = MOD deriving MUC < getName(MOD) > .
+  eq  MOD deriving (UC ; UC')            = (MOD deriving UC) deriving UC' .
+  eq  MOD deriving (UC | UC')            = (MOD deriving UC) ++ (MOD deriving UC') .
 endfm
 ```
