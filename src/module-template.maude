@@ -12,6 +12,9 @@
 --- a way to have "structured" sort names and operator names. For this, a few
 --- constructors are provided.
 
+--- -   `var<X>`, where `X` is some sort, will create an object-level variable of
+---     the given sort by first creating a meta-level variable and then downing it.
+
 
 fmod STRUCTURED-NAME is
   extending META-LEVEL .
@@ -20,17 +23,17 @@ fmod STRUCTURED-NAME is
   vars Q Q' : Qid . vars A A' : Attr . var AS : AttrSet . var SU : Substitution .
   vars OP OP' : OpDecl . var OPDS : OpDeclSet . vars MB MB' : MembAx . var MAS : MembAxSet .
   vars EQ EQ' : Equation . var EQS : EquationSet . vars RL RL' : Rule . var RLS : RuleSet .
-  var TYPE : Type . vars NeTL NeTL' : NeTypeList . var TL : TypeList . vars C C' : Condition . vars EQC EQC' : EqCondition .
+  var TYPE : Type . vars NeTL NeTL' : NeTypeList . var TL : TypeList . vars COND COND' : Condition . vars EQC EQC' : EqCondition .
   vars TERM TERM' : Term . var TERML : TermList . vars NeTERML NeTERML' : NeTermList . var VAR : Variable . var CONST : Constant . var N : Nat .
 
-  op _<_>  : Qid  TypeList -> Qid      [prec 23] .
-  op _{_}  : Sort TypeList -> Sort     [prec 23] .
-  op _@_   : Qid  Sort     -> Sort     [prec 23] .
-  op _?    : Sort          -> Sort     [prec 23] .
-  op _==>_ : Sort Sort     -> Sort     [prec 25] .
-  op const : Qid  Sort     -> Constant .
-  op var   : Qid  Sort     -> Variable .
-  --------------------------------------
+  op _<_>  : Qid  TypeList -> Qid      [ctor prec 23] .
+  op _{_}  : Sort TypeList -> Sort     [ctor prec 23] .
+  op _@_   : Qid  Sort     -> Sort     [ctor prec 23] .
+  op _?    : Sort          -> Sort     [ctor prec 23] .
+  op _==>_ : Sort Sort     -> Sort     [ctor prec 25] .
+  op const : Qid  Sort     -> Constant [ctor] .
+  op var   : Qid  Sort     -> Variable [ctor] .
+  ---------------------------------------------
 
   op downQidError?          : -> [Qid] .
   op downSubstitutionError? : -> [Substitution] .
@@ -44,49 +47,50 @@ fmod STRUCTURED-NAME is
   op downRuleSetError?      : -> [RuleSet] .
   ------------------------------------------
 
-  op qvar          : Qid -> Qid .
-  op subvar        : Qid -> Substitution .
-  op importlistvar : Qid -> ImportList .
-  op svar          : Qid -> Sort .
-  op ssetvar       : Qid -> SortSet .
-  op subsvar       : Qid -> SubsortDeclSet .
-  op attrsetvar    : Qid -> AttrSet .
-  op opsetvar      : Qid -> OpDeclSet .
-  op membaxsetvar  : Qid -> MembAxSet .
-  op eqsetvar      : Qid -> EquationSet .
-  op rulesetvar    : Qid -> RuleSet .
-  -----------------------------------
-  ceq qvar(Q)          = Q'   if Q'   := downTerm(qid(string(Q) + ":Qid"),            downQidError?) .
-  ceq subvar(Q)        = SU   if SU   := downTerm(qid(string(Q) + ":Substitution"),   downSubstitutionError?) .
-  ceq importlistvar(Q) = IL   if IL   := downTerm(qid(string(Q) + ":ImportList"),     downImportListError?) .
-  ceq svar(Q)          = S    if S    := downTerm(qid(string(Q) + ":Sort"),           downSortsError?) .
-  ceq ssetvar(Q)       = SS   if SS   := downTerm(qid(string(Q) + ":SortSet"),        downSortsError?) .
-  ceq subsvar(Q)       = SSDS if SSDS := downTerm(qid(string(Q) + ":SubsortDeclSet"), downSubsortsError?) .
-  ceq attrsetvar(Q)    = AS   if AS   := downTerm(qid(string(Q) + ":AttrSet"),        downAttrSetError?) .
-  ceq opsetvar(Q)      = OPDS if OPDS := downTerm(qid(string(Q) + ":OpDeclSet"),      downOpSetError?) .
-  ceq membaxsetvar(Q)  = MAS  if MAS  := downTerm(qid(string(Q) + ":MembAxSet"),      downMembAxSetError?) .
-  ceq eqsetvar(Q)      = EQS  if EQS  := downTerm(qid(string(Q) + ":EquationSet"),    downEqSetError?) .
-  ceq rulesetvar(Q)    = RLS  if RLS  := downTerm(qid(string(Q) + ":RuleSet"),        downRuleSetError?) .
+  op var<Qid>            : Qid -> Qid .
+  op var<Substitution>   : Qid -> Substitution .
+  op var<ImportList>     : Qid -> ImportList .
+  op var<Sort>           : Qid -> Sort .
+  op var<SortSet>        : Qid -> SortSet .
+  op var<SubsortDeclSet> : Qid -> SubsortDeclSet .
+  op var<AttrSet>        : Qid -> AttrSet .
+  op var<OpDeclSet>      : Qid -> OpDeclSet .
+  op var<MembAxSet>      : Qid -> MembAxSet .
+  op var<EquationSet>    : Qid -> EquationSet .
+  op var<RuleSet>        : Qid -> RuleSet .
+  -----------------------------------------
+  ceq var<Qid>            (Q) = Q'   if Q'   := downTerm(qid(string(Q) + ":Qid"),            downQidError?) .
+  ceq var<Substitution>   (Q) = SU   if SU   := downTerm(qid(string(Q) + ":Substitution"),   downSubstitutionError?) .
+  ceq var<ImportList>     (Q) = IL   if IL   := downTerm(qid(string(Q) + ":ImportList"),     downImportListError?) .
+  ceq var<Sort>           (Q) = S    if S    := downTerm(qid(string(Q) + ":Sort"),           downSortsError?) .
+  ceq var<SortSet>        (Q) = SS   if SS   := downTerm(qid(string(Q) + ":SortSet"),        downSortsError?) .
+  ceq var<SubsortDeclSet> (Q) = SSDS if SSDS := downTerm(qid(string(Q) + ":SubsortDeclSet"), downSubsortsError?) .
+  ceq var<AttrSet>        (Q) = AS   if AS   := downTerm(qid(string(Q) + ":AttrSet"),        downAttrSetError?) .
+  ceq var<OpDeclSet>      (Q) = OPDS if OPDS := downTerm(qid(string(Q) + ":OpDeclSet"),      downOpSetError?) .
+  ceq var<MembAxSet>      (Q) = MAS  if MAS  := downTerm(qid(string(Q) + ":MembAxSet"),      downMembAxSetError?) .
+  ceq var<EquationSet>    (Q) = EQS  if EQS  := downTerm(qid(string(Q) + ":EquationSet"),    downEqSetError?) .
+  ceq var<RuleSet>        (Q) = RLS  if RLS  := downTerm(qid(string(Q) + ":RuleSet"),        downRuleSetError?) .
 
 
 --- It's useful when building universal constructions to generate the same
 --- structure, but with incremented variable names.
 
---- -   `prime` will prime every variable in a given term.
+--- -   `prime` will add a prime `'` to every variable in a given term.
+--- -   `#prime` is the meta-level version, which does the same over a `Term`.
 
 
   op prime :     Sort -> Sort .
   op prime : Nat Sort -> Sort .
   -----------------------------
   eq  prime(S)    = prime(1, S) .
-  ceq prime(N, S) = S' if S' := downTerm(primeVars(N, upTerm(S)), downSortsError?) .
+  ceq prime(N, S) = S' if S' := downTerm(#prime(N, upTerm(S)), downSortsError?) .
 
-  op primeVars : Nat TermList -> TermList .
-  -----------------------------------------
-  eq primeVars(N, VAR)                  = qid(string(getName(VAR)) + #primes(N) + ":" + string(getType(VAR))) .
-  eq primeVars(N, CONST)                = CONST .
-  eq primeVars(N, Q[NeTERML])           = Q[primeVars(N, NeTERML)] .
-  eq primeVars(N, (NeTERML , NeTERML')) = primeVars(N, NeTERML) , primeVars(N, NeTERML') .
+  op #prime : Nat TermList -> TermList .
+  ------------------------------------------
+  eq #prime(N, VAR)                  = qid(string(getName(VAR)) + #primes(N) + ":" + string(getType(VAR))) .
+  eq #prime(N, CONST)                = CONST .
+  eq #prime(N, Q[NeTERML])           = Q[#prime(N, NeTERML)] .
+  eq #prime(N, (NeTERML , NeTERML')) = #prime(N, NeTERML) , #prime(N, NeTERML') .
 
   op #primes : Nat -> String .
   ----------------------------
@@ -94,150 +98,209 @@ fmod STRUCTURED-NAME is
   eq #primes(s(N)) = "'" + #primes(N) .
 
 
+--- We'll need the ability to get the free variables of some specific sorts.
+
+--- -   `#fv<Sort>` is a meta-level operation which gets all the variables of sort
+---     `Sort` from a `Term`.
+
+
+  op #fv<Sort> : TermList -> SortSet .
+  ------------------------------------
+  eq #fv<Sort>(VAR)                  = if getType(VAR) == 'Sort then var<Sort>(getName(VAR)) else none fi .
+  eq #fv<Sort>(CONST)                = none .
+  eq #fv<Sort>(Q[NeTERML])           = #fv<Sort>(Q) ; #fv<Sort>(NeTERML) .
+  eq #fv<Sort>((NeTERML , NeTERML')) = #fv<Sort>(NeTERML) ; #fv<Sort>(NeTERML') .
+  eq #fv<Sort>(Q)                    = none [owise] .
+
+
 --- We'll also need ways to "resolve" these names into proper Maude names, so that
 --- we can do execution in Maude with the results. Here we provide the "base"
 --- resolution, as well as lifting it over the various meta-level data.
 
+--- -   `resolveNames` provides the reduction of structured names to unstructured
+---     Core Maude names (a single quoted identifier).
 
-  op #resolveTypeList : TypeList -> TypeList .
-  --------------------------------------------
-  eq #resolveTypeList(nil)        = nil .
-  eq #resolveTypeList(S)          = #resolveSorts(S) .
-  eq #resolveTypeList(NeTL NeTL') = #resolveTypeList(NeTL) #resolveTypeList(NeTL') .
+--- TODO: `resolveNames` should be defined over just a few primitives (the ones that
+--- we have structured names for), and `#resolveNames` should be a META-LEVEL
+--- version which descends to those points in the term and then calls the object
+--- level version. This should fix the preregularity issue with this as well.
 
-  op #string : TypeList -> String .
-  ---------------------------------
-  eq #string(nil)        = "" .
-  eq #string(S)          = string(S) .
-  eq #string(NeTL NeTL') = string(NeTL) + ";" + string(NeTL') .
 
-  op #resolveQid : Qid -> Qid .
-  -----------------------------
-  eq #resolveQid(Q < TL >) = qid(string(#resolveQid(Q)) + "<" + #string(#resolveTypeList(TL)) + ">") .
-  eq #resolveQid(Q)        = Q [owise] .
+  op #tl-string : TypeList -> String .
+  ------------------------------------
+  eq #tl-string(nil)        = "" .
+  eq #tl-string(S)          = string(S) .
+  eq #tl-string(NeTL NeTL') = #tl-string(NeTL) + ";" + #tl-string(NeTL') .
 
-  op #resolveTerm : TermList -> TermList .
+  op resolveNames : TypeList -> TypeList .
   ----------------------------------------
-  eq #resolveTerm(const(Q, S))          = qid(string(#resolveQid(Q)) + "." + string(#resolveSorts(S))) .
-  eq #resolveTerm(var(Q, S))            = qid(string(#resolveQid(Q)) + ":" + string(#resolveSorts(S))) .
-  eq #resolveTerm(Q [ TERML ])          = #resolveQid(Q) [ #resolveTerm(TERML) ] .
-  eq #resolveTerm((NeTERML , NeTERML')) = #resolveTerm(NeTERML) , #resolveTerm(NeTERML') .
-  eq #resolveTerm(TERM)                 = TERM [owise] .
+  eq resolveNames((nil).TypeList) = nil .
+  eq resolveNames(NeTL NeTL')     = resolveNames(NeTL) resolveNames(NeTL') .
 
-  op #resolveImports : ImportList -> ImportList .
-  -----------------------------------------------
-  eq #resolveImports(nil)        = nil .
-  eq #resolveImports(I)          = I .
-  eq #resolveImports(I IL I IL') = #resolveImports(I IL IL') .
-  eq #resolveImports(I I' IL)    = I #resolveImports(I' IL) [owise] .
+  op resolveNames : Qid -> Qid .
+  ------------------------------
+  eq resolveNames(Q < TL >) = qid(string(resolveNames(Q)) + "<" + #tl-string(resolveNames(TL)) + ">") .
+  eq resolveNames(Q)        = Q [owise] .
 
-  op #resolveSorts : SortSet -> SortSet .
-  ---------------------------------------
-  eq #resolveSorts(none)        = none .
-  eq #resolveSorts(S { TL })    = qid(string(#resolveSorts(S)) + "{" + #string(#resolveTypeList(TL)) + "}") .
-  eq #resolveSorts(Q @ S)       = qid(string(#resolveQid(Q)) + "@" + string(#resolveSorts(S))) .
-  eq #resolveSorts(S ==> S')    = qid(string(#resolveSorts(S)) + "==>" + string(#resolveSorts(S'))) .
-  eq #resolveSorts(S ?)         = qid(string(#resolveSorts(S)) + "?") .
-  eq #resolveSorts(S ; S' ; SS) = #resolveSorts(S) ; #resolveSorts(S') ; #resolveSorts(SS) .
-  eq #resolveSorts(S)           = S [owise] .
+  op resolveNames : TermList -> TermList .
+  ----------------------------------------
+  eq resolveNames(const(Q, S))          = qid(string(resolveNames(Q)) + "." + string(resolveNames(S))) .
+  eq resolveNames(var(Q, S))            = qid(string(resolveNames(Q)) + ":" + string(resolveNames(S))) .
+  eq resolveNames(Q[TERML])             = resolveNames(Q)[resolveNames(TERML)] .
+  eq resolveNames((NeTERML , NeTERML')) = resolveNames(NeTERML) , resolveNames(NeTERML') .
+  eq resolveNames(TERM)                 = TERM [owise] .
 
-  op #resolveSubsorts : SubsortDeclSet -> SubsortDeclSet .
-  --------------------------------------------------------
-  eq #resolveSubsorts(none)                  = none .
-  eq #resolveSubsorts(subsort S < S' . SSDS) = ( subsort #resolveSorts(S) < #resolveSorts(S') .
-                                                 #resolveSubsorts(SSDS)
-                                               ) .
+  op resolveNames : SortSet -> SortSet .
+  --------------------------------------
+  eq resolveNames((none).SortSet) = none .
+  eq resolveNames(S { TL })       = qid(string(resolveNames(S)) + "{" + #tl-string(resolveNames(TL)) + "}") .
+  eq resolveNames(Q @ S)          = qid(string(resolveNames(Q)) + "@" + string(resolveNames(S))) .
+  eq resolveNames(S ==> S')       = qid(string(resolveNames(S)) + "==>" + string(resolveNames(S'))) .
+  eq resolveNames(S ?)            = qid(string(resolveNames(S)) + "?") .
+  eq resolveNames(S ; S' ; SS)    = resolveNames(S) ; resolveNames(S') ; resolveNames(SS) .
+  eq resolveNames(S)              = S [owise] .
 
-  op #resolveAttrs : AttrSet -> AttrSet .
-  ---------------------------------------
-  eq #resolveAttrs(none)     = none .
-  eq #resolveAttrs(id(TERM)) = id(#resolveTerm(TERM)) .
-  eq #resolveAttrs(A A' AS)  = #resolveAttrs(A) #resolveAttrs(A') #resolveAttrs(AS) .
-  eq #resolveAttrs(A)        = A [owise] .
+  op resolveNames : AttrSet -> AttrSet .
+  --------------------------------------
+  eq resolveNames((none).AttrSet) = none .
+  eq resolveNames(id(TERM))       = id(resolveNames(TERM)) .
+  eq resolveNames(A A' AS)        = resolveNames(A) resolveNames(A') resolveNames(AS) .
+  eq resolveNames(A)              = A [owise] .
 
-  op #resolveOps : OpDeclSet -> OpDeclSet .
-  -----------------------------------------
-  eq #resolveOps(none) = none .
-  eq #resolveOps(OP OP' OPDS) = #resolveOps(OP) #resolveOps(OP') #resolveOps(OPDS) .
-  eq #resolveOps(op Q : TL -> TYPE [AS] .) = (op #resolveQid(Q) : #resolveTypeList(TL) -> #resolveTypeList(TYPE) [#resolveAttrs(AS)] .) .
+  op resolveNames : SubsortDecl -> SubsortDecl .
+  ----------------------------------------------
+  eq resolveNames(subsort S < S' .) = ( subsort resolveNames(S) < resolveNames(S') . ) .
 
-  op #resolveCondition : Condition -> Condition .
-  -----------------------------------------------
-  eq  #resolveCondition(nil)           = nil .
-  eq  #resolveCondition(TERM = TERM')  = #resolveTerm(TERM) =  #resolveTerm(TERM') .
-  eq  #resolveCondition(TERM : S)      = #resolveTerm(TERM) :  #resolveSorts(S) .
-  eq  #resolveCondition(TERM := TERM') = #resolveTerm(TERM) := #resolveTerm(TERM') .
-  eq  #resolveCondition(TERM => TERM') = #resolveTerm(TERM) => #resolveTerm(TERM') .
-  ceq #resolveCondition(C /\ C')       = #resolveCondition(C) /\ #resolveCondition(C') if not (C == nil or C' == nil) .
+  op resolveNames : Condition -> Condition .
+  ------------------------------------------
+  eq  resolveNames((nil).Condition) = nil .
+  eq  resolveNames(TERM : S)        = resolveNames(TERM) :  resolveNames(S) .
+  eq  resolveNames(TERM = TERM')    = resolveNames(TERM) =  resolveNames(TERM') .
+  eq  resolveNames(TERM := TERM')   = resolveNames(TERM) := resolveNames(TERM') .
+  eq  resolveNames(TERM => TERM')   = resolveNames(TERM) => resolveNames(TERM') .
+  ceq resolveNames(COND /\ COND')   = resolveNames(COND) /\ resolveNames(COND') if not (COND == nil or COND' == nil) .
 
-  op #resolveMemberships : MembAxSet -> MembAxSet .
-  -------------------------------------------------
-  eq #resolveMemberships(none) = none .
-  eq #resolveMemberships(MB MB' MAS) = #resolveMemberships(MB) #resolveMemberships(MB') #resolveMemberships(MAS) .
-  eq #resolveMemberships( mb TERM : S        [AS] .) = ( mb #resolveTerm(TERM) : #resolveSorts(S)                           [#resolveAttrs(AS)] .) .
-  eq #resolveMemberships(cmb TERM : S if EQC [AS] .) = (cmb #resolveTerm(TERM) : #resolveSorts(S) if #resolveCondition(EQC) [#resolveAttrs(AS)] .) .
+  op resolveNames : OpDecl -> OpDecl .
+  ------------------------------------
+  eq resolveNames(op Q : TL -> TYPE [AS] .) = (op resolveNames(Q) : resolveNames(TL) -> resolveNames(TYPE) [resolveNames(AS)] .) .
 
-  op #resolveEquations : EquationSet -> EquationSet .
-  ---------------------------------------------------
-  eq #resolveEquations(none) = none .
-  eq #resolveEquations(EQ EQ' EQS) = #resolveEquations(EQ) #resolveEquations(EQ') #resolveEquations(EQS) .
-  eq #resolveEquations( eq TERM = TERM'        [AS] .) = ( eq #resolveTerm(TERM) = #resolveTerm(TERM')                           [#resolveAttrs(AS)] .) .
-  eq #resolveEquations(ceq TERM = TERM' if EQC [AS] .) = (ceq #resolveTerm(TERM) = #resolveTerm(TERM') if #resolveCondition(EQC) [#resolveAttrs(AS)] .) .
+  op resolveNames : MembAxSet -> MembAxSet .
+  ------------------------------------------
+  eq resolveNames( mb TERM : S        [AS] .) = ( mb resolveNames(TERM) : resolveNames(S)                      [resolveNames(AS)] .) .
+  eq resolveNames(cmb TERM : S if EQC [AS] .) = (cmb resolveNames(TERM) : resolveNames(S) if resolveNames(EQC) [resolveNames(AS)] .) .
 
-  op #resolveRules : RuleSet -> RuleSet .
-  ---------------------------------------
-  eq #resolveRules(none) = none .
-  eq #resolveRules(RL RL' RLS) = #resolveRules(RL) #resolveRules(RL') #resolveRules(RLS) .
-  eq #resolveRules( rl TERM => TERM'      [AS] .) = ( rl #resolveTerm(TERM) => #resolveTerm(TERM')                         [#resolveAttrs(AS)] .) .
-  eq #resolveRules(crl TERM => TERM' if C [AS] .) = (crl #resolveTerm(TERM) => #resolveTerm(TERM') if #resolveCondition(C) [#resolveAttrs(AS)] .) .
+  op resolveNames : EquationSet -> EquationSet .
+  ----------------------------------------------
+  eq resolveNames( eq TERM = TERM'        [AS] .) = ( eq resolveNames(TERM) = resolveNames(TERM')                      [resolveNames(AS)] .) .
+  eq resolveNames(ceq TERM = TERM' if EQC [AS] .) = (ceq resolveNames(TERM) = resolveNames(TERM') if resolveNames(EQC) [resolveNames(AS)] .) .
+
+  op resolveNames : RuleSet -> RuleSet .
+  --------------------------------------
+  eq resolveNames( rl TERM => TERM'         [AS] .) = ( rl resolveNames(TERM) => resolveNames(TERM')                       [resolveNames(AS)] .) .
+  eq resolveNames(crl TERM => TERM' if COND [AS] .) = (crl resolveNames(TERM) => resolveNames(TERM') if resolveNames(COND) [resolveNames(AS)] .) .
 endfm
 
 
---- Module Templates {#module-templates-1}
---- ----------------
+--- Module Declarations
+--- -------------------
 
---- Module templates serve as more flexible module data-structures than what the
---- `META-LEVEL` provides for modules. The main functionality exported is:
-
---- -   `_++_ : ModuleTemplate ModuleTemplate -> ModuleTemplate [assoc comm]` allows
----     unioning two module templates.
---- 
---- -   `_|_ : ModuleTemplateSet ModuleTemplateSet -> ModuleTemplateSet [assoc comm id: .ModuleTemplateSet]`
----     and
----     `_\_ : ModuleTemplate ModuleTemplateSet -> ModuleTemplate [right id: .ModuleTemplateSet]`
----     are the union and difference of module templates respectively.
---- 
---- -   `++ : ModuleTemplateSet -> ModuleTemplate` folds the operation `_++_` over
----     its argument (unioning together the set of module templates).
---- 
---- -   `_<<_ : ModuleTemplateSet SubstitutionSet -> ModuleTemplateSet` generates
----     the all module templates from the first argument instantiated with any of
----     the substitutions in the second argument.
---- 
---- -   `match_with_ : ModuleTemplateSet ModuleTemplate -> SubstitutionSet` will
----     give all the substitutions which make elements of the second module template
----     set instances of an element of the first module template set.
---- 
+--- Module declarations include all of the individual declarations defined in the
+--- prelude, but extend them by adding a common supersort `ModuleDecl`, as well as a
+--- common subsort for each declaration set `NullDeclSet`. Additionally, extra sorts
+--- are added for the non-empty versions of each declaration (for preregularity).
 
 
 load constrained-terms.maude
 
-fmod MODULE-TEMPLATE-DATA is
+fmod MODULE-DECLARATION is
   protecting STRUCTURED-NAME .
   protecting CTERM-SET .
 
-  sort SortPoset .
-  subsort SortSet < SortPoset .
-  sorts SortTemplate SubsortTemplate OpTemplate MembAxTemplate EqTemplate RuleTemplate ModuleTemplate .
-  subsort SortTemplate < SubsortTemplate < OpTemplate < MembAxTemplate < EqTemplate < RuleTemplate < ModuleTemplate .
-  sorts NeModuleTemplateSet ModuleTemplateSet .
-  subsort ModuleTemplate < NeModuleTemplateSet < ModuleTemplateSet .
+  sorts ImportDecl ImportDeclSet .
+  --------------------------------
+  subsort ImportDecl < ImportDeclSet .
 
-  var H : Header . vars SU SU' SU'' : Substitution . var SUBSTS : SubstitutionSet . vars MT MT' MT'' : ModuleTemplate .
-  vars IL IL' : ImportList . vars S S' S'' : Sort . vars SS SS' : SortSet . var SPS : SortPoset .
-  vars SSDS SSDS' : SubsortDeclSet . vars OPDS OPDS' : OpDeclSet . vars MAS MAS' : MembAxSet . vars EQS EQS' : EquationSet . vars RLS RLS' : RuleSet .
-  var ST : SortTemplate . var SST : SubsortTemplate . var OPT : OpTemplate . var MAT : MembAxTemplate . var EQT : EqTemplate . var RLT : RuleTemplate .
-  vars MTS MTS' : ModuleTemplateSet . vars NeMTS NeMTS' NeMTS'' : NeModuleTemplateSet .
+  sorts SortPoset SortDecl SortDeclSet .
+  --------------------------------------
+  subsort SortSet < SortPoset .
+  subsort SortDecl < SortDeclSet .
+
+  sorts NeImportDeclSet NeSortDeclSet NeSubsortDeclSet NeOpDeclSet NeMembAxSet NeEquationSet NeRuleSet .
+  ------------------------------------------------------------------------------------------------------
+  subsorts ImportDecl  < NeImportDeclSet  < ImportDeclSet .
+  subsorts SortDecl    < NeSortDeclSet    < SortDeclSet .
+  subsorts SubsortDecl < NeSubsortDeclSet < SubsortDeclSet .
+  subsorts OpDecl      < NeOpDeclSet      < OpDeclSet .
+  subsorts MembAx      < NeMembAxSet      < MembAxSet .
+  subsorts Equation    < NeEquationSet    < EquationSet .
+  subsorts Rule        < NeRuleSet        < RuleSet .
+
+  sorts ModuleDecl NeModuleDeclSet ModuleDeclSet NullDeclSet .
+  ------------------------------------------------------------
+  subsorts ModuleDecl < NeModuleDeclSet < ModuleDeclSet .
+  subsorts               ImportDecl      SortDecl      SubsortDecl      OpDecl      MembAx      Equation      Rule    <   ModuleDecl .
+  subsorts NullDeclSet < ImportDeclSet   SortDeclSet   SubsortDeclSet   OpDeclSet   MembAxSet   EquationSet   RuleSet <   ModuleDeclSet .
+  subsorts             NeImportDeclSet NeSortDeclSet NeSubsortDeclSet NeOpDeclSet NeMembAxSet NeEquationSet NeRuleSet < NeModuleDeclSet .
+
+  var Q : Qid . var ME : ModuleExpression .
+  vars I I' : Import . var IL : ImportList . vars ID : ImportDecl . var NeIDS : NeImportDeclSet . var IDS : ImportDeclSet .
+  vars S S' S'' : Sort . vars SS SS' : SortSet . var SPS : SortPoset .
+  var SU : Substitution . var SUBSTS : SubstitutionSet .
+  vars NeMDS NeMDS' : NeModuleDeclSet . var MDS : ModuleDeclSet .
+
+  --- FOR PREGULARITY!!!!!!!
+  --- ----------------------
+  op __ : ImportDeclSet  NeImportDeclSet  -> NeImportDeclSet  [ctor ditto] .
+  op __ : SortDeclSet    NeSortDeclSet    -> NeSortDeclSet    [ctor ditto] .
+  op __ : SubsortDeclSet NeSubsortDeclSet -> NeSubsortDeclSet [ctor ditto] .
+  op __ : OpDeclSet      NeOpDeclSet      -> NeOpDeclSet      [ctor ditto] .
+  op __ : MembAxSet      NeMembAxSet      -> NeMembAxSet      [ctor ditto] .
+  op __ : EquationSet    NeEquationSet    -> NeEquationSet    [ctor ditto] .
+  op __ : RuleSet        NeRuleSet        -> NeRuleSet        [ctor ditto] .
+  --------------------------------------------------------------------------
+
+  op none : -> NullDeclSet [ctor] .
+  op __ : NullDeclSet NullDeclSet -> NullDeclSet [ctor ditto] .
+  -------------------------------------------------------------
+
+  op __ : ModuleDeclSet   ModuleDeclSet ->   ModuleDeclSet [ctor ditto] .
+  op __ : ModuleDeclSet NeModuleDeclSet -> NeModuleDeclSet [ctor ditto] .
+  -----------------------------------------------------------------------
+  eq NeMDS NeMDS = NeMDS .
+
+
+--- Using the syntax of the prelude, imports and sort declarations are treated
+--- specially. Here we add the notion of `ImportDecl` and `SortDecl`, so that they
+--- can be treated uniformly with the rest of the declarations.
+
+
+  ops (pr_.) (ex_.) (in_.) : ModuleExpression -> ImportDecl .
+  op __ : ImportDeclSet ImportDeclSet -> ImportDeclSet [ctor ditto] .
+  -------------------------------------------------------------------
+  eq ( pr ME . ) ( ex ME . ) = ( ex ME . ) .
+  eq ( pr ME . ) ( in ME . ) = ( in ME . ) .
+  eq ( ex ME . ) ( in ME . ) = ( in ME . ) .
+
+  op importDecls : ImportList -> ImportDeclSet .
+  ----------------------------------------------
+  eq importDecls(nil)             = none .
+  eq importDecls(protecting ME .) = (pr ME .) .
+  eq importDecls(extending  ME .) = (ex ME .) .
+  eq importDecls(including  ME .) = (in ME .) .
+  eq importDecls(I I' IL)         = importDecls(I) importDecls(I') importDecls(IL) .
+
+  op importList : ImportDeclSet -> ImportList .
+  ---------------------------------------------
+  eq importList(none)     = nil .
+  eq importList(pr ME .)  = (protecting ME .) .
+  eq importList(ex ME .)  = (extending  ME .) .
+  eq importList(in ME .)  = (including  ME .) .
+  eq importList(ID NeIDS) = importList(ID) importList(NeIDS) .  
+
+  op (sorts_.) : SortSet -> SortDecl [prec 60] .
+  op __ : SortDeclSet SortDeclSet -> SortDeclSet [ditto] .
+  --------------------------------------------------------
+  eq ( sorts SS . ) ( sorts SS' . ) = ( sorts SS ; SS' . ) .
 
   op _<_ : SortPoset SortPoset -> SortPoset [assoc id: none prec 122] .
   op (subsorts_.) : SortPoset -> SubsortDeclSet .
@@ -262,59 +325,113 @@ fmod MODULE-TEMPLATE-DATA is
        subsorts      S' ; SS'  < SPS .
      ) .
 
-  op (sorts_.) : SortSet -> SortTemplate [format(d d d d) prec 60] .
-  op __ : SortTemplate    SubsortDeclSet -> SubsortTemplate [right id: none format(d ni d) prec 61] .
-  op __ : SubsortTemplate OpDeclSet      -> OpTemplate      [right id: none format(d ni d) prec 62] .
-  op __ : OpTemplate      MembAxSet      -> MembAxTemplate  [right id: none format(d ni d) prec 63] .
-  op __ : MembAxTemplate  EquationSet    -> EqTemplate      [right id: none format(d ni d) prec 64] .
-  op __ : EqTemplate      RuleSet        -> RuleTemplate    [right id: none format(d ni d) prec 65] .
-  op __ : ImportList      RuleTemplate   -> ModuleTemplate  [left  id: nil  format(d ni d) prec 66] .
-  ---------------------------------------------------------------------------------------------------
 
-  op .ModuleTemplateSet : -> ModuleTemplateSet [ctor] .
-  op _|_ : ModuleTemplateSet ModuleTemplateSet   -> ModuleTemplateSet   [ctor assoc comm id: .ModuleTemplateSet prec 73] .
+--- -   `_<<_ : ModuleDeclSet Substitution -> [ModuleDeclSet]` lifts the
+---     substitution application operator `_<<_` over `ModuleDeclSet`.
+--- 
+--- -   `match_with_ : ModuleDeclSet ModuleDeclSet -> [SubstitutionSet]` gives all
+---     the ways that the first `ModuleDeclSet` matches the second with
+---     variable extension.
+--- 
+--- -   `resolveNames` and `fv<Sort>` are simply the lifting of `resolveNames` and
+---     `fv<Sort>` of `STRUCTURED-NAME` to `ModuleDeclSet`.
+--- 
+
+
+  op error<ModuleDeclSet> : -> [ModuleDeclSet] .
+  op var<ModuleDeclSet> : Qid -> [ModuleDeclSet] .
+  ------------------------------------------------
+  ceq var<ModuleDeclSet>(Q) = MDS if MDS := downTerm(qid(string(Q) + ":ModuleDeclSet"), error<ModuleDeclSet>) .
+
+  op _<<_ : ModuleDeclSet Substitution -> [ModuleDeclSet] .
+  ---------------------------------------------------------
+  eq  MDS                << empty = (none).NullDeclSet .
+  eq  (none).NullDeclSet << SU    = none .
+  ceq NeMDS              << SU    = NeMDS' if NeMDS' := downTerm(upTerm(NeMDS) << SU, error<ModuleDeclSet>) .
+
+  op match_with_ : ModuleDeclSet ModuleDeclSet -> [SubstitutionSet] .
+  -------------------------------------------------------------------
+  eq  match MDS with none  = empty .
+  ceq match MDS with NeMDS = SUBSTS if NeMDS' := MDS ( sorts var<SortSet>('##SSCTX##) . ) var<ModuleDeclSet>('##MDSCTX##)
+                                    /\ SUBSTS := #subsumesWith(upModule('MODULE-DECLARATION, true), upTerm(NeMDS'), upTerm(NeMDS)) .
+
+  op resolveNames : ModuleDeclSet -> ModuleDeclSet .
+  --------------------------------------------------
+  eq resolveNames(IDS)                = IDS .
+  eq resolveNames(( sorts SS . ))     = ( sorts resolveNames(SS) . ) .
+  eq resolveNames((none).NullDeclSet) = none .
+  eq resolveNames(NeMDS NeMDS')       = resolveNames(NeMDS) resolveNames(NeMDS') .
+
+  op fv<Sort> : ModuleDeclSet -> SortSet .
+  ----------------------------------------
+  eq fv<Sort>(MDS) = #fv<Sort>(upTerm(MDS)) .
+endfm
+
+
+--- Module Templates {#module-templates-1}
+--- ----------------
+
+--- Module templates serve as more flexible module data-structures than what the
+--- prelude provides for modules. Every `ModuleDeclSet` is a `ModuleTemplateSet`.
+--- The main functionality exported is:
+
+--- -   `_|_` and `_\_` serve as `ModuleTemplateSet` union and
+---     difference, respectively.
+--- 
+--- -   `++ : ModuleTemplateSet -> ModuleDeclSet` unions together the given
+---     `ModuleTemplateSet` into a single `ModuleDeclSet`.
+--- 
+--- -   `_<<_ : ModuleTemplateSet SubstitutionSet -> [ModuleTemplateSet]` is lifted
+---     pointwise over *both* of its arguments.
+--- 
+--- -   `match_with_ : ModuleTemplateSet ModuleDeclSet -> [SubstitionSet]` allows to
+---     specify a union or difference of source templates to match from.
+--- 
+--- -   `resolveNames` and `fv<Sort>` are lifted over `ModuleTemplateSet`.
+--- 
+
+
+fmod MODULE-TEMPLATE-SET is
+  protecting MODULE-DECLARATION .
+
+  sorts NeModuleTemplateSet ModuleTemplateSet .
+  subsorts   ModuleDeclSet <   ModuleTemplateSet .
+  subsorts NeModuleDeclSet < NeModuleTemplateSet < ModuleTemplateSet .
+
+  vars NeMDS NeMDS' : NeModuleDeclSet . var MDS : ModuleDeclSet .
+  vars NeMTS NeMTS' NeMTS'' : NeModuleTemplateSet . var MTS : ModuleTemplateSet .
+  vars SU SU' SU'' : Substitution . var SUBSTS : SubstitutionSet .
+
+  op _|_ : ModuleTemplateSet   ModuleTemplateSet ->   ModuleTemplateSet [ctor assoc comm id: (none).NullDeclSet prec 73] .
   op _|_ : ModuleTemplateSet NeModuleTemplateSet -> NeModuleTemplateSet [ctor ditto] .
   ------------------------------------------------------------------------------------
   eq NeMTS | NeMTS = NeMTS .
-  
-  op _\_ : ModuleTemplate    ModuleTemplateSet -> ModuleTemplate    [ctor right id: .ModuleTemplateSet prec 74] .
-  op _\_ : ModuleTemplateSet ModuleTemplateSet -> ModuleTemplateSet [ditto] .
-  ---------------------------------------------------------------------------
-  eq .ModuleTemplateSet \ NeMTS = .ModuleTemplateSet .
-  eq MT \ (MT | MTS)            = .ModuleTemplateSet .
-  eq (NeMTS | NeMTS') \ NeMTS'' = (NeMTS \ NeMTS'') | (NeMTS' \ NeMTS'') .
-  eq (NeMTS \ NeMTS') \ NeMTS'' = NeMTS \ (NeMTS' | NeMTS'') .
 
-  op _++_ : ModuleTemplate ModuleTemplate -> ModuleTemplate [assoc comm prec 72] .
-  --------------------------------------------------------------------------------
-  eq (IL sorts SS . SSDS OPDS MAS EQS RLS) ++ (IL' sorts SS' . SSDS' OPDS' MAS' EQS' RLS')
-   = (IL IL') (sorts SS ; SS' .) (SSDS SSDS') (OPDS OPDS') (MAS MAS') (EQS EQS') (RLS RLS') .
-  eq MT ++ (MT' \ NeMTS') = (MT ++ MT') \ NeMTS' .
+  op _\_ : ModuleTemplateSet ModuleTemplateSet -> ModuleTemplateSet [ctor right id: none prec 74] .
+  -------------------------------------------------------------------------------------------------
+  eq NeMTS            \ (NeMTS | MTS) = none .
+  eq none             \ NeMTS         = none .
+  eq (NeMTS | NeMTS') \ NeMTS''       = (NeMTS \ NeMTS'') | (NeMTS' \ NeMTS'') .
+  eq (NeMTS \ NeMTS') \ NeMTS''       = NeMTS \ (NeMTS' | NeMTS'') .
 
-  op ++ : ModuleTemplateSet -> ModuleTemplate .
-  ---------------------------------------------
-  eq ++(.ModuleTemplateSet) = (sorts none .) .
-  eq ++(MT)                 = MT .
-  eq ++(MT | NeMTS)         = MT ++ ++(NeMTS) .
+  op ++ : ModuleTemplateSet -> ModuleDeclSet .
+  --------------------------------------------
+  eq ++(none)          = none .
+  eq ++(NeMDS)         = NeMDS .
+  eq ++(NeMDS | NeMTS) = NeMDS ++(NeMTS) .
 
-  op moduleTemplateError? : -> [ModuleTemplate] .
-  op _<<_ : ModuleTemplateSet SubstitutionSet -> ModuleTemplateSet .
-  ------------------------------------------------------------------
-  eq  MT << empty               = .ModuleTemplateSet .
-  ceq MT << SU                  = MT' if MT' := downTerm(upTerm(MT) << SU, moduleTemplateError?) .
-  eq  MT << (SU | SU' | SUBSTS) = (MT << SU) | (MT << SU') | (MT << SUBSTS) .
-  eq  .ModuleTemplateSet << (SU | SUBSTS) = .ModuleTemplateSet .
-  eq  (MT | NeMTS)       << (SU | SUBSTS) = (MT  << (SU | SUBSTS)) | (NeMTS  << (SU | SUBSTS)) .
-  eq  (MTS \ NeMTS')     << (SU | SUBSTS) = (MTS << (SU | SUBSTS)) \ (NeMTS' << (SU | SUBSTS)) .
+  op error<ModuleTemplateSet> : -> [ModuleTemplateSet] .
+  op _<<_ : ModuleTemplateSet SubstitutionSet -> [ModuleTemplateSet] .
+  --------------------------------------------------------------------
+  eq MTS              << empty               = MTS .
+  eq MTS              << (SU | SU' | SUBSTS) = (MTS << SU) | (MTS << SU') | (MTS << SUBSTS) .
+  eq (NeMTS | NeMTS') << SUBSTS              = (NeMTS << SUBSTS) | (NeMTS' << SUBSTS) .
+  eq (NeMTS \ NeMTS') << SUBSTS              = (NeMTS << SUBSTS) \ (NeMTS' << SUBSTS) .
 
-  --- TODO: ORDER HERE MATTERS!!! AAAGGHHHH!
-  op match_with_ : ModuleTemplateSet ModuleTemplate -> [SubstitutionSet] .
-  ------------------------------------------------------------------------
-  eq  match .ModuleTemplateSet with MT  = empty .
-  eq  match NeMTS | NeMTS'     with MT' = (match NeMTS with MT') | (match NeMTS' with MT') .
-  ceq match MT \ NeMTS         with MT' = SUBSTS if SUBSTS := not-instance-with?(NeMTS, MT', (match MT with MT')) .
-  ceq match MT                 with MT' = #varCleanSubsts(SUBSTS) if SUBSTS := #subsumesWith(upModule('MODULE-TEMPLATE, true), upTerm(#varExtendTemplate(MT)), upTerm(MT')) .
-  --- eq match MT \ NeMTS               with MT' = { subvar('##SUBVAR##) in match MT with MT' | empty?(match NeMTS << subvar('##SUBVAR##) with MT') } .
+  op match_with_ : ModuleTemplateSet ModuleDeclSet -> [SubstitutionSet] .
+  -----------------------------------------------------------------------
+  eq  match NeMTS | NeMTS' with MDS = (match NeMTS with MDS) | (match NeMTS' with MDS) .
+  ceq match NeMTS \ NeMTS' with MDS = SUBSTS if SUBSTS := not-instance-with?(NeMTS', MDS, match NeMTS with MDS) .
 
   var B : [Bool] .
   op {_in_|_} : Substitution SubstitutionSet [Bool] -> SubstitutionSet [strat(2 0)] .
@@ -328,73 +445,21 @@ fmod MODULE-TEMPLATE-DATA is
   eq empty?(empty)       = true .
   eq empty?(SU | SUBSTS) = false .
 
-  --- TODO: This could be generalized with some generalized comprehension
-  op not-instance-with? : ModuleTemplateSet ModuleTemplate SubstitutionSet -> SubstitutionSet .
-  ---------------------------------------------------------------------------------------------
-  eq  not-instance-with?(MTS, MT, empty)               = empty .
-  ceq not-instance-with?(MTS, MT, SU)                  = if SUBSTS == empty then SU else empty fi if SUBSTS := match (MTS << SU) with MT .
-  eq  not-instance-with?(MTS, MT, (SU | SU' | SUBSTS)) = not-instance-with?(MTS, MT, SU) | not-instance-with?(MTS, MT, SU') | not-instance-with?(MTS, MT, SUBSTS) .
+  op not-instance-with? : ModuleTemplateSet ModuleDeclSet SubstitutionSet -> SubstitutionSet .
+  --------------------------------------------------------------------------------------------
+  eq  not-instance-with?(MTS, MDS, empty)               = empty .
+  ceq not-instance-with?(MTS, MDS, SU)                  = if SUBSTS == empty then SU else empty fi if SUBSTS := match (MTS << SU) with MDS .
+  eq  not-instance-with?(MTS, MDS, (SU | SU' | SUBSTS)) = not-instance-with?(MTS, MDS, SU) | not-instance-with?(MTS, MDS, SU') | not-instance-with?(MTS, MDS, SUBSTS) .
 
-  op resolveNames : ModuleTemplate -> ModuleTemplate .
-  ----------------------------------------------------
-  eq  resolveNames(sorts SS .) = (sorts #resolveSorts(SS) .) .
-  ceq resolveNames(ST   SSDS)  = resolveNames(ST)    #resolveSubsorts(SSDS)   if not (SSDS == none) .
-  ceq resolveNames(SST  OPDS)  = resolveNames(SST)   #resolveOps(OPDS)        if not (OPDS == none) .
-  ceq resolveNames(OPT  MAS)   = resolveNames(OPT)   #resolveMemberships(MAS) if not (MAS  == none) .
-  ceq resolveNames(MAT  EQS)   = resolveNames(MAT)   #resolveEquations(EQS)   if not (EQS  == none) .
-  ceq resolveNames(EQT  RLS)   = resolveNames(EQT)   #resolveRules(RLS)       if not (RLS  == none) .
-  ceq resolveNames(IL   RLT)   = #resolveImports(IL) resolveNames(RLT)        if not (IL   == nil) .
+  op resolveNames : ModuleTemplateSet -> ModuleTemplateSet .
+  ----------------------------------------------------------
+  eq resolveNames(NeMTS | NeMTS') = resolveNames(NeMTS) | resolveNames(NeMTS') .
+  eq resolveNames(NeMTS \ NeMTS') = resolveNames(NeMTS) \ resolveNames(NeMTS') .
 
-  op extractParameters : ModuleTemplate -> ModuleTemplate .
-  ---------------------------------------------------------
-  eq  extractParameters(sorts SS .) = #extractParametersSS(SS) .
-  ceq extractParameters(ST   SSDS)  = extractParameters(ST)    ++ #extractParametersSSDS(SSDS) if not (SSDS == none) .
-  ceq extractParameters(SST  OPDS)  = extractParameters(SST)   ++ #extractParametersOPDS(OPDS) if not (OPDS == none) .
-  ceq extractParameters(OPT  MAS)   = extractParameters(OPT)   ++ #extractParametersMAS(MAS)   if not (MAS  == none) .
-  ceq extractParameters(MAT  EQS)   = extractParameters(MAT)   ++ #extractParametersEQS(EQS)   if not (EQS  == none) .
-  ceq extractParameters(EQT  RLS)   = extractParameters(EQT)   ++ #extractParametersRLS(RLS)   if not (RLS  == none) .
-  ceq extractParameters(IL   RLT)   = #extractParametersIL(IL) ++ extractParameters(RLT)       if not (IL   == nil) .
-
-  op #extractParametersIL   : ImportList     -> ModuleTemplate .
-  op #extractParametersSS   : SortSet        -> ModuleTemplate .
-  op #extractParametersSSDS : SubsortDeclSet -> ModuleTemplate .
-  op #extractParametersOPDS : OpDeclSet      -> ModuleTemplate .
-  op #extractParametersMAS  : MembAxSet      -> ModuleTemplate .
-  op #extractParametersEQS  : EquationSet    -> ModuleTemplate .
-  op #extractParametersRLS  : RuleSet        -> ModuleTemplate .
-  --------------------------------------------------------------
----  eq #extractParameters(IL) = nil .
-  eq #extractParametersSS(SS) = ( sorts none . ) .
-  eq #extractParametersSSDS( none )                  = ( sorts none . ) .
-  eq #extractParametersSSDS( subsort S < S' . SSDS ) = ( sorts S ; S' . ) .
-
-  var T : Term .
-  op #varCleanSubst  : Substitution    -> [Substitution] .
-  op #varCleanSubsts : SubstitutionSet -> [SubstitutionSet] .
-  -----------------------------------------------------------
-  eq #varCleanSubsts(empty)             = empty .
-  eq #varCleanSubsts(SU)                = #varCleanSubst(SU) .
-  eq #varCleanSubsts(SU | SU' | SUBSTS) = #varCleanSubst(SU) | #varCleanSubst(SU') | #varCleanSubsts(SUBSTS) .
-  eq #varCleanSubst(SU ; '##MTCTXILIST##:ImportList       <- T) = #varCleanSubst(SU) .
-  eq #varCleanSubst(SU ; '##MTCTXSORTS##:SortSet          <- T) = #varCleanSubst(SU) .
-  eq #varCleanSubst(SU ; '##MTCTXSUBSORT##:SubsortDeclSet <- T) = #varCleanSubst(SU) .
-  eq #varCleanSubst(SU ; '##MTCTXOPSET##:OpDeclSet        <- T) = #varCleanSubst(SU) .
-  eq #varCleanSubst(SU ; '##MTCTXMEMBAXSET##:MembAxSet    <- T) = #varCleanSubst(SU) .
-  eq #varCleanSubst(SU ; '##MTCTXEQSET##:EquationSet      <- T) = #varCleanSubst(SU) .
-  eq #varCleanSubst(SU ; '##MTCTXRULESET##:RuleSet        <- T) = #varCleanSubst(SU) .
-  eq #varCleanSubst(SU)                                         = SU [owise] .
-
-  --- TODO: All of these variables would ideally be actually fresh.
-  op #varExtendTemplate : ModuleTemplate -> [ModuleTemplate] .
-  ------------------------------------------------------------
-  eq #varExtendTemplate(IL sorts SS . SSDS OPDS MAS EQS RLS) = ( (IL         importlistvar('##MTCTXILIST##))
-                                                                 (sorts SS ; ssetvar('##MTCTXSORTS##) .)
-                                                                 (SSDS       subsvar('##MTCTXSUBSORT##))
-                                                                 (OPDS       opsetvar('##MTCTXOPSET##))
-                                                                 (MAS        membaxsetvar('##MTCTXMEMBAXSET##))
-                                                                 (EQS        eqsetvar('##MTCTXEQSET##))
-                                                                 (RLS        rulesetvar('##MTCTXRULESET##))
-                                                               ) .
+  op fv<Sort> : ModuleTemplateSet -> SortSet .
+  --------------------------------------------
+  eq fv<Sort>(NeMTS | NeMTS') = fv<Sort>(NeMTS) ; fv<Sort>(NeMTS') .
+  eq fv<Sort>(NeMTS \ NeMTS') = fv<Sort>(NeMTS) ; fv<Sort>(NeMTS') .
 endfm
 
 
@@ -418,32 +483,34 @@ endfm
 
 
 fmod MODULE-TEMPLATE is
-  protecting MODULE-TEMPLATE-DATA .
+  protecting MODULE-TEMPLATE-SET .
   protecting META-LEVEL .
 
-  var H : Header . var IL : ImportList . var SS : SortSet . var SSDS : SubsortDeclSet . var OPDS : OpDeclSet .
-  var MAS : MembAxSet . var EQS : EquationSet . var RLS : RuleSet . vars MOD MOD' : Module . var NeMTS : NeModuleTemplateSet .
+  var H : Header . var IL : ImportList . var SS : SortSet .
+  var IS : ImportDeclSet . var SSDS : SubsortDeclSet . var OPDS : OpDeclSet .
+  var MAS : MembAxSet . var EQS : EquationSet . var RLS : RuleSet . var NeRLS : NeRuleSet .
+  vars MOD MOD' : Module . var NeMTS : NeModuleTemplateSet .
 
-  op asTemplate : Module -> [ModuleTemplate] .
-  --------------------------------------------
-  eq asTemplate(fmod H is IL sorts SS . SSDS OPDS MAS EQS     endfm) = (IL sorts SS . SSDS OPDS MAS EQS) .
-  eq asTemplate( mod H is IL sorts SS . SSDS OPDS MAS EQS RLS endm)  = (IL sorts SS . SSDS OPDS MAS EQS RLS) .
+  op asTemplate : Module -> [ModuleDeclSet] .
+  -------------------------------------------
+  eq asTemplate(fmod H is IL sorts SS . SSDS OPDS MAS EQS     endfm) = (importDecls(IL) (sorts SS .) SSDS OPDS MAS EQS) .
+  eq asTemplate (mod H is IL sorts SS . SSDS OPDS MAS EQS RLS endm)  = (importDecls(IL) (sorts SS .) SSDS OPDS MAS EQS RLS) .
 
-  op fromTemplate : Header ModuleTemplate -> [Module] .
-  -----------------------------------------------------
-  eq fromTemplate(H, IL sorts SS . SSDS OPDS MAS EQS)     = (fmod H is IL sorts SS . SSDS OPDS MAS EQS     endfm) .
-  eq fromTemplate(H, IL sorts SS . SSDS OPDS MAS EQS RLS) = (mod  H is IL sorts SS . SSDS OPDS MAS EQS RLS endm) .
+  op fromTemplate : Header ModuleDeclSet -> [Module] .
+  ----------------------------------------------------
+  eq fromTemplate(H, (IS (sorts SS .) SSDS OPDS MAS EQS))       = (fmod H is importList(IS) sorts SS . SSDS OPDS MAS EQS       endfm) .
+  eq fromTemplate(H, (IS (sorts SS .) SSDS OPDS MAS EQS NeRLS)) =  (mod H is importList(IS) sorts SS . SSDS OPDS MAS EQS NeRLS endm) .
 
-  op _++_ : Module ModuleTemplateSet -> [Module] [right id: .ModuleTemplateSet prec 72] .
-  ---------------------------------------------------------------------------------------
-  eq MOD ++ NeMTS = fromTemplate(getName(MOD), asTemplate(MOD) ++ ++(NeMTS)) .
+  op _++_ : Module ModuleTemplateSet -> [Module] [right id: none prec 72] .
+  -------------------------------------------------------------------------
+  eq MOD ++ NeMTS = fromTemplate(getName(MOD), ++(NeMTS | asTemplate(MOD))) .
 
   op _++_ : Module Module -> [Module] [assoc prec 73] .
   -----------------------------------------------------
   eq MOD ++ MOD' = MOD ++ asTemplate(MOD') .
 
-  op resolveModule : Module -> [Module] .
-  ---------------------------------------
-  eq resolveModule(MOD) = fromTemplate(getName(MOD), resolveNames(asTemplate(MOD))) .
+  op resolveNames : Module -> [Module] .
+  --------------------------------------
+  eq resolveNames(MOD) = fromTemplate(getName(MOD), resolveNames(asTemplate(MOD))) .
 endfm
 

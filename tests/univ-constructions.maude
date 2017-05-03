@@ -12,6 +12,10 @@ fmod TEST-MODULE is
   op f : B -> A .
   ---------------
   eq f(b) = a .
+
+  op g : B -> B .
+  ---------------
+  eq g(a) = a .
 endfm
 
 fmod TEST-MODULE2 is
@@ -46,26 +50,28 @@ claim [ ( modules < .ModuleEnv >
         ( modules < 'TEST-MODULE |-> 'TEST-MODULE 'TEST-MODULE-LIST |-> ('TEST-MODULE deriving LIST)>
           strategy < .Program >
           output < show-module( fmod 'TEST-MODULE is
-                                  nil
-                                  sorts 'A ; 'B ; 'List`{A`} ; 'List`{B`} ; 'NeList`{A`} ; 'NeList`{B`} .
-                                  subsort 'A < 'B .
-                                  subsort 'A < 'NeList`{A`} .
-                                  subsort 'B < 'NeList`{B`} .
-                                  subsort 'List`{A`} < 'List`{B`} .
-                                  subsort 'NeList`{A`} < 'List`{A`} .
-                                  subsort 'NeList`{A`} < 'NeList`{B`} .
-                                  subsort 'NeList`{B`} < 'List`{B`} .
-                                  op '.List : nil -> 'List`{A`} [ctor] .
-                                  op '.List : nil -> 'List`{B`} [ctor] .
-                                  op '_`,_ : 'List`{A`} 'List`{A`} -> 'List`{A`} [assoc ctor id('.List.List`{A`})] .
-                                  op '_`,_ : 'List`{A`} 'NeList`{A`} -> 'NeList`{A`} [assoc ctor id('.List.List`{A`})] .
-                                  op '_`,_ : 'List`{B`} 'List`{B`} -> 'List`{B`} [assoc ctor id('.List.List`{B`})] .
-                                  op '_`,_ : 'List`{B`} 'NeList`{B`} -> 'NeList`{B`} [assoc ctor id('.List.List`{B`})] .
-                                  op 'a : nil -> 'A [none] .
-                                  op 'b : nil -> 'B [none] .
-                                  op 'f : 'B -> 'A [none] .
-                                  none
-                                  eq 'f['b.B] = 'a.A [none] .
+                                  ( nil )
+                                    sorts 'A ; 'B ; 'List`{A`} ; 'List`{B`} ; 'NeList`{A`} ; 'NeList`{B`} .
+                                  ( subsort 'A < 'B .
+                                    subsort 'A < 'NeList`{A`} .
+                                    subsort 'B < 'NeList`{B`} .
+                                    subsort 'List`{A`} < 'List`{B`} .
+                                    subsort 'NeList`{A`} < 'List`{A`} .
+                                    subsort 'NeList`{A`} < 'NeList`{B`} .
+                                    subsort 'NeList`{B`} < 'List`{B`} . )
+                                  ( op '.List : nil -> 'List`{A`} [ctor] .
+                                    op '.List : nil -> 'List`{B`} [ctor] .
+                                    op '_`,_ : 'List`{A`} 'List`{A`} -> 'List`{A`} [assoc ctor id('.List.List`{A`})] .
+                                    op '_`,_ : 'List`{A`} 'NeList`{A`} -> 'NeList`{A`} [assoc ctor id('.List.List`{A`})] .
+                                    op '_`,_ : 'List`{B`} 'List`{B`} -> 'List`{B`} [assoc ctor id('.List.List`{B`})] .
+                                    op '_`,_ : 'List`{B`} 'NeList`{B`} -> 'NeList`{B`} [assoc ctor id('.List.List`{B`})] .
+                                    op 'a : nil -> 'A [none] .
+                                    op 'b : nil -> 'B [none] .
+                                    op 'f : 'B -> 'A [none] .
+                                    op 'g : 'B -> 'B [none] . )
+                                  ( none )
+                                  ( eq 'f['b.B] = 'a.A [none] .
+                                    eq 'g['a.A] = 'a.A [none] . )
                                 endfm
                               )
                  >
@@ -89,28 +95,30 @@ claim [ ( modules < .ModuleEnv >
         ( modules < 'TEST-MODULE |-> 'TEST-MODULE 'TEST-MODULE-SET |-> ('TEST-MODULE deriving SET)>
           strategy < .Program >
           output < show-module( fmod 'TEST-MODULE is
-                                  nil
-                                  sorts 'A ; 'B ; 'NeSet`{A`} ; 'NeSet`{B`} ; 'Set`{A`} ; 'Set`{B`} .
-                                  subsort 'A < 'B .
-                                  subsort 'A < 'NeSet`{A`} .
-                                  subsort 'B < 'NeSet`{B`} .
-                                  subsort 'NeSet`{A`} < 'NeSet`{B`} .
-                                  subsort 'NeSet`{A`} < 'Set`{A`} .
-                                  subsort 'NeSet`{B`} < 'Set`{B`} .
-                                  subsort 'Set`{A`} < 'Set`{B`} .
-                                  op '.Set : nil -> 'Set`{A`} [ctor] .
-                                  op '.Set : nil -> 'Set`{B`} [ctor] .
-                                  op '_;_ : 'Set`{A`} 'NeSet`{A`} -> 'NeSet`{A`} [assoc comm ctor id('.Set.Set`{A`})] .
-                                  op '_;_ : 'Set`{A`} 'Set`{A`} -> 'Set`{A`} [assoc comm ctor id('.Set.Set`{A`})] .
-                                  op '_;_ : 'Set`{B`} 'NeSet`{B`} -> 'NeSet`{B`} [assoc comm ctor id('.Set.Set`{B`})] .
-                                  op '_;_ : 'Set`{B`} 'Set`{B`} -> 'Set`{B`} [assoc comm ctor id('.Set.Set`{B`})] .
-                                  op 'a : nil -> 'A [none] .
-                                  op 'b : nil -> 'B [none] .
-                                  op 'f : 'B -> 'A [none] .
-                                  none
-                                  eq '_;_['NeS:NeSet`{A`},'NeS:NeSet`{A`}] = 'NeS:NeSet`{A`} [none] .
-                                  eq '_;_['NeS:NeSet`{B`},'NeS:NeSet`{B`}] = 'NeS:NeSet`{B`} [none] .
-                                  eq 'f['b.B] = 'a.A [none] .
+                                  ( nil )
+                                    sorts 'A ; 'B ; 'NeSet`{A`} ; 'NeSet`{B`} ; 'Set`{A`} ; 'Set`{B`} .
+                                  ( subsort 'A < 'B .
+                                    subsort 'A < 'NeSet`{A`} .
+                                    subsort 'B < 'NeSet`{B`} .
+                                    subsort 'NeSet`{A`} < 'NeSet`{B`} .
+                                    subsort 'NeSet`{A`} < 'Set`{A`} .
+                                    subsort 'NeSet`{B`} < 'Set`{B`} .
+                                    subsort 'Set`{A`} < 'Set`{B`} . )
+                                  ( op '.Set : nil -> 'Set`{A`} [ctor] .
+                                    op '.Set : nil -> 'Set`{B`} [ctor] .
+                                    op '_;_ : 'Set`{A`} 'NeSet`{A`} -> 'NeSet`{A`} [assoc comm ctor id('.Set.Set`{A`})] .
+                                    op '_;_ : 'Set`{A`} 'Set`{A`} -> 'Set`{A`} [assoc comm ctor id('.Set.Set`{A`})] .
+                                    op '_;_ : 'Set`{B`} 'NeSet`{B`} -> 'NeSet`{B`} [assoc comm ctor id('.Set.Set`{B`})] .
+                                    op '_;_ : 'Set`{B`} 'Set`{B`} -> 'Set`{B`} [assoc comm ctor id('.Set.Set`{B`})] .
+                                    op 'a : nil -> 'A [none] .
+                                    op 'b : nil -> 'B [none] .
+                                    op 'f : 'B -> 'A [none] .
+                                    op 'g : 'B -> 'B [none] . )
+                                  ( none )
+                                  ( eq '_;_['NeS:NeSet`{A`},'NeS:NeSet`{A`}] = 'NeS:NeSet`{A`} [none] .
+                                    eq '_;_['NeS:NeSet`{B`},'NeS:NeSet`{B`}] = 'NeS:NeSet`{B`} [none] .
+                                    eq 'f['b.B] = 'a.A [none] .
+                                    eq 'g['a.A] = 'a.A [none] . )
                                 endfm
                               )
                  >
@@ -168,8 +176,12 @@ claim [ modules < 'STATE |-> ('TEST-MODULE deriving DOWN-TERM) >
                      >
             state    <  'downTerm<A>[''a.A.Constant] ;; 'downTerm<A>[''b.B.Constant]
                      ;; 'downTerm<B>[''a.A.Constant] ;; 'downTerm<B>[''b.B.Constant]
+                     ;; 'downTerm<A>[upTerm('f['b.B])] ;; 'downTerm<A>[upTerm('f['a.A])]
+                     ;; 'downTerm<B>[upTerm('f['b.B])] ;; 'downTerm<B>[upTerm('f['a.A])]
                      ;; '_==_['wellFormed<A>[''a.A.Constant], 'true.Bool] ;; '_==_['wellFormed<A>[''b.B.Constant], 'false.Bool]
                      ;; '_==_['wellFormed<B>[''a.A.Constant], 'true.Bool] ;; '_==_['wellFormed<B>[''b.B.Constant], 'true.Bool]
+                     ;; '_==_['wellFormed<A>[upTerm('f['b.B])], 'true.Bool] ;; '_==_['wellFormed<A>[upTerm('f['a.A])], 'true.Bool]
+                     ;; '_==_['wellFormed<B>[upTerm('f['b.B])], 'true.Bool] ;; '_==_['wellFormed<B>[upTerm('f['a.A])], 'true.Bool]
                      >
             output   < .Output >
           )
@@ -177,32 +189,34 @@ claim [ modules < 'STATE |-> ('TEST-MODULE deriving DOWN-TERM) >
         reduces-to
 
           ( strategy < .Program >
-            state    < 'a.A ;; 'downTerm<A>[''b.B.Constant] ;; 'a.A ;; 'b.B ;; 'true.Bool >
+            state    < 'a.A ;; 'downTerm<A>[''b.B.Constant] ;; 'b.B ;; 'f['a.A] ;; 'true.Bool >
             output   < show-module( fmod 'TEST-MODULE is
-                                        protecting 'META-LEVEL .
-                                        protecting 'TEST-MODULE .
+                                      ( protecting 'META-LEVEL .
+                                        protecting 'TEST-MODULE . )
                                         sorts 'A ; 'A? ; 'B ; 'B? .
-                                        subsort 'A < 'A? .
+                                      ( subsort 'A < 'A? .
                                         subsort 'A < 'B .
                                         subsort 'A? < 'B? .
-                                        subsort 'B < 'B? .
-                                        op 'a : nil -> 'A [none] .
+                                        subsort 'B < 'B? . )
+                                      ( op 'a : nil -> 'A [none] .
                                         op 'b : nil -> 'B [none] .
                                         op 'downTerm<A> : 'Term -> 'A? [none] .
                                         op 'downTerm<B> : 'Term -> 'B? [none] .
                                         op 'downTermError<A> : nil -> 'A? [ctor] .
                                         op 'downTermError<B> : nil -> 'B? [ctor] .
                                         op 'f : 'B -> 'A [none] .
+                                        op 'g : 'B -> 'B [none] .
                                         op 'wellFormed<A> : 'Term -> 'Bool [none] .
-                                        op 'wellFormed<B> : 'Term -> 'Bool [none] .
-                                        none
-                                        eq 'f['b.B] = 'a.A [none] .
+                                        op 'wellFormed<B> : 'Term -> 'Bool [none] . )
+                                      ( none )
+                                      ( eq 'f['b.B] = 'a.A [none] .
+                                        eq 'g['a.A] = 'a.A [none] .
                                         eq 'wellFormed<A>['T:Term] = 'false.Bool [owise] .
                                         eq 'wellFormed<B>['T:Term] = 'false.Bool [owise] .
                                         ceq 'downTerm<A>['T:Term] = 'X:A if 'X:A := 'downTerm['T:Term,'downTermError<A>.A?] [none] .
                                         ceq 'downTerm<B>['T:Term] = 'X:B if 'X:B := 'downTerm['T:Term,'downTermError<B>.B?] [none] .
                                         ceq 'wellFormed<A>['T:Term] = 'true.Bool if 'X:A := 'downTerm<A>['T:Term] [none] .
-                                        ceq 'wellFormed<B>['T:Term] = 'true.Bool if 'X:B := 'downTerm<B>['T:Term] [none] .
+                                        ceq 'wellFormed<B>['T:Term] = 'true.Bool if 'X:B := 'downTerm<B>['T:Term] [none] . )
                                     endfm
                                   )
                      >
