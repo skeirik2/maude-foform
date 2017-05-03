@@ -66,6 +66,7 @@ fmod INTERSECTION is
   protecting META-LEVEL .
   protecting STRING .
   protecting CONVERSION .
+  protecting RENAMING-EXPR-EVALUATION .
   
   ---- Intersection
   
@@ -138,12 +139,15 @@ fmod INTERSECTION is
   ---- Given two modules M1 and M2, let M0 = intersect(M1, M2).
   ---- Given S is a sort of M1 (or M2), the joint sort of S, 
   ---- denoted as joint_sort(S), is defined as follows.
-  ---- (Case A) If S is a sort of M0, then return S.
+  ---- (Case A) If S is a sort in M0, then return S.
   ---- (Case B) If S is not a sort of M0, then
-  ----     1. Calculate intersect(connected_component(S), M0).
-  ----     2. Return the maximal sort of the above. 
+  ----     1. Calculate intersect(connected_component(S), getSorts(M0)).
+  ----     2. Return the maximal sort (in M0) of the above. 
   
   op joint-sort : Sort FModule FModule -> Sort .
+  
+  ---- Auxiliary functions.
+  op joint-sort-aux : FModule SortSet -> Sort .
   
   ---- (Case A)
   
@@ -151,13 +155,16 @@ fmod INTERSECTION is
    if hasSortQ(intersect(M1, M2), S) .
    
   ---- (Case B)
-
+  
+  ceq joint-sort(S, M1, M2) 
+    = if hasSortQ(M1, S)
+      then maximalSorts(M0, kind(intersect(connectedSorts(M1, S), getSorts(M0))))
+      else maximalSorts(M0, kind(intersect(connectedSorts(M2, S), getSorts(M0))))
+      fi
+   if M0 := intersect(M1, M2) .
+   
 endfm
-
-reduce joint-sort('NzN, upModule('MYINT-RAT, true),
-                        upModule('MYINT-LIST, true)) .
-quit
-
+                        
 -----------------------------------------
 ----     Concrete Module FVAR        ----
 ---- upModule(FVAR-CONCRETE) is FVAR ----
@@ -168,6 +175,7 @@ fmod FVAR-CONCRETE is
   protecting META-LEVEL .
   protecting STRING .
   protecting CONVERSION .
+  protecting INTERSECTION .
   
   ---- Convert a list of terms to a string.
   op #string : TermList -> String .
@@ -182,12 +190,30 @@ fmod FVAR-CONCRETE is
   op #qid : TermList -> Qid .
   eq #qid(TL:TermList) = qid(#string(TL:TermList)) .
   
-  ---- 
+  ---- Make a Variable.
+  op #makeVariable : Qid Sort -> Variable .
+  op #makeVariable : String Sort -> Variable .
+  eq #makeVariable(Name:Qid, S:Sort)
+   = qid(string(Name:Qid) + ":" + string(S:Sort)) .
+  eq #makeVariable(Name:String, S:Sort)
+   = qid(Name:String + ":" + string(S:Sort)) .
    
+  vars M1 M2 : FModule . var T : Term .
+  
+  ---- Calculate the joint-variable of a Term in a signature.
+  
+  op joint-variable : FModule FModule Term -> Variable .
+  eq joint-variable(M1, M2, T)
+   = if wellFormed(M1, T)
+     then #makeVariable(#string(T), joint-sort(leastSort(M1, T), M1, M2))
+     else #makeVariable(#string(T), joint-sort(leastSort(M2, T), M1, M2))
+     fi .
+  
 endfm
 
-reduce in META-LEVEL : 
-upModule('FVAR-CONCRETE, false) .
+reduce joint-variable(upModule('MYINT-RAT, true),
+                      upModule('MYINT-LIST, true),
+                      '_/_['_+_['1.N, 'X:R], 'Y:NzR]) .
 
 quit
 
