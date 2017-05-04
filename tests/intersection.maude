@@ -1,5 +1,6 @@
 load ../src/universal-construction .
 load ../src/full-maude .
+load ../src/foform .
 
 ------------------------------------------------------------
 ----              Testing Modules:                      ----
@@ -9,17 +10,18 @@ load ../src/full-maude .
 set include BOOL off .
 
 fmod MYINT is
+  protecting META-LEVEL .
   sorts N NzN .
   sorts I NzI .
   subsort NzN < NzI N < I .
 
-  op 0 : -> N [ctor] .
-  op 1 : -> NzN [ctor] .
-  op _+_ : N NzN -> NzN [ctor assoc comm id: 0 prec 26] .
+  op zero : -> N [ctor] .
+  op one : -> NzN [ctor] .
+  op _+_ : N NzN -> NzN [ctor assoc comm id: zero prec 26] .
   op _+_ : N N   -> N   [ctor ditto] .
   op _+_ : I I   -> I   [ctor ditto] .
 
-  op _*_ : NzN NzN -> NzN [assoc comm id: 1 prec 24] .
+  op _*_ : NzN NzN -> NzN [assoc comm id: one prec 24] .
   op _*_ : NzI NzI -> NzI [ditto] .
   op _*_ : N   N   -> N   [ditto] .
   op _*_ : I   I   -> I   [ditto] .
@@ -37,7 +39,7 @@ fmod MYINT-RAT is
   op _*_ : R   R   -> R   [ditto] .
   op _*_ : NzR NzR -> NzR [ditto] .
 
-  op _/_ : R NzR -> R [ctor right id: 1 prec 25] .
+  op _/_ : R NzR -> R [ctor right id: one prec 25] .
 endfm
 
 fmod MYINT-LIST is
@@ -213,47 +215,70 @@ endfm
 
 reduce joint-variable(upModule('MYINT-RAT, true),
                       upModule('MYINT-LIST, true),
-                      '_/_['_+_['1.N, 'X:R], 'Y:NzR]) .
+                      '_/_['_+_['one.NzN,'X:R],'Y:NzR]) .
+                      
+---------------------------------------------------------
+---- Given two signatures and a first-order formula, ----
+---- purify the formula.                             ----
+---------------------------------------------------------
 
---- quit
+fmod PURIFICATION-CONCRETE is
 
-
-
-
----- Module FVAR ----
-
-*** fmod FVAR is
-***   protecting MODULE-EXPRESSION .
+  protecting FVAR-CONCRETE .
+  protecting FOFORM .
   
-***   op FVAR : ?? ?? -> ?? .
+  op purify : FModule FModule PosEqConj -> PosEqConj .
   
-***   eq FVAR(MOD1,MOD2) = 
-***     META-THEORY < MOD1 > ;
-***     META-THEORY < MOD2 > ;
-***     exists ( protecting 'META-LEVEL .
-***              protecting 'STRING .
-***              protecting 'CONVERSION . )
-***;            ( sorts none . ) ;
-***     forall ( sorts 'Term ; 'Term{svar('M1)} ; 'Term{svar('M2)} . )
-***     exists ( sorts 'Variable{svar('M1) svar('M2)} . )
-***;            ( subsorts 'Variable{svar('M1) svar('M2)} < 'Variable{svar('M1)} ; 'Variable{svar('M2)} . ) 
-***;            ( op 'fvar : ( 'Term{svar('M1)} ) ( 'Term{svar('M2)} ) -> 'Variable{svar('M1) svar('M2)} [none] . 
-***              op 'fvar : 'Term -> 'Variable [none] . 
-***              op '#string : 'TermList -> 'String [none] . )
-***;            ( eq '#string['Q:Qid] = 'string['Q:Qid] [none] .
-***              eq '#string['_`,_['T:Term,'TL:TermList]] = '_+_['#string['T:Term],'", ".String,'#string['TL:TermList]] [none] .
-***              eq '#string['_`[_`]['Q:Qid,'TL:TermList]] = '_+_['_+_['_+_['#string['Q:Qid],'"[".Char],'#string['TL:TermList]],'"]".Char] [none] .
-
-
-***              eq 'fvar('T:Term{svar('M1)@svar('S)}) =  )
+  vars M M1 M2 M0 : FModule . vars T T1 T2 T0 : Term .
   
-*** endfm
+  eq purify(M1, M2, T1 ?= T2) = T1 ?= T2 .
+  
+endfm
+
+---- one, one / Y:NzR ?= X:R, Z:N
+
+reduce purify(upModule('MYINT-RAT, true),
+              upModule('MYINT-LIST, true),
+              '_,_['one.NzN, '_/_['one.NzN, 'Y:NzR]]
+              ?=
+              '_,_['X:R, 'Z:N]) .
+                      
+                      
+quit
+
+------------------------------------
+---- UniversalConstruction FVAR ----
+------------------------------------
+
+fmod FVAR is
+
+  protecting MODULE-EXPRESSION .
+  
+  op FVAR : Qid Qid -> UniversalConstruction .
+  
+  eq FVAR(MOD1,MOD2) = 
+    META-THEORY < MOD1 > ;
+    META-THEORY < MOD2 > ;
+    exists ( protecting 'META-LEVEL .
+             protecting 'STRING .
+             protecting 'CONVERSION . )
+           ( sorts none . ) ;
+    forall ( sorts 'Term ; 'Term{svar('M1)} ; 'Term{svar('M2)} . )
+    exists ( sorts 'Variable{svar('M1) svar('M2)} . )
+           ( subsorts 'Variable{svar('M1) svar('M2)} < 'Variable{svar('M1)} ; 'Variable{svar('M2)} . ) 
+           ( op 'fvar : ( 'Term{svar('M1)} ) ( 'Term{svar('M2)} ) -> 'Variable{svar('M1) svar('M2)} [none] . 
+             op 'fvar : 'Term -> 'Variable [none] . 
+             op '#string : 'TermList -> 'String [none] . )
+           ( eq '#string['Q:Qid] = 'string['Q:Qid] [none] .
+             eq '#string['_`,_['T:Term,'TL:TermList]] = '_+_['#string['T:Term],'", ".String,'#string['TL:TermList]] [none] .
+
+endfm
 
 
 
 
 
-*** load ../msh.maude
+load ../msh.maude
 
 *** ---- Testing ----
 
