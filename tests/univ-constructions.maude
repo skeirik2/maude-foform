@@ -229,7 +229,7 @@ claim [ modules < 'STATE |-> ('TEST-MODULE deriving DOWN-TERM) >
 
 reduce
 
-claim [ modules < 'current |-> ('TEST-MODULE deriving META-THEORY) >
+claim [ modules < 'current |-> ('TEST-MODULE deriving META-TERM) >
 
         ( ( strategy < sort(upTerm('a.A))
                      --- ; sort(upTerm('b.B))
@@ -247,6 +247,10 @@ claim [ modules < 'current |-> ('TEST-MODULE deriving META-THEORY) >
         )
       ]
 .
+
+reduce #upModule('TEST-MODULE) deriving META-TERM < 'TEST-MODULE > .
+reduce resolveNames(#upModule('TEST-MODULE) deriving META-TERM < 'TEST-MODULE >) .
+reduce wellFormed(resolveNames(#upModule('TEST-MODULE) deriving META-TERM < 'TEST-MODULE >)) .
 
 ---reduce
 ---

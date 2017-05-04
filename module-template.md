@@ -246,10 +246,8 @@ fmod MODULE-DECLARATION is
   vars I I' : Import . var IL : ImportList . vars ID : ImportDecl . var NeIDS : NeImportDeclSet . var IDS : ImportDeclSet .
   vars S S' S'' : Sort . vars SS SS' : SortSet . var SPS : SortPoset .
   var SU : Substitution . var SUBSTS : SubstitutionSet .
-  vars NeMDS NeMDS' : NeModuleDeclSet . var MDS : ModuleDeclSet .
+  vars NeMDS NeMDS' : NeModuleDeclSet . vars MDS MDS' : ModuleDeclSet .
 
-  --- FOR PREGULARITY!!!!!!!
-  --- ----------------------
   op __ : ImportDeclSet  NeImportDeclSet  -> NeImportDeclSet  [ctor ditto] .
   op __ : SortDeclSet    NeSortDeclSet    -> NeSortDeclSet    [ctor ditto] .
   op __ : SubsortDeclSet NeSubsortDeclSet -> NeSubsortDeclSet [ctor ditto] .
@@ -324,6 +322,28 @@ can be treated uniformly with the rest of the declarations.
        subsorts SS < S' ; SS' .
        subsorts      S' ; SS'  < SPS .
      ) .
+```
+
+-   `connected-component : ModuleDeclSet ModuleDeclSet -> ModuleDeclSet` will
+    complete the second module declaration set with all the sorts and subsorts
+    in the intersection of the two connected components.
+
+```{.maude .mod-template}
+  op connected-component : ModuleDeclSet ModuleDeclSet -> ModuleDeclSet .
+  -----------------------------------------------------------------------
+  eq connected-component(MDS, MDS') = MDS' [owise] .
+  eq connected-component( ( sorts S ; S' ; SS . ) ( subsort S < S' . ) MDS
+                        , ( sorts S ; SS' . ) MDS'
+                        )
+   = connected-component( ( sorts S ; S' ; SS . ) MDS
+                        , ( sorts S ; S' ; SS' . ) ( subsort S < S' . ) MDS'
+                        ) .
+  eq connected-component( ( sorts S ; S' ; SS . ) ( subsort S' < S . ) MDS
+                        , ( sorts S ; SS' . ) MDS'
+                        )
+   = connected-component( ( sorts S ; S' ; SS . ) MDS
+                        , ( sorts S ; S' ; SS' . ) ( subsort S' < S . ) MDS'
+                        ) .
 ```
 
 -   `_<<_ : ModuleDeclSet Substitution -> [ModuleDeclSet]` lifts the
