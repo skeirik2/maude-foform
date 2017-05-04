@@ -1,6 +1,7 @@
 load ../src/universal-construction .
 load ../src/full-maude .
 load ../src/foform .
+load ../src/constrained-terms .
 
 ------------------------------------------------------------
 ----              Testing Modules:                      ----
@@ -10,6 +11,7 @@ load ../src/foform .
 set include BOOL off .
 
 fmod MYINT is
+
   protecting META-LEVEL .
   sorts N NzN .
   sorts I NzI .
@@ -225,24 +227,67 @@ reduce joint-variable(upModule('MYINT-RAT, true),
 fmod PURIFICATION-CONCRETE is
 
   protecting FVAR-CONCRETE .
-  protecting FOFORM .
+  protecting CTERM-SET * ( op _;;_ to _;;;_ ) .
   
   op purify : FModule FModule PosEqConj -> PosEqConj .
   
-  vars M M1 M2 M0 : FModule . vars T T1 T2 T0 : Term .
+  vars M M1 M2 M0 : FModule . vars T T1 T2 T0 FV PT1 PT2 : Term .
+  vars C1 C2 : FOForm .
   
-  eq purify(M1, M2, T1 ?= T2) = T1 ?= T2 .
+  ---- (Case A) Lhs and Rhs are pure and from one module.
+  
+  ceq purify(M1, M2, T1 ?= T2) = T1 ?= T2 
+   if (wellFormed(M1, T1) and wellFormed(M1, T2))
+   or (wellFormed(M2, T1) and wellFormed(M2, T2)) .
+  
+  ---- (Case B) Lhs and Rhs are pure but from different modules.
+  
+  ceq purify(M1, M2, T1 ?= T2) 
+    = T1 ?= joint-variable(M1, M2, T1) /\ T2 ?= joint-variable(M1, M2, T1)
+   if ((wellFormed(M1, T1) and wellFormed(M2, T2))
+    or (wellFormed(M1, T2) and wellFormed(M2, T1))) .
+    
+  ---- (Case C) Lhs and/or Rhs are not pure
+    
+  op purifyTerm : FModule FModule Term -> CTerm .
+  
+  ceq purify(M1, M2, T1 ?= T2)
+    = purify(M1, M2, PT1 ?= PT2) /\ C1 /\ C2 
+  if  PT1 | C1 := purifyTerm(M1, M2, T1)
+  /\  PT2 | C2 := purifyTerm(M1, M2, T2) .
+
+  ---- Purify a term
+  
+  ---- (Case 1) T is pure.
+  
+  ceq purifyTerm(M1, M2, T) = T
+   if (wellFormed(M1, T) or wellFormed(M2, T)) .
+   
+  ---- (Case 2) T = Q[T1,...,Tn] is not pure.
+  ----          Q[PT1,...,PTn] | C1 /\ ... /\ Cn
+   
+  eq purify(M1, M2, T1 ?= T2) = 'no ?= 'match .
   
 endfm
 
----- one, one / Y:NzR ?= X:R, Z:N
+---- Some test cases
+
+---- purify(one, one / Y:NzR, nil ?= X:R, Z:N, nil)
 
 reduce purify(upModule('MYINT-RAT, true),
               upModule('MYINT-LIST, true),
-              '_,_['one.NzN, '_/_['one.NzN, 'Y:NzR]]
+              '_`,_['one.NzN,'_`,_['_/_['one.NzN,'Y:NzR],'nil.List]]
               ?=
-              '_,_['X:R, 'Z:N]) .
-                      
+              '_`,_['X:R,'_`,_['Z:N,'nil.List]]) .
+
+---- purify(one, zero, nil ?= X:N, Y:N, nil)
+
+reduce purify(upModule('MYINT-RAT, true),
+              upModule('MYINT-LIST, true),
+              '_`,_['one.NzN,'_`,_['zero.N,'nil.List]]
+              ?=
+              '_`,_['X:N,'_`,_['Y:N,'nil.List]]) .
+            
                       
 quit
 
