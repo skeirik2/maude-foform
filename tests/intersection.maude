@@ -12,7 +12,6 @@ set include BOOL off .
 
 fmod MYINT is
 
-  protecting META-LEVEL .
   sorts N NzN .
   sorts I NzI .
   subsort NzN < NzI N < I .
@@ -161,13 +160,31 @@ fmod INTERSECTION is
          none
        endfm) .
        
-  vars S S1 S2 : Sort . vars M M0 M1 M2 : FModule .
+  vars S S1 S2 : Sort . vars M M0 M1 M2 : FModule . var Q Q' : Qid .
+  var TL : TypeList .
+  vars T : Type .
+  var Att : AttrSet .
+  var OPDS : OpDeclSet .
   
   ---- Check whether a sort is in a module.
   
   op hasSortQ : FModule Sort -> Bool .
   
   eq hasSortQ(M, S) = S in getSorts(M) .
+  
+  ---- Check whether an op is in a module.
+  
+  op hasOpQ : FModule Qid -> Bool .
+  op hasOpQ : OpDeclSet Qid -> Bool .
+  
+  eq hasOpQ(M, Q) = hasOpQ(getOps(M), Q) .
+  
+  ceq hasOpQ(((op Q' : nil -> T [Att] .) OPDS), Q) = true
+   if Q = qid(string(Q') + "." + string(T)) .
+  eq hasOpQ(((op Q  : TL -> T [Att] .) OPDS), Q) = true .
+  eq hasOpQ(((op Q' : TL -> T [Att] .) OPDS), Q)
+   = hasOpQ(OPDS, Q) .
+  eq hasOpQ(OPDS, Q) = false .
 
   ---- Calculating joint sorts.
   ---- Given two modules M1 and M2, let M0 = intersect(M1, M2).
@@ -263,8 +280,8 @@ fmod PURIFICATION-CONCRETE is
   
   op purify : FModule FModule PosEqConj -> PosEqConj .
   
-  vars M M1 M2 M0 : FModule . vars T T1 T2 T0 FV PT1 PT2 : Term .
-  vars C1 C2 : FOForm .
+  vars M M1 M2 M0 : FModule . vars T T' T1 T2 T0 FV PT1 PT2 : Term .
+  vars C C1 C2 : FOForm . var Q : Qid . vars TL TL' TL1 TL2 : TermList .
   
   ---- (Case A) Lhs and Rhs are pure and from one module.
   
@@ -295,8 +312,26 @@ fmod PURIFICATION-CONCRETE is
   ceq purifyTerm(M1, M2, T) = T
    if (wellFormed(M1, T) or wellFormed(M2, T)) .
    
-  ---- (Case 2) T = Q[T1,...,Tn] is not pure.
-  ----          Q[PT1,...,PTn] | C1 /\ ... /\ Cn
+  ---- (Case 2) Q[T1,...,Tn] is not pure.
+  ----          Q[V1,...,Vn] | V1 ?= T1 /\ ... /\ Vn ?= Tn
+  
+  eq purifyTerm(M1, M2, Q[TL])
+   = if hasOpQ(M1, Q)
+     then purifyTerm-aux(M1, M2, M1, Q, TL, nil, tt)
+     else purifyTerm-aux(M1, M2, M2, Q, TL, nil, tt)
+     fi .
+  
+  op purifyTerm-aux : FModule FModule FModule Qid TermList TermList FOForm -> CTerm .
+  
+  eq purifyTerm-aux(M1, M2, M, Q, nil, TL, C)
+   = Q[TL] | C .
+   
+  ceq purifyTerm-aux(M1, M2, M, Q, (T, TL), TL', C)
+    = purifyTerm-aux(M1, M2, M, Q, TL, (TL', T'), C /\ (T' ?= T))
+   if T' := if wellFormed(M, T)
+            then T
+            else joint-variable(M1, M2, T)
+            fi .
    
   eq purify(M1, M2, T1 ?= T2) = 'no ?= 'match .
   
@@ -308,7 +343,7 @@ endfm
 
 reduce purify(upModule('MYINT-RAT, true),
               upModule('MYINT-LIST, true),
-              '_`,_['one.NzN,'_`,_['_/_['one.NzN,'Y:NzR],'nil.List]]
+              '_`,_['one.NzN ,'_`,_['_/_['one.NzN,'Y:NzR],'nil.List]]
               ?=
               '_`,_['X:R,'_`,_['Z:N,'nil.List]]) .
 
@@ -319,7 +354,13 @@ reduce purify(upModule('MYINT-RAT, true),
               '_`,_['one.NzN,'_`,_['zero.N,'nil.List]]
               ?=
               '_`,_['X:N,'_`,_['Y:N,'nil.List]]) .
-            
+
+---- purify a term.
+
+reduce 
+purifyTerm(upModule('MYINT-RAT, true),
+           upModule('MYINT-LIST, true),
+           '_`,_['one.NzN,'_`,_['_/_['one.NzN,'Y:NzR],'nil.List]]) .
                       
 quit
 
