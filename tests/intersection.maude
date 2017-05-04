@@ -58,6 +58,36 @@ fmod MYINT-COMBINED is
   protecting MYINT-LIST + MYINT-RAT .
 endfm
 
+fmod TEST1 is
+  sorts A B .
+  subsort A < B .
+
+  op a : -> A .
+  op b : -> B .
+
+  op f : B -> A .
+endfm
+
+fmod TEST2 is
+  sorts A B .
+  subsort A < B .
+
+  op a : -> A .
+  op b : -> B .
+
+  op f : A -> A .
+endfm
+
+fmod TEST1-INTERSECT-TEST2 is
+  sorts A B .
+  subsort A < B .
+
+  op a : -> A .
+  op b : -> B .
+
+  op f : A -> A .
+endfm
+
 set include BOOL on .
 
 -----------------------------------------------------
@@ -168,6 +198,8 @@ fmod INTERSECTION is
    if M0 := intersect(M1, M2) .
    
 endfm
+
+reduce intersect(upModule('TEST1, false), upModule('TEST2, false)) == upModule('TEST1-INTERSECT-TEST2, false) .
                         
 -----------------------------------------
 ----     Concrete Module FVAR        ----
