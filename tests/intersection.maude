@@ -101,7 +101,7 @@ fmod INTERSECTION is
   protecting CONVERSION .
   protecting RENAMING-EXPR-EVALUATION .
   
-  ---- Intersection
+  ---- Intersection of modules, sorts, subsorts, and ops.
   
   op intersect : FModule FModule -> FModule .
   op intersect : SortSet SortSet -> SortSet .
@@ -217,7 +217,8 @@ fmod INTERSECTION is
 endfm
 ---(
 reduce intersect(upModule('TEST1, false), upModule('TEST2, false)) == upModule('TEST1-INTERSECT-TEST2, false) .
----)                    
+---)
+             
 -----------------------------------------
 ----     Concrete Module FVAR        ----
 ---- upModule(FVAR-CONCRETE) is FVAR ----
@@ -287,13 +288,15 @@ fmod PURIFICATION-CONCRETE is
   eq purify(M1, M2, tt) = tt .
   eq purify(M1, M2, ff) = ff .
   
-  ---- (Case A) Lhs and Rhs are pure and from one module.
+  ---- (Case A) Both Lhs and Rhs are pure and from one module.
+  ----          Return Lhs ?= Rhs.
   
   ceq purify(M1, M2, T1 ?= T2) = T1 ?= T2 
    if (wellFormed(M1, T1) and wellFormed(M1, T2))
    or (wellFormed(M2, T1) and wellFormed(M2, T2)) .
   
   ---- (Case B) Lhs and Rhs are pure but from different modules.
+  ----          
   
   ceq purify(M1, M2, T1 ?= T2) 
     = T1 ?= joint-variable(M1, M2, T1) /\ T2 ?= joint-variable(M1, M2, T1)
@@ -398,7 +401,7 @@ reduce purify(upModule('MYINT-RAT, true),
               
 ---- purify( (X:N / Y:NzN) , nil ?= L:List)
 ----      =    (Z:I, nil ?= L:List)    ---- in LIST module
-            /\ (X:N / Y:NzN ?= Z:I)    ---- in Rat  module
+---         /\ (X:N / Y:NzN ?= Z:I)    ---- in Rat  module
 
 reduce purify(upModule('MYINT-RAT, true),
               upModule('MYINT-LIST, true),
