@@ -160,8 +160,8 @@ fmod FVAR-CONCRETE is
   ---- Make a Variable.
   op #makeVariable : Qid    Sort -> Variable .
   op #makeVariable : String Sort -> Variable .
-  eq #makeVariable(Name:Qid, S:Sort)    = qid("#makeVariable(" + string(Name:Qid) + ":" + string(S:Sort) + ")") .
-  eq #makeVariable(Name:String, S:Sort) = qid("#makeVariable(" + Name:String + ":" + string(S:Sort) + ")") .
+  eq #makeVariable(Name:Qid, S:Sort)    = qid("#makeVariable(" + string(Name:Qid) + "):" + string(S:Sort)) .
+  eq #makeVariable(Name:String, S:Sort) = qid("#makeVariable(" + Name:String + "):" + string(S:Sort)) .
 
   vars M1 M2 : FModule . var T : Term .
 
