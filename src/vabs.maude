@@ -9,7 +9,7 @@ fmod VABS is
     pr FOFORM .
     pr FOFORMSIMPLIFY-IMPL .
     pr TEST-MODULE .
-    pr FVAR-CONCRETE .
+    pr BREAK-EQATOMS .
 
     vars V NV : Variable .
     var F : Qid .
@@ -19,27 +19,12 @@ fmod VABS is
     var EqA : EqAtom .
     vars EqC EqC' : EqConj .
 
-    op destruct : ModuleExpression ModuleExpression EqConj -> EqConj .
     op vabs :     ModuleExpression ModuleExpression EqConj -> EqConj .
 
-    ceq destruct(M1, M2, T ?= T') = T ?= NV /\ T' ?= NV
-      if not (T :: Variable or T' :: Variable)
-      /\ NV := joint-variable(M1, M2, T) .
-
-    ceq destruct(M1, M2, T != T') = T ?= NV /\ T' != NV
-      if not (T :: Variable or T' :: Variable)
-      /\ NV := joint-variable(M1, M2, T) 
-      /\ sortLeq(upModule(M1, false), leastSort(upModule(M1, false), T), leastSort(upModule(M1, false), NV)) = true .
-
-    ceq destruct(M1, M2, T != T') = T ?= NV /\ T' != NV
-      if not (T :: Variable or T' :: Variable)
-      /\ NV := joint-variable(M1, M2, T) 
-      /\ sortLeq(upModule(M2, false), leastSort(upModule(M2, false), T), leastSort(upModule(M2, false), NV)) = true .
-      
-    ceq vabs(M1, M2, T ?= T') = vabs(M1, M2, destruct(M1, M2, T ?= T'))
+    ceq vabs(M1, M2, T ?= T') = vabs(M1, M2, break-eqatoms(M1, M2, T ?= T'))
       if not (T :: Variable or T' :: Variable) .
       
-    ceq vabs(M1, M2, T != T') = vabs(M1, M2, destruct(M1, M2, T != T'))
+    ceq vabs(M1, M2, T != T') = vabs(M1, M2, break-eqatoms(M1, M2, T != T'))
       if not (T :: Variable or T' :: Variable) .
 
     ceq vabs(M1, M2, F[TL, T, TL'] ?= V)
