@@ -102,9 +102,11 @@ endfm
 reduce upModule('VABS, false) .
 reduce vabs('x:A ?= 'f['a.A]) .
     
-reduce in VARIABLE-ABSTRACTION : resolveNames(#upModule('TEST-MODULE deriving VABS)) .
-reduce in VARIABLE-ABSTRACTION : wellFormed(resolveNames(#upModule('TEST-MODULE deriving VABS))) .
-reduce downTerm(getTerm(metaReduce( resolveNames(#upModule('TEST-MODULE deriving VABS))
+reduce in VARIABLE-ABSTRACTION : resolveNames(#upModule('TEST-MODULE deriving VABS < 'TEST-MODULE >)) .
+reduce in VARIABLE-ABSTRACTION : wellFormed(resolveNames(#upModule('TEST-MODULE deriving VABS < 'TEST-MODULE >))) .
+reduce downTerm(getTerm(metaReduce( resolveNames(#upModule('TEST-MODULE deriving VABS < 'TEST-MODULE >))
                                   , 'vabs[upTerm('x:A ?= 'f['a.A])])), ff) .
-reduce downTerm(getTerm(metaReduce( resolveNames(#upModule('TEST-MODULE deriving VABS))
+reduce downTerm(getTerm(metaReduce( resolveNames(#upModule('TEST-MODULE deriving VABS < 'TEST-MODULE >))
                                   , 'vabs[upTerm('f['f['a.A]] ?= 'f['a.A])])), ff) .
+*** reduce downTerm(getTerm(metaReduce( resolveNames(#upModule('TEST-MODULE deriving VABS < 'TEST-MODULE >))
+***                                   , 'vabs['_/\_[upTerm('f['f['a.A]] ?= 'f['a.A]), upTerm('f['f['a.A]] ?= 'f['a.A])]])), ff) .
