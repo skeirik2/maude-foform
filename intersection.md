@@ -178,6 +178,33 @@ fmod FVAR-CONCRETE is
      fi .
 
 endfm
+
+fmod BREAK-EQATOMS is
+    protecting FVAR-CONCRETE .
+
+    vars EqC EqC' : EqConj . vars M1 M2 : Module . vars ME ME' : ModuleExpression .
+    vars T T' : Term . var NV : Variable .
+
+    op break-eqatoms : Module Module EqConj -> EqConj .
+    op break-eqatoms : ModuleExpression ModuleExpression EqConj -> EqConj .
+    -----------------------------------------------------------------------
+    eq break-eqatoms(ME, ME', EqC)        = break-eqatoms(upModule(ME, true), upModule(ME', true), EqC) .
+    eq break-eqatoms(M1, M2, EqC /\ EqC') = break-eqatoms(M1, M2, EqC) /\ break-eqatoms(M1, M2, EqC') .
+
+    ceq break-eqatoms(M1, M2, T ?= T') = T ?= NV /\ T' ?= NV
+     if not (T :: Variable or T' :: Variable)
+     /\ NV := joint-variable(M1, M2, T) .
+
+    ceq break-eqatoms(M1, M2, T != T') = T ?= NV /\ T' != NV
+     if not (T :: Variable or T' :: Variable)
+     /\ NV := joint-variable(M1, M2, T) 
+     /\ sortLeq(M1, leastSort(M1, T), leastSort(M1, NV)) .
+
+    ceq break-eqatoms(M1, M2, T != T') = T ?= NV /\ T' != NV
+     if not (T :: Variable or T' :: Variable)
+     /\ NV := joint-variable(M1, M2, T) 
+     /\ sortLeq(M2, leastSort(M2, T), leastSort(M2, NV)) .
+endfm
 ---(
 reduce joint-variable(upModule('MYINT-RAT, true),
                       upModule('MYINT-LIST, true),
