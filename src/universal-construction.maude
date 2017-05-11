@@ -40,9 +40,11 @@ fmod UNIVERSAL-CONSTRUCTION is
 
   op for_in__ : Sort SortDeclSet UniversalConstruction -> UniversalConstruction [prec 76] .
   -----------------------------------------------------------------------------------------
-  eq  for S in none                      UC                       = exists none .
-  eq  for S in ( sorts S' ; S'' ; SS . ) UC                       = (for S in ( sorts S' . ) UC) | (for S in ( sorts S'' . ) UC) | (for S in ( sorts SS . ) UC) .
-  ceq for S in ( sorts S' . )            (forall MTS exists MTS') = forall (MTS << SU) exists (MTS' << SU) if SU := upTerm(S) <- upTerm(S') .
+  eq  for S in none                      UC                      = exists none .
+  eq  for S in SDS                       (UC ; UC')              = (for S in SDS UC) ; (for S in SDS UC') .
+  eq  for S in SDS                       (UC | UC')              = (for S in SDS UC) | (for S in SDS UC') .
+  eq  for S in ( sorts S' ; S'' ; SS . ) UC                      = (for S in ( sorts S' . ) UC) | (for S in ( sorts S'' . ) UC) | (for S in ( sorts SS . ) UC) .
+  ceq for S in ( sorts S' . )            (forall MTS exists MDS) = forall (MTS << SU) exists (MDS << SU) if SU := upTerm(S) <- upTerm(S') .
 
 ---  op _over_ : UniversalConstruction ModuleTemplate -> UniversalConstruction [prec 76] .
 ---  -------------------------------------------------------------------------------------
@@ -301,7 +303,7 @@ fmod UNIVERSAL-CONSTRUCTION is
   --------------------------------------------
   ceq META-TERM < Q > =   DOWN-TERM < Q >
                         ; exists tag-sorts(Q, (SDS SSDS))
-                        ; for TH in SDS ( exists ( sorts TH{Q} . ) ( subsort TH{Q} < TH . )
+                        ; for TH in SDS ( exists ( subsort TH{Q} < TH . )
                                         ; forall ( sorts X ; X ? . ) exists ( sorts TH{X @ Q} . )
                                         ; forall top-sorts(X ?)      exists ( subsort TH{X @ Q} < TH{Q} . )
                                         )

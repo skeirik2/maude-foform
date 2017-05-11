@@ -33,6 +33,7 @@ fmod STRUCTURED-NAME is
   op _==>_ : Sort Sort     -> Sort     [ctor prec 25] .
   op const : Qid  Sort     -> Constant [ctor] .
   op var   : Qid  Sort     -> Variable [ctor] .
+  op var   : Term          -> Variable [ctor] .
   ---------------------------------------------
 
   op downQidError?          : -> [Qid] .
@@ -328,8 +329,8 @@ can be treated uniformly with the rest of the declarations.
     For each sort `X` in the original sort structure it will produce `X{Q}`, for `Q` the supplied `Qid`.
 
 ```{.maude .mod-template}
-  op connected-component : ModuleDeclSet ModuleDeclSet -> ModuleDeclSet .
-  -----------------------------------------------------------------------
+  op connected-component : ModuleDeclSet ModuleDeclSet -> [ModuleDeclSet] .
+  -------------------------------------------------------------------------
   eq connected-component(MDS, MDS') = MDS' [owise] .
   eq connected-component( ( sorts S ; S' ; SS . ) ( subsort S < S' . ) MDS
                         , ( sorts S ; SS' . ) MDS'
@@ -344,8 +345,8 @@ can be treated uniformly with the rest of the declarations.
                         , ( sorts S ; S' ; SS' . ) ( subsort S' < S . ) MDS'
                         ) .
 
-  op tag-sorts : Qid ModuleDeclSet  -> [ModuleDeclSet] .
-  ------------------------------------------------------
+  op tag-sorts : Qid ModuleDeclSet -> [ModuleDeclSet] .
+  -----------------------------------------------------
   eq tag-sorts(Q, none)                    = none .
   eq tag-sorts(Q, (NeMDS NeMDS'))          = tag-sorts(Q, NeMDS) tag-sorts(Q, NeMDS') .
   eq tag-sorts(Q, ( sorts S . ))           = ( sorts S{Q} . ) .

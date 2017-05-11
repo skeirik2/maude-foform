@@ -1,0 +1,103 @@
+load ../src/universal-construction .
+load ../src/full-maude .
+load ../src/foform .
+load ../src/constrained-terms .
+
+------------------------------------------------------------
+----              Testing Modules:                      ----
+----   MYINT, MYINT-RAT, MYINT-LIST, and MYINT-COMBINED ----
+------------------------------------------------------------
+
+set include BOOL off .
+
+fmod MYINT is
+
+  sorts N NzN .
+  sorts I NzI .
+  subsort NzN < NzI N < I .
+
+  op zero : -> N [ctor] .
+  op one : -> NzN [ctor] .
+  op _+_ : N NzN -> NzN [ctor assoc comm id: zero prec 26] .
+  op _+_ : N N   -> N   [ctor ditto] .
+  op _+_ : I I   -> I   [ctor ditto] .
+
+  op _*_ : NzN NzN -> NzN [assoc comm id: one prec 24] .
+  op _*_ : NzI NzI -> NzI [ditto] .
+  op _*_ : N   N   -> N   [ditto] .
+  op _*_ : I   I   -> I   [ditto] .
+endfm
+
+
+fmod MYINT-RAT is
+  protecting MYINT .
+
+  sorts R NzR .
+  subsorts NzI < NzR < R .
+  subsort I < R .
+
+  op _+_ : R   R   -> R   [ctor ditto] .
+  op _*_ : R   R   -> R   [ditto] .
+  op _*_ : NzR NzR -> NzR [ditto] .
+
+  op _/_ : R NzR -> R [ctor right id: one prec 25] .
+endfm
+
+fmod MYINT-LIST is
+  protecting MYINT .
+
+  sorts NeList List .
+  subsort NeList < List .
+
+  op nil : -> List .
+  op _,_ : I List -> NeList [ctor prec 27] .
+endfm
+
+fmod MYINT-COMBINED is
+  protecting MYINT-LIST + MYINT-RAT .
+endfm
+
+fmod TEST-MODULE is
+  sorts A B .
+  subsort A < B .
+    
+  op a : -> A .
+  op b : -> B .
+    
+  op f : B -> A .
+  ---------------
+  eq f(b) = a .
+endfm
+
+
+fmod TEST1 is
+  sorts A B .
+  subsort A < B .
+
+  op a : -> A .
+  op b : -> B .
+
+  op f : B -> A .
+endfm
+
+fmod TEST2 is
+  sorts A B .
+  subsort A < B .
+
+  op a : -> A .
+  op b : -> B .
+
+  op f : A -> A .
+endfm
+
+fmod TEST1-INTERSECT-TEST2 is
+  sorts A B .
+  subsort A < B .
+
+  op a : -> A .
+  op b : -> B .
+
+  op f : A -> A .
+endfm
+
+set include BOOL on .
