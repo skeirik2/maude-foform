@@ -1,6 +1,7 @@
 load universal-construction.maude
 load foform.maude
-load ../tests/intersection.maude
+load ../src/intersection.maude
+load ../tests/test-modules.maude
 
 fmod VARIABLE-ABSTRACTION is
 
@@ -25,6 +26,11 @@ fmod VARIABLE-ABSTRACTION is
                  if 'not_['_or_['_::`Variable[T], '_::`Variable[T']]] = 'true.Bool
                  /\ NV := 'joint-variable['upModule[upTerm(M1), 'false.Bool], 'upModule[upTerm(M2), 'false.Bool], T] [none] .
 
+                ceq 'vabs['_!=_[T, T']] = '_/\_['vabs['_?=_[T, NV]],'vabs['_!=_[T', NV]]] 
+                 if 'not_['_or_['_::`Variable[T], '_::`Variable[T']]] = 'true.Bool
+                 /\ NV := 'joint-variable['upModule[upTerm(M1), 'false.Bool], 'upModule[upTerm(M2), 'false.Bool], T] 
+                 /\ 'sortLeq['upModule[upTerm(M1), 'false.Bool], 'leastSort['upModule[upTerm(M1), 'false.Bool], T], 'leastSort['upModule[upTerm(M2), 'false.Bool], NV]] = 'true.Bool [none] .
+
                 ceq 'vabs['_?=_[V, '_`[_`][F, '_`,_[TL, T, TL']]]]
                   = '_/\_['vabs['_?=_[T, NV]], 'vabs['_?=_[V, '_`[_`][F,'_`,_[TL, NV, TL']]]]]
                  if 'not_['_::`Variable[T]] = 'true.Bool 
@@ -44,6 +50,9 @@ fmod VARIABLE-ABSTRACTION is
         /\ NV := var('NV, 'Variable) .
 endfm
 
+--- VARIABLE ABSTRACTION
+--- Input: Conjunction of Equations of the form T ?= T' and T != T'
+
 fmod VABS is
     pr FOFORM .
     pr TEST-MODULE .
@@ -53,24 +62,43 @@ fmod VABS is
     var F : Qid .
     vars T T' : Term .
     vars TL TL' : TermList .
+    vars M1 M2 : ModuleExpression .
+    var EqA : EqAtom .
+    var EqC : EqConj .
 
-    op vabs : EqConj -> EqConj .
-    ceq vabs(T ?= T') = vabs(T ?= NV) /\ vabs(T' ?= NV)
+    op destruct : ModuleExpression ModuleExpression EqConj -> EqConj .
+    op vabs :     ModuleExpression ModuleExpression EqConj -> EqConj .
+
+    ceq destruct(M1, M2, T ?= T') = T ?= NV /\ T' ?= NV
       if not (T :: Variable or T' :: Variable)
-      /\ NV := joint-variable(upModule('TEST-MODULE, false), upModule('TEST-MODULE, false), T) .
-    ceq vabs(F[TL, T, TL'] ?= V)
-      = vabs(F[TL, NV, TL'] ?= V) /\ vabs(NV ?= T)
+      /\ NV := joint-variable(M1, M2, T) .
+
+    ceq destruct(M1, M2, T != T') = T ?= NV /\ T' != NV
+      if not (T :: Variable or T' :: Variable)
+      /\ NV := joint-variable(M1, M2, T) 
+      /\ sortLeq(M1, leastSort(M1, T), leastSort(M1, NV)) = true .
+
+    ceq destruct(M1, M2, T != T') = T ?= NV /\ T' != NV
+      if not (T :: Variable or T' :: Variable)
+      /\ NV := joint-variable(M1, M2, T) 
+      /\ sortLeq(M2, leastSort(M2, T), leastSort(M2, NV)) = true .
+
+    ceq vabs(M1, M2, F[TL, T, TL'] ?= V)
+      = vabs(M1, M2, F[TL, NV, TL'] ?= V) /\ vabs(M1, M2, NV ?= T)
       if not (T :: Variable) 
-      /\ NV := joint-variable(upModule('TEST-MODULE, false), upModule('TEST-MODULE, false), T) .
-    ceq vabs(F[TL, T, TL'] != V)
-      = vabs(F[TL, NV, TL'] != V) /\ vabs(NV ?= T)
+      /\ NV := joint-variable(M1, M2, T) .
+
+    ceq vabs(M1, M2, F[TL, T, TL'] != V)
+      = vabs(M1, M2, F[TL, NV, TL'] != V) /\ vabs(M1, M2, NV ?= T)
       if not (T :: Variable) 
-      /\ NV := joint-variable(upModule('TEST-MODULE, false), upModule('TEST-MODULE, false), T) .
-    eq vabs(T ?= T') = T ?= T' [owise] .
+      /\ NV := joint-variable(M1, M2, T) .
+
+    eq vabs(M1, M2, EqA /\ EqC) = vabs(M1, M2, EqA) /\ vabs(M1, M2, EqC) .
+    eq vabs(M1, M2, EqA) = EqA [owise] .
 endfm
     
 reduce upModule('VABS, false) .
-reduce vabs('x:A ?= 'f['a.A]) .
+reduce vabs('TEST-MODULE, 'TEST-MODULE, 'x:A ?= 'f['a.A]) .
     
 reduce in VARIABLE-ABSTRACTION : resolveNames(#upModule('TEST-MODULE deriving VABS < 'TEST-MODULE, 'TEST-MODULE >)) .
 reduce in VARIABLE-ABSTRACTION : wellFormed(resolveNames(#upModule('TEST-MODULE deriving VABS < 'TEST-MODULE, 'TEST-MODULE >))) .
