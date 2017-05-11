@@ -21,30 +21,28 @@ fmod UNIVERSAL-CONSTRUCTION is
   vars SU SU' : Substitution . var SUBSTS : SubstitutionSet . var MOD : Module .
   vars MDS MDS' MDS'' : ModuleDeclSet . vars MTS MTS' : ModuleTemplateSet . vars UC UC' UC'' : UniversalConstruction .
   vars S S' S'' NeS : Sort . vars SS SS' : SortSet . vars OP Nil Q : Qid . var AS : AttrSet . var NES : Variable .
-  vars NeMTS NeMTS' : NeModuleTemplateSet . var SPS : SortPoset . var SSDS : SubsortDeclSet . vars X Y Z TH TH' : Sort . vars T T' : Term .
+  vars NeMTS NeMTS' : NeModuleTemplateSet . var SPS : SortPoset . var SDS : SortDeclSet . var SSDS : SubsortDeclSet . vars X Y Z TH TH' : Sort . vars T T' : Term .
 
   op _<_> : ModUniversalConstruction Qid -> UniversalConstruction [ctor] .
   ------------------------------------------------------------------------
 
+  op _;_ : UniversalConstruction UniversalConstruction -> UniversalConstruction [ctor assoc prec 76 format(d n d d)] .
   op _|_ : UniversalConstruction UniversalConstruction -> UniversalConstruction [ctor assoc comm prec 77 format(d n d d)] .
   -------------------------------------------------------------------------------------------------------------------------
+  eq (forall MTS exists none) ; UC = UC .
   eq UC | UC = UC .
 
-  op _;_ : UniversalConstruction UniversalConstruction -> UniversalConstruction [ctor assoc prec 76 format(d n d d)] .
-  --------------------------------------------------------------------------------------------------------------------
-  eq (UC | UC') ; UC''         = (UC ; UC'') | (UC' ; UC'') .
-  eq         UC ; (UC' | UC'') = (UC ; UC')  | (UC  ; UC'') .
-
-  op exists_        : ModuleTemplateSet                   -> UniversalConstruction [prec 75] .
-  op forall_exists_ : ModuleTemplateSet ModuleTemplateSet -> UniversalConstruction [ctor prec 75] .
-  op for_in__       : Sort SortSet UniversalConstruction  -> UniversalConstruction [prec 76] .
-  --------------------------------------------------------------------------------------------
+  op exists_        : ModuleTemplateSet                      -> UniversalConstruction [prec 75] .
+  op forall_exists_ : ModuleTemplateSet ModuleTemplateSet    -> UniversalConstruction [ctor prec 75] .
+  ----------------------------------------------------------------------------------------------------
   eq exists MTS = forall none exists MTS .
   eq forall MTS exists NeMTS | NeMTS' = (forall MTS exists NeMTS) | (forall MTS exists NeMTS) .
 
-  eq for S in none            UC                       = exists none .
-  eq for S in S'              (forall MTS exists MTS') = forall (MTS << (upTerm(S) <- upTerm(S'))) exists (MTS' << (upTerm(S) <- upTerm(S'))) .
-  eq for S in (S' ; S'' ; SS) UC                       = (for S in S' UC) | (for S in S'' UC) | (for S in SS UC) .
+  op for_in__ : Sort SortDeclSet UniversalConstruction -> UniversalConstruction [prec 76] .
+  -----------------------------------------------------------------------------------------
+  eq  for S in none                      UC                       = exists none .
+  eq  for S in ( sorts S' ; S'' ; SS . ) UC                       = (for S in ( sorts S' . ) UC) | (for S in ( sorts S'' . ) UC) | (for S in ( sorts SS . ) UC) .
+  ceq for S in ( sorts S' . )            (forall MTS exists MTS') = forall (MTS << SU) exists (MTS' << SU) if SU := upTerm(S) <- upTerm(S') .
 
 ---  op _over_ : UniversalConstruction ModuleTemplate -> UniversalConstruction [prec 76] .
 ---  -------------------------------------------------------------------------------------
@@ -102,10 +100,10 @@ supersorts) of the original.
   ---------------------------------------------------
   eq covariant(S, S') =   forall ( sorts S . )
                           exists ( sorts S' . )
-                        ; forall ( sorts S  ; prime(S)
-                                       ; S' ; prime(S') .
+                        ; forall ( sorts S        ; S'
+                                       ; prime(S) ; prime(S') .
                                  )
-                                 ( subsort S < prime(S) . )
+                                 ( subsort S  < prime(S) . )
                           exists ( subsort S' < prime(S') . ) .
 
   op covariant-data-up : Sort Sort -> UniversalConstruction .
@@ -269,6 +267,17 @@ memberships which push elements of the sort `Term` into the subsort of
   ------------------------------------------
   eq top-sorts(S) = (sorts S .) \ ((sorts S ; prime(S) .) subsort S < prime(S) .) .
 
+  op sort-intersect : Sort -> UniversalConstruction .
+  ---------------------------------------------------
+  ceq sort-intersect(S) = forall ( sorts S{X} ; S{Y} . )
+                          exists ( sorts S{X Y} . )
+                                 ( subsorts S{X Y} < S{X} ; S{Y} . )
+                                 ( cmb var('T, S{X}) : S{X Y} if var('T, S{X}) : S{Y} [none] .
+                                   cmb var('T, S{Y}) : S{X Y} if var('T, S{Y}) : S{X} [none] .
+                                 )
+                        if X := var<Sort>('X)
+                        /\ Y := var<Sort>('Y) .
+
   op DOWN-TERM : -> ModUniversalConstruction .
   --------------------------------------------
   ceq DOWN-TERM < Q > =   exists ( pr 'META-LEVEL .
@@ -283,35 +292,23 @@ memberships which push elements of the sort `Term` into the subsort of
                                  )
                                  ( ceq 'downTerm   < X > [var('T, 'Term)] = var('X, X) if var('X, X) := 'downTerm[var('T, 'Term), const('downTermError < X >, X ?)] [none] .
                                    ceq 'wellFormed < X > [var('T, 'Term)] = 'true.Bool if var('X, X) := 'downTerm < X > [var('T, 'Term)] [none] .
-                                   eq  'wellFormed < X > [var('T, 'Term)] = 'false.Bool [owise] .
                                  )
                       if X := var<Sort>('X) .
 
   op META-TERM : -> ModUniversalConstruction .
   --------------------------------------------
   ceq META-TERM < Q > =   DOWN-TERM < Q >
-                        ; exists ( MDS deriving covariant-data-down(TH, TH{Q}) )
-                        ; forall ( sorts X ; X ? ; TH ; TH{Q} . )
-                          exists ( sorts TH{Q @ X} . )
-                        ; forall ( sorts X ; X ? ; TH{Q @ X}
-                                       ; Y ; Y ? ; TH{Q @ Y} .
-                                 )
-                                 ( subsort X < Y . )
-                          exists ( subsort TH{Q @ X} < TH{Q @ Y} . )
-                        ; forall ( sorts TH  ; TH {Q @ X}
-                                       ; TH' ; TH'{Q @ X} .
-                                 )
-                                 ( subsort TH < TH' . )
-                          exists ( subsort TH{Q @ X} < TH'{Q @ X} . )
-                        ; for TH in ('Term ; 'Variable ; 'GroundTerm ; 'Constant)
-                              ( forall ( sorts X ; X ? ; TH ; TH{Q} ; TH{Q @ X} . )
-                                exists ( cmb var('T, TH) : TH{Q @ X} if 'wellFormed < X > [var('T, TH)] = 'true.Bool [none] . )
-                              )
-                      if MDS := connected-component(asTemplate(upModule('META-TERM, false)), ( sorts 'Term . ))
-                      /\ X   := var<Sort>('X)
-                      /\ Y   := var<Sort>('Y)
-                      /\ TH  := var<Sort>('T)
-                      /\ TH' := var<Sort>('T') .
+                        ; exists tag-sorts(Q, (SDS SSDS))
+                        ; for TH in SDS ( exists ( sorts TH{Q} . ) ( subsort TH{Q} < TH . )
+                                        ; forall ( sorts X ; X ? . ) exists ( sorts TH{X @ Q} . )
+                                        ; forall top-sorts(X ?)      exists ( subsort TH{X @ Q} < TH{Q} . )
+                                        )
+                        ; covariant(TH{Q}, TH{X @ Q})
+                        ; covariant(X, TH{X @ Q})
+                      if SDS SSDS := connected-component(asTemplate('META-TERM), ( sorts 'Term . ))
+                      /\ X        := var<Sort>('X)
+                      /\ Y        := var<Sort>('Y)
+                      /\ TH       := var<Sort>('TH) .
 endfm
 ```
 

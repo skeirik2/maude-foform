@@ -28,7 +28,7 @@ fmod STRUCTURED-NAME is
 
   op _<_>  : Qid  TypeList -> Qid      [ctor prec 23] .
   op _{_}  : Sort TypeList -> Sort     [ctor prec 23] .
-  op _@_   : Qid  Sort     -> Sort     [ctor prec 23] .
+  op _@_   : Sort Sort     -> Sort     [ctor prec 23] .
   op _?    : Sort          -> Sort     [ctor prec 23] .
   op _==>_ : Sort Sort     -> Sort     [ctor prec 25] .
   op const : Qid  Sort     -> Constant [ctor] .
@@ -298,15 +298,14 @@ can be treated uniformly with the rest of the declarations.
   op (sorts_.) : SortSet -> SortDecl [prec 60] .
   op __ : SortDeclSet SortDeclSet -> SortDeclSet [ditto] .
   --------------------------------------------------------
+  eq ( sorts none . )               = none .
   eq ( sorts SS . ) ( sorts SS' . ) = ( sorts SS ; SS' . ) .
 
   op _<_ : SortPoset SortPoset -> SortPoset [assoc id: none prec 122] .
   op (subsorts_.) : SortPoset -> SubsortDeclSet .
   -----------------------------------------------
-  eq ( subsorts SS . )
-   = none .
-  eq ( subsorts S < S' . )
-   = ( subsort S < S' . ) .
+  eq ( subsorts SS . )     = none .
+  eq ( subsorts S < S' . ) = ( subsort S < S' . ) .
   eq ( subsorts S < S' ; S'' ; SS' . )
    = ( subsorts S < S' .
        subsorts S < S'' .
@@ -324,9 +323,9 @@ can be treated uniformly with the rest of the declarations.
      ) .
 ```
 
--   `connected-component : ModuleDeclSet ModuleDeclSet -> ModuleDeclSet` will
-    complete the second module declaration set with all the sorts and subsorts
-    in the intersection of the two connected components.
+-   `connected-component : ModuleDeclSet ModuleDeclSet -> ModuleDeclSet` will complete the second module declaration set with all the sorts and subsorts in the intersection of the two connected components.
+-   `tag-sorts : Qid ModuleDeclSet -> [ModuleDeclSet]` will take a sort structure (a `ModuleDeclSet` which only consists of `SortDecl` and `SubsortDecl`) and produce a "tagged" version.
+    For each sort `X` in the original sort structure it will produce `X{Q}`, for `Q` the supplied `Qid`.
 
 ```{.maude .mod-template}
   op connected-component : ModuleDeclSet ModuleDeclSet -> ModuleDeclSet .
@@ -344,17 +343,21 @@ can be treated uniformly with the rest of the declarations.
    = connected-component( ( sorts S ; S' ; SS . ) MDS
                         , ( sorts S ; S' ; SS' . ) ( subsort S' < S . ) MDS'
                         ) .
+
+  op tag-sorts : Qid ModuleDeclSet  -> [ModuleDeclSet] .
+  ------------------------------------------------------
+  eq tag-sorts(Q, none)                    = none .
+  eq tag-sorts(Q, (NeMDS NeMDS'))          = tag-sorts(Q, NeMDS) tag-sorts(Q, NeMDS') .
+  eq tag-sorts(Q, ( sorts S . ))           = ( sorts S{Q} . ) .
+  eq tag-sorts(Q, ( subsort S < S' . ))    = ( subsort S{Q} < S'{Q} . ) .
+  eq tag-sorts(Q, ( sorts S ; S' ; SS . )) = tag-sorts(Q, ( sorts S . ))
+                                             tag-sorts(Q, ( sorts S' . ))
+                                             tag-sorts(Q, ( sorts SS . )) .
 ```
 
--   `_<<_ : ModuleDeclSet Substitution -> [ModuleDeclSet]` lifts the
-    substitution application operator `_<<_` over `ModuleDeclSet`.
-
--   `match_with_ : ModuleDeclSet ModuleDeclSet -> [SubstitutionSet]` gives all
-    the ways that the first `ModuleDeclSet` matches the second with
-    variable extension.
-
--   `resolveNames` and `fv<Sort>` are simply the lifting of `resolveNames` and
-    `fv<Sort>` of `STRUCTURED-NAME` to `ModuleDeclSet`.
+-   `_<<_ : ModuleDeclSet Substitution -> [ModuleDeclSet]` lifts the substitution application operator `_<<_` over `ModuleDeclSet`.
+-   `match_with_ : ModuleDeclSet ModuleDeclSet -> [SubstitutionSet]` gives all the ways that the first `ModuleDeclSet` matches the second with variable extension.
+-   `resolveNames` and `fv<Sort>` are simply the lifting of `resolveNames` and `fv<Sort>` of `STRUCTURED-NAME` to `ModuleDeclSet`.
 
 ```{.maude .mod-template}
   op error<ModuleDeclSet> : -> [ModuleDeclSet] .
@@ -390,21 +393,13 @@ endfm
 Module Templates
 ----------------
 
-Module templates serve as more flexible module data-structures than what the
-prelude provides for modules. Every `ModuleDeclSet` is a `ModuleTemplateSet`.
+Module templates serve as more flexible module data-structures than what the prelude provides for modules. Every `ModuleDeclSet` is a `ModuleTemplateSet`.
 The main functionality exported is:
 
 -   `_|_` and `_\_` serve as `ModuleTemplateSet` union and difference, respectively.
-
--   `++ : ModuleTemplateSet -> ModuleDeclSet` unions together the given
-    `ModuleTemplateSet` into a single `ModuleDeclSet`.
-
--   `_<<_ : ModuleTemplateSet SubstitutionSet -> [ModuleTemplateSet]` is lifted
-    pointwise over *both* of its arguments.
-
--   `match_with_ : ModuleTemplateSet ModuleDeclSet -> [SubstitionSet]` allows to
-    specify a union or difference of source templates to match from.
-
+-   `++ : ModuleTemplateSet -> ModuleDeclSet` unions together the given `ModuleTemplateSet` into a single `ModuleDeclSet`.
+-   `_<<_ : ModuleTemplateSet SubstitutionSet -> [ModuleTemplateSet]` is lifted pointwise over *both* of its arguments.
+-   `match_with_ : ModuleTemplateSet ModuleDeclSet -> [SubstitionSet]` allows to specify a union or difference of source templates to match from.
 -   `resolveNames` and `fv<Sort>` are lifted over `ModuleTemplateSet`.
 
 ```{.maude .mod-template}
@@ -483,19 +478,11 @@ endfm
 Interface to `Module`
 ---------------------
 
-To actually do execution in the modules generated by a module template, we need
-functions to convert between `Module` and `ModuleTemplate`.
+To actually do execution in the modules generated by a module template, we need functions to convert between `Module` and `ModuleTemplate`.
 
--   `asTemplate : Module -> ModuleTemplate` and
-    `fromTemplate : ModuleTemplate -> Module` provide functions between the
-    normal Maude modules and the module templates defined here.
-
--   `_++_ : Module ModuleTemplateSet -> Module` and
-    `_++_ : Module Module -> Module` are the lifting of operator `_++_` in
-    `MODULE-TEMPLATE-DATA` to work directly on Maude modules.
-
--   `resolveModule: ModuleTemplate -> ModuleTemplate` resolves the structured
-    names of a module into proper Core Maude names.
+-   `asTemplate : Module -> ModuleTemplate`, `asTemplate : ModuleExpression -> ModuleTemplate` and `fromTemplate : ModuleTemplate -> Module` provide functions between the normal Maude modules and the module templates defined here.
+-   `_++_ : Module ModuleTemplateSet -> Module` and `_++_ : Module Module -> Module` are the lifting of operator `_++_` in `MODULE-TEMPLATE-DATA` to work directly on Maude modules.
+-   `resolveModule: ModuleTemplate -> ModuleTemplate` resolves the structured names of a module into proper Core Maude names.
 
 ```{.maude .mod-template}
 fmod MODULE-TEMPLATE is
@@ -505,10 +492,12 @@ fmod MODULE-TEMPLATE is
   var H : Header . var IL : ImportList . var SS : SortSet .
   var IS : ImportDeclSet . var SSDS : SubsortDeclSet . var OPDS : OpDeclSet .
   var MAS : MembAxSet . var EQS : EquationSet . var RLS : RuleSet . var NeRLS : NeRuleSet .
-  vars MOD MOD' : Module . var NeMTS : NeModuleTemplateSet .
+  var ME : ModuleExpression . vars MOD MOD' : Module . var NeMTS : NeModuleTemplateSet .
 
+  op asTemplate : ModuleExpression -> [ModuleDeclSet] .
   op asTemplate : Module -> [ModuleDeclSet] .
   -------------------------------------------
+  eq asTemplate(ME) = asTemplate(upModule(ME, false)) .
   eq asTemplate(fmod H is IL sorts SS . SSDS OPDS MAS EQS     endfm) = (importDecls(IL) (sorts SS .) SSDS OPDS MAS EQS) .
   eq asTemplate (mod H is IL sorts SS . SSDS OPDS MAS EQS RLS endm)  = (importDecls(IL) (sorts SS .) SSDS OPDS MAS EQS RLS) .
 
