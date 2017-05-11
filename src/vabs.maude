@@ -16,6 +16,7 @@ fmod VABS is
     vars T T' : Term .
     vars TL TL' : TermList .
     vars M1 M2 : ModuleExpression .
+    var EqA : EqAtom .
     vars EqC EqC' : EqConj .
 
     op destruct : ModuleExpression ModuleExpression EqConj -> EqConj .
