@@ -17,7 +17,7 @@ fmod PURIFICATION is
   protecting BREAK-EQATOMS .
 
   var Q : Qid . var TA : TruthAtom . vars EqC EqC' : EqConj .
-  vars ME1 ME2 : ModuleExpression . vars M M' : Module . 
+  vars ME ME' : ModuleExpression . vars M M' : Module . 
   vars FV : Variable . vars T T' T1 T2 : Term .
   vars NeTL NeTL' : NeTermList . vars TL TL' : TermList . vars TL? TL?' : [TermList] .
 
@@ -45,12 +45,12 @@ Purifying Equational Conjunctions
 ---------------------------------
 
 Purification first checks if the conjunction is well-formed in one of the modules.
-If so, then it 
+If so, then it leaves it alone, otherwise more work is required on the equational atoms.
 
 ```{.maude .purification}
   op purify : ModuleExpression ModuleExpression EqConj -> [EqConj] .
   ------------------------------------------------------------------
-  eq purify(ME1, ME2, EqC) = purify(upModule(ME1, true), upModule(ME2, true), EqC) .
+  eq purify(ME, ME', EqC) = purify(upModule(ME, true), upModule(ME', true), EqC) .
 
   op purify : Module Module EqConj -> [EqConj] .
   ----------------------------------------------
@@ -58,29 +58,42 @@ If so, then it
   eq  purify(M, M', EqC /\ EqC') = purify(M, M', EqC) /\ purify(M, M', EqC') .
 ```
 
-If one of the sides of the equality is not in the first module, purify it with respect to the first module 
+If one of the sides of the equality is not in the first module, purify it with respect to the first module.
+Note that the equational atoms are commutative, which handles the reversed case.
+
 
 ```{.maude .purification}
   ceq purify(M, M', T1 ?= T2) = purify(M, M', purify(M, M', T1) ?= T2) if not wellFormed(M, T1) .
   ceq purify(M, M', T1 != T2) = purify(M, M', purify(M, M', T1) != T2) if not wellFormed(M, T1) .
 ```
 
-If the term is well-formed in the first module, return it.
+Purifying Terms
+---------------
+
+Purifying a term means finding alien sub-terms and extracting them as equality constraints.
+This is lifted to `TermList` in the normal way.
+Note that we take advantage of the fact that generated constraints will bubble to the top.
 
 ```{.maude .purification}
   op purify : ModuleExpression ModuleExpression TermList -> [CTerm] .
   -------------------------------------------------------------------
-  eq purify(ME1, ME2, TL) = purify(upModule(ME1, true), upModule(ME2, true), TL) .
+  eq purify(ME, ME', TL) = purify(upModule(ME, true), upModule(ME', true), TL) .
 
   op purify : Module Module TermList -> [CTerm] .
   -----------------------------------------------
   eq purify(M, M', empty)          = empty .
   eq purify(M, M', (NeTL , NeTL')) = purify(M, M', NeTL) , purify(M, M', NeTL') .
+```
 
+If the term is well-formed in the first module, return it.
+If the top symbol of the term is from the first module, purify the subterms.
+Otherwise, generate an equality constraint at the top and purify with respect to the second module.
+
+```{.maude .purification}
   ceq purify(M, M', T)     = T                       if wellFormed(M, T) .
-  ceq purify(M, M', Q[TL]) = Q[purify(M, M', TL)]   if Q in asTemplate(M) .
+  ceq purify(M, M', Q[TL]) = Q[purify(M, M', TL)]    if Q in asTemplate(M) .
   ceq purify(M, M', Q[TL]) = FV | ((FV ?= T) /\ EqC) if (not Q in asTemplate(M)) /\ Q in asTemplate(M')
-                                                      /\ T | EqC := purify(M', M, Q[TL])
-                                                      /\ FV      := joint-variable(M, M', Q[TL]) .
+                                                     /\ T | EqC := purify(M', M, Q[TL])
+                                                     /\ FV      := joint-variable(M, M', Q[TL]) .
 endfm
 ```
