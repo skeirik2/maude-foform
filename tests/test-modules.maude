@@ -1,7 +1,5 @@
-load ../src/universal-construction .
-load ../src/full-maude .
-load ../src/foform .
-load ../src/constrained-terms .
+load ../src/vabs.maude
+--- load ../src/purification.maude
 
 ------------------------------------------------------------
 ----              Testing Modules:                      ----
@@ -101,3 +99,69 @@ fmod TEST1-INTERSECT-TEST2 is
 endfm
 
 set include BOOL on .
+
+
+
+fmod TESTS is
+---    protecting PURIFICATION .
+    protecting VABS .
+
+    op TERM_ : Nat -> Term .
+
+    eq TERM 1 = 'x:A .
+    eq TERM 2 = 'f['a.A] .
+    eq TERM 3 = 'f['b.A] .
+    eq TERM 4 = 'f['f['a.A]] .
+    eq TERM 5 = 'f['f['f['x:A]]] .
+
+    eq TERM 6  = '_+_['zero.N, 'x:N] .
+    eq TERM 7  = '_/_['one.NzN, 'y:NzN] .
+    eq TERM 8  = '_*_['zero.N, 'x:N] .
+    eq TERM 9  = '_`,_['zero.N, '_`,_[TERM 7, 'nil.List]] .
+    eq TERM 10 = '_`,_[TERM 8, '_`,_[TERM 7, 'nil.List]] .
+    eq TERM 11  = '_`,_['x:N, '_`,_[TERM 8, 'nil.List]] .
+    
+endfm
+
+    
+reduce vabs('TEST-MODULE, TERM 1 ?= TERM 2) .
+reduce vabs('TEST-MODULE, TERM 4 ?= TERM 2) .
+reduce vabs('TEST-MODULE, TERM 4 ?= TERM 3) .
+reduce vabs('TEST-MODULE, TERM 4 ?= TERM 2 /\ TERM 4 != TERM 2) .
+reduce vabs('TEST-MODULE, TERM 4 ?= TERM 2 /\ TERM 5 != TERM 2) .
+reduce vabs('TEST-MODULE, TERM 3 ?= TERM 2 /\ TERM 5 != TERM 3) .
+
+reduce vabs('MYINT-COMBINED, TERM 6 ?= TERM 7) .
+reduce vabs('MYINT-COMBINED, TERM 9 != TERM 11) .
+reduce vabs('MYINT-COMBINED, TERM 9 ?= TERM 11 /\ TERM 10 != TERM 11) .
+reduce vabs('MYINT-COMBINED, TERM 8 ?= TERM 7 /\ TERM 10 != TERM 11) .
+
+--- 1/y is a subterm of an I List, but 1/y is only an I when y is 1.
+--- We need to check that there is a ground instance of 1/y of sort I.
+--- This is a *semantic* check, and wellFormed cannot perform this check.
+--- reduce vabs('MYINT-COMBINED, TERM 9 ?= TERM 10) .
+
+
+--- Variable abstraction:
+
+
+*** Sample input/output:
+
+*** Input:  x ?= f(a)
+*** Output: V0 ?= a /\ x ?= f(V0)
+
+*** Input:  f(f(a)) ?= f(a)
+*** Output: V0 ?= a /\ V1 ?= f(V0) /\ V1 ?= f(V1)
+    
+*** Input:  f(f(a)) ?= f(b)
+*** Output: V0 ?= a /\ V1 ?= b /\ V2 ?= f(V0) /\ V3 ?= f(V1) /\ V3 ?= f(V2)
+
+*** Input:  f(f(a)) ?= f(a) /\ f(f(a)) != f(a)
+*** Output: V0 ?= a /\ V1 ?= f(V0) /\ V1 ?= f(V1) /\ V1 != f(V1)
+
+--- Fix these
+*** Input:  f(f(a)) ?= f(a) /\ f(f(f(x))) != f(a)
+*** Output: V0 ?= a /\ V1 ?= f(V0) /\ rest
+
+*** Input:  f(b) ?= f(a) /\ f(f(f(x))) != f(b)
+
