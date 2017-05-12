@@ -1,33 +1,128 @@
+load intersection .
+load ../tests/test-modules .
+
 fmod PURIFICATION-CONCRETE is
 
+  protecting META-LEVEL .
   protecting FVAR-CONCRETE .
   protecting FOFORMSIMPLIFY-IMPL .
   protecting CTERM-SET * ( op _;;_ to _;;;_ ) .
+  protecting BREAK-EQATOMS .
   
-  op purify : FModule FModule PosEqConj -> PosEqConj .
+  op purify : FModule FModule EqConj -> EqConj .
   
-  vars M M1 M2 M0 : FModule . vars T T' T1 T2 T0 FV PT1 PT2 : Term .
+  vars M M1 M2 M0 : FModule . 
+  vars FV V : Variable .
+  vars T T' T1 T2 T0 PT1 PT2 : Term .
   vars C C' C1 C2 : FOForm . var Q : Qid . vars TL TL' TL1 TL2 : TermList .
   
   eq purify(M1, M2, tt) = tt .
   eq purify(M1, M2, ff) = ff .
   
   ---- (Case A) Both Lhs and Rhs are pure and from one module.
+  ---- (Case A: equality)
   ----          Return Lhs ?= Rhs.
+  ---- (Case A: disequality)
+  ----          Return Lhs != Rhs.
   
   ceq purify(M1, M2, T1 ?= T2) = T1 ?= T2 
    if (wellFormed(M1, T1) and wellFormed(M1, T2))
    or (wellFormed(M2, T1) and wellFormed(M2, T2)) .
+   
+  ceq purify(M1, M2, T1 != T2) = T1 != T2 
+   if (wellFormed(M1, T1) and wellFormed(M1, T2))
+   or (wellFormed(M2, T1) and wellFormed(M2, T2)) .
   
-  ---- (Case B) Lhs and Rhs are pure but from different modules.
-  ----          
-  
-  ceq purify(M1, M2, T1 ?= T2) 
-    = T1 ?= joint-variable(M1, M2, T1) /\ T2 ?= joint-variable(M1, M2, T1)
-   if ((wellFormed(M1, T1) and wellFormed(M2, T2))
-    or (wellFormed(M1, T2) and wellFormed(M2, T1))) .
+  ---- (Case B) Lhs and Rhs are both not Variable.
     
-  ---- (Case C) Lhs and/or Rhs are not pure
+  ceq purify(M1, M2, T1 ?= T2) 
+    = break-eqatoms(M1, M2, T1 ?= T2) 
+   if not (T1 :: Variable or T2 :: Variable) .
+    
+  ceq purify(M1, M2, T1 != T2) 
+    = break-eqatoms(M1, M2, T1 != T2) 
+   if not (T1 :: Variable or T2 :: Variable) .
+   
+   
+   ---- (Case C) Lhs is a Variable and Rhs is not.
+   ----          Purify the term Rhs w.r.t. the module of Lhs.
+   
+   eq purify(M1, M2, V ?= T)
+     = if wellFormed(M1, V)
+       then V ?= purifyTerm(M1, M2, T)
+       else V ?= purifyTerm(M2, M1, T)
+       fi .
+       
+   eq purify(M1, M2, V != T)
+     = if wellFormed(M1, V)
+       then V != purifyTerm(M1, M2, T)
+       else V != purifyTerm(M2, M1, T)
+       fi .
+   
+   op purifyTerm : Module Module Term -> CTerm .
+   
+   op _?=_ : Term CTerm -> EqConj [ditto] .
+   op _!=_ : Term CTerm -> EqConj [ditto] .
+   
+   eq T ?= T' | C = T ?= T' /\ C .
+   eq T != T' | C = T != T' /\ C .
+   
+   ---- Define purifyTerm(M1, M2, T)
+   
+   ---- (Case A) T is a well-formed term in M1.
+   ----          Simply returns T.
+   
+   ceq purifyTerm(M1, M2, T) = T
+    if wellFormed(M1, T) .
+    
+   ---- (Case B) T is a well-formed term in M2.
+   ----          Return JointVar /\ JointVar ?= T.
+   
+   ceq purifyTerm(M1, M2, T) = FV | FV ?= T 
+    if wellFormed(M2, T) /\ FV := joint-variable(M1, M2, T) .
+    
+  
+  ---- (Case C) T = Q[TL] is mixed-form.
+  
+  eq purifyTerm(M1, M2, Q[TL])
+    = if hasOpQ(M1, Q)
+      then purifyTerm-aux(M1, M2, M1, Q, TL, empty, tt)
+      else purifyTerm-aux(M1, M2, M2, Q, TL, empty, tt)
+      fi .
+  
+  op purifyTerm-aux : 
+       Module 
+       Module 
+       Module 
+       Qid 
+       TermList 
+       TermList 
+       FOForm
+       -> CTerm .
+
+  eq purifyTerm-aux(M1, M2, M1, Q, empty, TL, C)
+   = Q[TL] | C .
+   
+  ceq purifyTerm-aux(M1, M2, M2, Q, empty, TL, C)
+    = V | C /\ V ?= Q[TL] 
+   if V := joint-variable(M1, M2, Q[TL]) .
+   
+  --- ceq purityTerm-aux(M1, M2, 
+   
+endfm
+
+---- some test cases.
+
+reduce purify(upModule('MYINT-RAT, true),
+              upModule('MYINT-LIST, true),
+              '_`,_['one.NzN ,'_`,_['Y:NzN,'nil.List]]
+              !=
+              '_`,_['X:I,'L:List]) .
+ 
+quit
+    
+  ---- (Case C) X ?= T
+ 
   
   ---- (Case C1) Q[TL] ?= Q[TL']
   ----           TL ?= TL'
@@ -92,6 +187,7 @@ fmod PURIFICATION-CONCRETE is
    if T' | C' := purifyTerm(M1, M2, T) .
    
   eq purify(M1, M2, T1 ?= T2) = 'no ?= 'match .
+  
   
 endfm
 
