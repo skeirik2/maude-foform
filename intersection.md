@@ -31,13 +31,13 @@ fmod INTERSECTION is
 It will often be useful to know if a sort or an operator is in a `ModuleDeclSet`.
 
 ```{.maude .intersection}
-  op _in_ : Sort ModuleDeclSet -> Bool .
-  op _in_ : Qid  ModuleDeclSet -> Bool .
+  op _inS_ : Sort ModuleDeclSet -> Bool .
+  op _inO_ : Qid  ModuleDeclSet -> Bool .
   --------------------------------------
-  eq S in ( sorts SS . )            MDS = S in SS .
-  eq Q in ( op Q : TL -> T [AS] . ) MDS = true .
-  eq S in MDS = false [owise] .
-  eq Q in MDS = false [owise] .
+  eq S inS ( sorts SS . )            MDS = S in SS .
+  eq Q inO ( op Q : TL -> T [AS] . ) MDS = true .
+  eq S inS MDS = false [owise] .
+  eq Q inO MDS = false [owise] .
 ```
 
 Joint Sorts
@@ -49,15 +49,17 @@ Calculating the joint sort of a sort `S` in connected components `C1` and `C2` c
 -   If not, return the maximal sort in `C1 /\ C2`.
 
 ```{.maude .intersection}
+  op joint-sort : Sort ModuleDeclSet    ModuleDeclSet    -> Sort .
+  ----------------------------------------------------------------
+  ceq joint-sort(S, MDS, MDS') = joint-sort(S, MDS', MDS) if (not S inS MDS) /\ S inS MDS' .
+  ceq joint-sort(S, MDS, MDS') = if S inS MDS'' then S else #top-sort(MDS'') fi
+                               if S inS MDS /\ MDS'' := intersect(connected-component(MDS, (sorts S .)), MDS') .
+
   op joint-sort : Sort Module           Module           -> Sort .
   op joint-sort : Sort ModuleExpression ModuleExpression -> Sort .
-  op joint-sort : Sort ModuleDeclSet    ModuleDeclSet    -> Sort .
   ----------------------------------------------------------------
   eq  joint-sort(S, ME,  ME')  = joint-sort(S, upModule(ME /\ ME', true), upModule(ME /\ ME', true)) .
   eq  joint-sort(S, MOD, MOD') = joint-sort(S, asTemplate(MOD), asTemplate(MOD')) .
-  ceq joint-sort(S, MDS, MDS') = joint-sort(S, MDS', MDS) if (not S in MDS) /\ S in MDS' .
-  ceq joint-sort(S, MDS, MDS') = if S in MDS'' then S else #top-sort(MDS'') fi
-                               if S in MDS /\ MDS'' := intersect(connected-component(MDS, (sorts S .)), MDS') .
 
   op #top-sort : ModuleDeclSet -> [Sort] .
   ----------------------------------------

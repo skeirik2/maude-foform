@@ -132,8 +132,8 @@ reduce vabs('TEST-MODULE, TERM 3 ?= TERM 2 /\ TERM 5 != TERM 3) .
 reduce vabs('MYINT-COMBINED, TERM 6 ?= TERM 7) .
 --- set trace on .
 --- reduce vabs('MYINT-COMBINED, TERM 9 != TERM 11) .
-reduce vabs('MYINT-COMBINED, TERM 9 ?= TERM 11 /\ TERM 10 != TERM 11) .
-reduce vabs('MYINT-COMBINED, TERM 8 ?= TERM 7 /\ TERM 10 != TERM 11) .
+--- reduce vabs('MYINT-COMBINED, TERM 9 ?= TERM 11 /\ TERM 10 != TERM 11) .
+--- reduce vabs('MYINT-COMBINED, TERM 8 ?= TERM 7 /\ TERM 10 != TERM 11) .
 
 reduce purify('MYINT-RAT, 'MYINT-LIST, TERM 6) .
 reduce purify('MYINT-RAT, 'MYINT-LIST, TERM 7) .

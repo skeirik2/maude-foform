@@ -61,7 +61,6 @@ If so, then it leaves it alone, otherwise more work is required on the equationa
 If one of the sides of the equality is not in the first module, purify it with respect to the first module.
 Note that the equational atoms are commutative, which handles the reversed case.
 
-
 ```{.maude .purification}
   ceq purify(M, M', T1 ?= T2) = purify(M, M', purify(M, M', T1) ?= T2) if not wellFormed(M, T1) .
   ceq purify(M, M', T1 != T2) = purify(M, M', purify(M, M', T1) != T2) if not wellFormed(M, T1) .
@@ -91,8 +90,8 @@ Otherwise, generate an equality constraint at the top and purify with respect to
 
 ```{.maude .purification}
   ceq purify(M, M', T)     = T                       if wellFormed(M, T) .
-  ceq purify(M, M', Q[TL]) = Q[purify(M, M', TL)]    if Q in asTemplate(M) .
-  ceq purify(M, M', Q[TL]) = FV | ((FV ?= T) /\ EqC) if (not Q in asTemplate(M)) /\ Q in asTemplate(M')
+  ceq purify(M, M', Q[TL]) = Q[purify(M, M', TL)]    if Q inO asTemplate(M) .
+  ceq purify(M, M', Q[TL]) = FV | ((FV ?= T) /\ EqC) if (not Q inO asTemplate(M)) /\ Q inO asTemplate(M')
                                                      /\ T | EqC := purify(M', M, Q[TL])
                                                      /\ FV      := joint-variable(M, M', Q[TL]) .
 endfm

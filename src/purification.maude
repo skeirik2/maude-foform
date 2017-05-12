@@ -94,8 +94,8 @@ fmod PURIFICATION is
 
 
   ceq purify(M, M', T)     = T                       if wellFormed(M, T) .
-  ceq purify(M, M', Q[TL]) = Q[purify(M, M', TL)]    if Q in asTemplate(M) .
-  ceq purify(M, M', Q[TL]) = FV | ((FV ?= T) /\ EqC) if (not Q in asTemplate(M)) /\ Q in asTemplate(M')
+  ceq purify(M, M', Q[TL]) = Q[purify(M, M', TL)]    if Q inO asTemplate(M) .
+  ceq purify(M, M', Q[TL]) = FV | ((FV ?= T) /\ EqC) if (not Q inO asTemplate(M)) /\ Q inO asTemplate(M')
                                                      /\ T | EqC := purify(M', M, Q[TL])
                                                      /\ FV      := joint-variable(M, M', Q[TL]) .
 endfm
