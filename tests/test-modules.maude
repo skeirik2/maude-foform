@@ -179,11 +179,11 @@ reduce (upModule('MYINT-LIST, true)) .
 *** Input:  f(f(a)) ?= f(a) /\ f(f(a)) != f(a)
 *** Output: V0 ?= a /\ V1 ?= f(V0) /\ V1 ?= f(V1) /\ V1 != f(V1)
 
---- Fix these
 *** Input:  f(f(a)) ?= f(a) /\ f(f(f(x))) != f(a)
-*** Output: V0 ?= a /\ V1 ?= f(V0) /\ rest
+*** Output: V0 ?= a /\ V1 ?= f(V0) /\ V1 ?= f(V1) /\ V2 ?= f(V3) /\ V3 ?= f(x) /\ V1 != f(V2)
 
 *** Input:  f(b) ?= f(a) /\ f(f(f(x))) != f(b)
-
+*** Output: V0 ?= a /\ V1 ?= b /\ V2 ?= f(V0) /\ V2 ?= f(V1) /\ V3 ?= f(V1) /\ V4 ?= f(V5) /\ V5 ?= f(x) /\ V3 != f(V4)
+    
 quit
 
