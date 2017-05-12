@@ -130,20 +130,21 @@ reduce vabs('TEST-MODULE, TERM 4 ?= TERM 2 /\ TERM 5 != TERM 2) .
 reduce vabs('TEST-MODULE, TERM 3 ?= TERM 2 /\ TERM 5 != TERM 3) .
 
 reduce vabs('MYINT-COMBINED, TERM 6 ?= TERM 7) .
-reduce vabs('MYINT-COMBINED, TERM 9 != TERM 11) .
+--- set trace on .
+--- reduce vabs('MYINT-COMBINED, TERM 9 != TERM 11) .
 reduce vabs('MYINT-COMBINED, TERM 9 ?= TERM 11 /\ TERM 10 != TERM 11) .
 reduce vabs('MYINT-COMBINED, TERM 8 ?= TERM 7 /\ TERM 10 != TERM 11) .
 
-reduce purifyTerm('MYINT-RAT, 'MYINT-LIST, TERM 6) .
-reduce purifyTerm('MYINT-RAT, 'MYINT-LIST, TERM 7) .
-reduce purifyTerm('MYINT-RAT, 'MYINT-LIST, TERM 8) .
+reduce purify('MYINT-RAT, 'MYINT-LIST, TERM 6) .
+reduce purify('MYINT-RAT, 'MYINT-LIST, TERM 7) .
+reduce purify('MYINT-RAT, 'MYINT-LIST, TERM 8) .
 
-reduce purifyTerm('MYINT-LIST, 'MYINT-RAT, TERM 6) .
-reduce purifyTerm('MYINT-LIST, 'MYINT-RAT, TERM 7) .
-reduce purifyTerm('MYINT-LIST, 'MYINT-RAT, TERM 8) .
-reduce purifyTerm('MYINT-LIST, 'MYINT-RAT, TERM 9) .
-reduce purifyTerm('MYINT-LIST, 'MYINT-RAT, TERM 10) .
-reduce purifyTerm('MYINT-LIST, 'MYINT-RAT, TERM 11) .
+reduce purify('MYINT-LIST, 'MYINT-RAT, TERM 6) .
+reduce purify('MYINT-LIST, 'MYINT-RAT, TERM 7) .
+reduce purify('MYINT-LIST, 'MYINT-RAT, TERM 8) .
+reduce purify('MYINT-LIST, 'MYINT-RAT, TERM 9) .
+reduce purify('MYINT-LIST, 'MYINT-RAT, TERM 10) .
+reduce purify('MYINT-LIST, 'MYINT-RAT, TERM 11) .
 
 reduce purify('MYINT-LIST, 'MYINT-RAT, TERM 6 ?= TERM 7) .
 reduce purify('MYINT-LIST, 'MYINT-RAT, TERM 9 ?= TERM 10) .
@@ -184,6 +185,4 @@ reduce (upModule('MYINT-LIST, true)) .
 
 *** Input:  f(b) ?= f(a) /\ f(f(f(x))) != f(b)
 *** Output: V0 ?= a /\ V1 ?= b /\ V2 ?= f(V0) /\ V2 ?= f(V1) /\ V3 ?= f(V1) /\ V4 ?= f(V5) /\ V5 ?= f(x) /\ V3 != f(V4)
-    
-quit
 

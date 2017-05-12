@@ -13,19 +13,19 @@ fmod INTERSECTION is
 
   var B : Bool . vars TL : TypeList . var T : Type . var AS : AttrSet . var OPD : OpDecl . var OPDS : OpDeclSet .
   vars MOD MOD' M0 : Module . vars ME ME' : ModuleExpression .
-  vars Q Q' : Qid . vars H H' : Header . var S : Sort . vars SS SS' : SortSet .
-  vars NeMDS : NeModuleDeclSet . vars MDS MDS' : ModuleDeclSet .
+  vars Q Q' : Qid . vars H H' : Header . vars S S' : Sort . vars SS SS' : SortSet .
+  vars NeMDS NeMDS' : NeModuleDeclSet . vars MDS MDS' MDS'' : ModuleDeclSet .
 
   op intersect : ModuleDeclSet ModuleDeclSet -> ModuleDeclSet [assoc comm id: none] .
   -----------------------------------------------------------------------------------
-  eq intersect(MDS, MDS') = none [owise] .
+  eq intersect( NeMDS     , NeMDS' )     = none [owise] .
   eq intersect( NeMDS MDS , NeMDS MDS' ) = NeMDS intersect( MDS , MDS' ) .
   eq intersect( (sorts S ; SS .) MDS , (sorts S ; SS' .) MDS' ) = (sorts S .) intersect( (sorts SS .) MDS , (sorts SS' .) MDS' ) .
 
   op intersect : Module Module -> Module .
-  op intersect : ModuleExpression ModuleExpression -> ModuleExpression .
-  ----------------------------------------------------------------------
-  ceq upModule(H /\ H', B) = fromTemplate(resolveNames(H /\ H'), MDS) if MDS := intersect(asTemplate(H), asTemplate(H')) .
+  ----------------------------------------
+  eq intersect(MOD, MOD') = fromTemplate(resolveNames(getName(MOD) /\ getName(MOD')), intersect(asTemplate(MOD), asTemplate(MOD'))) .
+  eq upModule(H /\ H', B) = intersect(upModule(H, B), upModule(H', B)) .
 
 
 --- It will often be useful to know if a sort or an operator is in a
@@ -53,14 +53,18 @@ fmod INTERSECTION is
 
   op joint-sort : Sort Module           Module           -> Sort .
   op joint-sort : Sort ModuleExpression ModuleExpression -> Sort .
+  op joint-sort : Sort ModuleDeclSet    ModuleDeclSet    -> Sort .
   ----------------------------------------------------------------
-  eq  joint-sort(S, ME,  ME')  = joint-sort(S, upModule(ME, true),  upModule(ME', true)) .
-  ceq joint-sort(S, MOD, MOD') = S if S in asTemplate(intersect(MOD, MOD')) .
-  ceq joint-sort(S, MOD, MOD') = if S in asTemplate(MOD)
-                                 then maximalSorts(M0, kind(intersect(connectedSorts(MOD, S), getSorts(M0))))
-                                 else maximalSorts(M0, kind(intersect(connectedSorts(MOD', S), getSorts(M0))))
-                                 fi
-                               if M0 := intersect(MOD, MOD') .
+  eq  joint-sort(S, ME,  ME')  = joint-sort(S, upModule(ME /\ ME', true), upModule(ME /\ ME', true)) .
+  eq  joint-sort(S, MOD, MOD') = joint-sort(S, asTemplate(MOD), asTemplate(MOD')) .
+  ceq joint-sort(S, MDS, MDS') = joint-sort(S, MDS', MDS) if (not S in MDS) /\ S in MDS' .
+  ceq joint-sort(S, MDS, MDS') = if S in MDS'' then S else #top-sort(MDS'') fi
+                               if S in MDS /\ MDS'' := intersect(connected-component(MDS, (sorts S .)), MDS') .
+
+  op #top-sort : ModuleDeclSet -> [Sort] .
+  ----------------------------------------
+  eq #top-sort( ( sorts S ; SS . )   MDS ) = top-sort( ( sorts S ; SS . )   MDS , S ) .
+  eq #top-sort( ( subsort S < S' . ) MDS ) = top-sort( ( subsort S < S' . ) MDS , S ) .
 endfm
 
 
@@ -127,7 +131,7 @@ fmod BREAK-EQATOMS is
     op break-eqatoms : Module Module EqConj -> EqConj .
     op break-eqatoms : ModuleExpression ModuleExpression EqConj -> EqConj .
     -----------------------------------------------------------------------
-    eq break-eqatoms(ME, ME', EqC)        = break-eqatoms(upModule(ME, true), upModule(ME', true), EqC) .
+    eq break-eqatoms(ME,  ME',  EqC)         = break-eqatoms(upModule(ME, true), upModule(ME', true), EqC) .
     eq break-eqatoms(MOD, MOD', EqC /\ EqC') = break-eqatoms(MOD, MOD', EqC) /\ break-eqatoms(MOD, MOD', EqC') .
 
     ceq break-eqatoms(MOD, MOD', T ?= T') = T ?= NV /\ T' ?= NV if not (T :: Variable or T' :: Variable)

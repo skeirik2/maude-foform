@@ -330,11 +330,17 @@ can be treated uniformly with the rest of the declarations.
      ) .
 ```
 
+-   `top-sort : ModuleDeclSet Sort -> [Sort]` gives the top sort of a connected component with the given sort in it.
 -   `connected-component : ModuleDeclSet ModuleDeclSet -> ModuleDeclSet` will complete the second module declaration set with all the sorts and subsorts in the intersection of the two connected components.
 -   `tag-sorts : Qid ModuleDeclSet -> [ModuleDeclSet]` will take a sort structure (a `ModuleDeclSet` which only consists of `SortDecl` and `SubsortDecl`) and produce a "tagged" version.
     For each sort `X` in the original sort structure it will produce `X{Q}`, for `Q` the supplied `Qid`.
 
 ```{.maude .mod-template}
+  op top-sort : ModuleDeclSet Sort -> [Sort] .
+  --------------------------------------------
+  eq top-sort( ( subsort S < S' . ) MDS , S ) = top-sort( MDS , S' ) .
+  eq top-sort( MDS , S ) = S [owise] .
+
   op connected-component : ModuleDeclSet ModuleDeclSet -> [ModuleDeclSet] .
   -------------------------------------------------------------------------
   eq connected-component(MDS, MDS') = MDS' [owise] .
