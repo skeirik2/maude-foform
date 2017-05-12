@@ -6,6 +6,7 @@ The intersection operation is lifted to `Module` via `asTemplate`.
 
 ```{.maude .intersection}
 load module-template.maude
+load constrained-terms.maude
 
 fmod INTERSECTION is
   protecting MODULE-TEMPLATE * ( op _;;_ to _;;;_ ) .
@@ -15,6 +16,8 @@ fmod INTERSECTION is
   vars MOD MOD' M0 : Module . vars ME ME' : ModuleExpression .
   vars Q Q' : Qid . vars H H' : Header . vars S S' : Sort . vars SS SS' : SortSet .
   vars NeMDS NeMDS' : NeModuleDeclSet . vars MDS MDS' MDS'' : ModuleDeclSet .
+  
+  var EqC : EqConj . var TM : Term . var TM? : [Term] . vars TML? TML?' : [TermList] .
 
   op intersect : ModuleDeclSet ModuleDeclSet -> ModuleDeclSet [assoc comm id: none] .
   -----------------------------------------------------------------------------------
@@ -38,6 +41,18 @@ It will often be useful to know if a sort or an operator is in a `ModuleDeclSet`
   eq Q inO ( op Q : TL -> T [AS] . ) MDS = true .
   eq S inS MDS = false [owise] .
   eq Q inO MDS = false [owise] .
+```
+
+When purifying we'll generate extra constraints we want to bubble to the top.
+Allowing QF equality atoms to bubble to the top is safe.
+
+```{.maude .intersection}
+  op _?=_ : CTerm CTerm -> EqConj [ditto] .
+  op _!=_ : CTerm CTerm -> EqConj [ditto] .
+  -----------------------------------------
+  eq TM? ?= (TM | EqC)          = (TM? ?= TM) /\ EqC .
+  eq TM? != (TM | EqC)          = (TM? != TM) /\ EqC .
+  eq Q[TML?, (TM | EqC), TML?'] = Q[TML?, TM, TML?'] | EqC .
 ```
 
 Joint Sorts

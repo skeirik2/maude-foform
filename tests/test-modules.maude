@@ -121,19 +121,23 @@ fmod TESTS is
     
 endfm
 
-    
 reduce vabs('TEST-MODULE, TERM 1 ?= TERM 2) .
 reduce vabs('TEST-MODULE, TERM 4 ?= TERM 2) .
 reduce vabs('TEST-MODULE, TERM 4 ?= TERM 3) .
+reduce vabs('TEST-MODULE, TERM 5 != TERM 3) .
 reduce vabs('TEST-MODULE, TERM 4 ?= TERM 2 /\ TERM 4 != TERM 2) .
 reduce vabs('TEST-MODULE, TERM 4 ?= TERM 2 /\ TERM 5 != TERM 2) .
 reduce vabs('TEST-MODULE, TERM 3 ?= TERM 2 /\ TERM 5 != TERM 3) .
 
 reduce vabs('MYINT-COMBINED, TERM 6 ?= TERM 7) .
---- set trace on .
 --- reduce vabs('MYINT-COMBINED, TERM 9 != TERM 11) .
 --- reduce vabs('MYINT-COMBINED, TERM 9 ?= TERM 11 /\ TERM 10 != TERM 11) .
 --- reduce vabs('MYINT-COMBINED, TERM 8 ?= TERM 7 /\ TERM 10 != TERM 11) .
+
+--- 1/y is a subterm of an I List, but 1/y is only an I when y is 1.
+--- We need to check that there is a ground instance of 1/y of sort I.
+--- This is a *semantic* check, and wellFormed cannot perform this check.
+--- reduce vabs('MYINT-COMBINED, TERM 9 ?= TERM 10) .
 
 reduce purify('MYINT-RAT, 'MYINT-LIST, TERM 6) .
 reduce purify('MYINT-RAT, 'MYINT-LIST, TERM 7) .
@@ -156,33 +160,3 @@ match M:FModule <=?
 (upModule('MYINT-LIST, true)) .
 
 reduce (upModule('MYINT-LIST, true)) .
-
---- 1/y is a subterm of an I List, but 1/y is only an I when y is 1.
---- We need to check that there is a ground instance of 1/y of sort I.
---- This is a *semantic* check, and wellFormed cannot perform this check.
---- reduce vabs('MYINT-COMBINED, TERM 9 ?= TERM 10) .
-
-
---- Variable abstraction:
-
-
-*** Sample input/output:
-
-*** Input:  x ?= f(a)
-*** Output: V0 ?= a /\ x ?= f(V0)
-
-*** Input:  f(f(a)) ?= f(a)
-*** Output: V0 ?= a /\ V1 ?= f(V0) /\ V1 ?= f(V1)
-    
-*** Input:  f(f(a)) ?= f(b)
-*** Output: V0 ?= a /\ V1 ?= b /\ V2 ?= f(V0) /\ V3 ?= f(V1) /\ V3 ?= f(V2)
-
-*** Input:  f(f(a)) ?= f(a) /\ f(f(a)) != f(a)
-*** Output: V0 ?= a /\ V1 ?= f(V0) /\ V1 ?= f(V1) /\ V1 != f(V1)
-
-*** Input:  f(f(a)) ?= f(a) /\ f(f(f(x))) != f(a)
-*** Output: V0 ?= a /\ V1 ?= f(V0) /\ V1 ?= f(V1) /\ V2 ?= f(V3) /\ V3 ?= f(x) /\ V1 != f(V2)
-
-*** Input:  f(b) ?= f(a) /\ f(f(f(x))) != f(b)
-*** Output: V0 ?= a /\ V1 ?= b /\ V2 ?= f(V0) /\ V2 ?= f(V1) /\ V3 ?= f(V1) /\ V4 ?= f(V5) /\ V5 ?= f(x) /\ V3 != f(V4)
-

@@ -18,7 +18,7 @@ fmod PURIFICATION is
 
   var Q : Qid . var TA : TruthAtom . vars EqC EqC' : EqConj .
   vars ME ME' : ModuleExpression . vars M M' : Module . 
-  vars FV : Variable . vars T T' T1 T2 : Term .
+  vars FV : Variable . vars T T' T1 T2 : Term . var T? : [Term] .
   vars NeTL NeTL' : NeTermList . vars TL TL' : TermList . vars TL? TL?' : [TermList] .
 
   op _in_ : EqConj Module -> Bool .
@@ -27,18 +27,6 @@ fmod PURIFICATION is
   eq (EqC /\ EqC') in M = (EqC in M) and (EqC' in M) .
   eq (T ?= T')     in M = wellFormed(M, T) and wellFormed(M, T') .
   eq (T != T')     in M = wellFormed(M, T) and wellFormed(M, T') .
-```
-
-When purifying we'll generate extra constraints we want to bubble to the top.
-Allowing QF equality atoms to bubble to the top is safe.
-
-```{.maude .purification}
-  op _?=_ : CTerm CTerm -> EqConj [ditto] .
-  op _!=_ : CTerm CTerm -> EqConj [ditto] .
-  -----------------------------------------
-  eq T ?= (T' | EqC)         = (T ?= T') /\ EqC .
-  eq T != (T' | EqC)         = (T != T') /\ EqC .
-  eq Q[TL?, (T | EqC), TL?'] = Q[TL?, T, TL?'] | EqC .
 ```
 
 Purifying Equational Conjunctions
