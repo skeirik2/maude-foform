@@ -1,5 +1,5 @@
 load ../src/vabs.maude
---- load ../src/purification.maude
+load ../src/purification.maude
 
 ------------------------------------------------------------
 ----              Testing Modules:                      ----
@@ -100,10 +100,8 @@ endfm
 
 set include BOOL on .
 
-
-
 fmod TESTS is
----    protecting PURIFICATION .
+    protecting PURIFICATION .
     protecting VABS .
 
     op TERM_ : Nat -> Term .
@@ -136,6 +134,28 @@ reduce vabs('MYINT-COMBINED, TERM 9 != TERM 11) .
 reduce vabs('MYINT-COMBINED, TERM 9 ?= TERM 11 /\ TERM 10 != TERM 11) .
 reduce vabs('MYINT-COMBINED, TERM 8 ?= TERM 7 /\ TERM 10 != TERM 11) .
 
+reduce purifyTerm('MYINT-RAT, 'MYINT-LIST, TERM 6) .
+reduce purifyTerm('MYINT-RAT, 'MYINT-LIST, TERM 7) .
+reduce purifyTerm('MYINT-RAT, 'MYINT-LIST, TERM 8) .
+
+reduce purifyTerm('MYINT-LIST, 'MYINT-RAT, TERM 6) .
+reduce purifyTerm('MYINT-LIST, 'MYINT-RAT, TERM 7) .
+reduce purifyTerm('MYINT-LIST, 'MYINT-RAT, TERM 8) .
+reduce purifyTerm('MYINT-LIST, 'MYINT-RAT, TERM 9) .
+reduce purifyTerm('MYINT-LIST, 'MYINT-RAT, TERM 10) .
+reduce purifyTerm('MYINT-LIST, 'MYINT-RAT, TERM 11) .
+
+reduce purify('MYINT-LIST, 'MYINT-RAT, TERM 6 ?= TERM 7) .
+reduce purify('MYINT-LIST, 'MYINT-RAT, TERM 9 ?= TERM 10) .
+reduce purify('TEST1, 'TEST2, TERM 1 ?= TERM 5 /\ TERM 2 != TERM 3) .
+
+---- Something goes wrong here!!
+
+match M:FModule <=?
+(upModule('MYINT-LIST, true)) .
+
+reduce (upModule('MYINT-LIST, true)) .
+
 --- 1/y is a subterm of an I List, but 1/y is only an I when y is 1.
 --- We need to check that there is a ground instance of 1/y of sort I.
 --- This is a *semantic* check, and wellFormed cannot perform this check.
@@ -164,4 +184,6 @@ reduce vabs('MYINT-COMBINED, TERM 8 ?= TERM 7 /\ TERM 10 != TERM 11) .
 *** Output: V0 ?= a /\ V1 ?= f(V0) /\ rest
 
 *** Input:  f(b) ?= f(a) /\ f(f(f(x))) != f(b)
+
+quit
 

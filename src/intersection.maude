@@ -12,7 +12,7 @@ fmod INTERSECTION is
 
   ---- Intersection of modules, sorts, subsorts, and ops.
 
-  op intersect : FModule FModule -> FModule .
+  op intersect : Module Module -> Module .
   op intersect : SortSet SortSet -> SortSet .
   op intersect : SubsortDeclSet SubsortDeclSet -> SubsortDeclSet .
   op intersect : OpDeclSet OpDeclSet -> OpDeclSet .
@@ -25,6 +25,7 @@ fmod INTERSECTION is
   vars OpDeclSet1 OpDeclSet2 : OpDeclSet .
   vars MembAxSet1 MembAxSet2 : MembAxSet .
   vars EquationSet1 EquationSet2 : EquationSet .
+  vars RuleSet1 RuleSet2 : RuleSet .
 
   eq intersect(none, SortSet2) = none .
   eq intersect((S:Sort ; SortSet1), 
@@ -69,6 +70,35 @@ fmod INTERSECTION is
          none
          none
        endfm) .
+  
+    eq intersect(
+      (mod Header1 is
+         ImportList1
+         sorts SortSet1 .
+         SubsortDeclSet1
+         OpDeclSet1
+         MembAxSet1
+         EquationSet1
+         RuleSet1
+       endm),
+      (mod Header2 is
+         ImportList2
+         sorts SortSet2 .
+         SubsortDeclSet2
+         OpDeclSet2
+         MembAxSet2
+         EquationSet2
+         RuleSet2
+       endm))
+  =   (mod qid(string(Header1) + " intersect " + string(Header2)) is
+         nil
+         sorts intersect(SortSet1, SortSet2) .
+         intersect(SubsortDeclSet1, SubsortDeclSet2)
+         intersect(OpDeclSet1, OpDeclSet2)
+         none
+         none
+         none
+       endm) .
 
   vars S S1 S2 : Sort . vars M M0 M1 M2 : FModule . var Q Q' : Qid .
   var TL : TypeList .
@@ -193,7 +223,7 @@ fmod BREAK-EQATOMS is
     ceq break-eqatoms(M1, M2, T ?= T') = T ?= NV /\ T' ?= NV
      if not (T :: Variable or T' :: Variable)
      /\ NV := joint-variable(M1, M2, T) .
-
+     
     ceq break-eqatoms(M1, M2, T != T') = T ?= NV /\ T' != NV
      if not (T :: Variable or T' :: Variable)
      /\ NV := joint-variable(M1, M2, T) 
@@ -204,9 +234,4 @@ fmod BREAK-EQATOMS is
      /\ NV := joint-variable(M1, M2, T) 
      /\ sortLeq(M2, leastSort(M2, T), leastSort(M2, NV)) .
 endfm
----(
-reduce joint-variable(upModule('MYINT-RAT, true),
-                      upModule('MYINT-LIST, true),
-                      '_/_['_+_['one.NzN,'X:R],'Y:NzR]) .
----)                  
 

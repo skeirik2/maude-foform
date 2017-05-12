@@ -1,15 +1,22 @@
 load intersection .
-load ../tests/test-modules .
 
-fmod PURIFICATION-CONCRETE is
+fmod PURIFICATION is
 
   protecting META-LEVEL .
   protecting FVAR-CONCRETE .
   protecting FOFORMSIMPLIFY-IMPL .
   protecting CTERM-SET * ( op _;;_ to _;;;_ ) .
   protecting BREAK-EQATOMS .
+  protecting INTERSECTION .
   
   op purify : FModule FModule EqConj -> EqConj .
+  
+  op purify : ModuleExpression ModuleExpression EqConj -> EqConj .
+  vars MExp1 MExp2 : ModuleExpression .
+  eq purify(MExp1, MExp2, E:EqConj)
+   = purify(upModule(MExp1, true),
+            upModule(MExp2, true),
+            E:EqConj) .
   
   vars M M1 M2 M0 : FModule . 
   vars FV V : Variable .
@@ -18,6 +25,8 @@ fmod PURIFICATION-CONCRETE is
   
   eq purify(M1, M2, tt) = tt .
   eq purify(M1, M2, ff) = ff .
+  eq purify(M1, M2, C1 /\ C2)
+   = purify(M1, M2, C1) /\ purify(M1, M2, C2) .
   
   ---- (Case A) Both Lhs and Rhs are pure and from one module.
   ---- (Case A: equality)
@@ -61,6 +70,12 @@ fmod PURIFICATION-CONCRETE is
    
    op purifyTerm : Module Module Term -> CTerm .
    
+   op purifyTerm : ModuleExpression ModuleExpression Term -> CTerm .
+   eq purifyTerm(MExp1, MExp2, T)
+    = purifyTerm(upModule(MExp1, true),
+                 upModule(MExp2, true),
+                 T) .
+   
    op _?=_ : Term CTerm -> EqConj [ditto] .
    op _!=_ : Term CTerm -> EqConj [ditto] .
    
@@ -84,148 +99,37 @@ fmod PURIFICATION-CONCRETE is
   
   ---- (Case C) T = Q[TL] is mixed-form.
   
-  eq purifyTerm(M1, M2, Q[TL])
-    = if hasOpQ(M1, Q)
-      then purifyTerm-aux(M1, M2, M1, Q, TL, empty, tt)
-      else purifyTerm-aux(M1, M2, M2, Q, TL, empty, tt)
-      fi .
+  ---- If Q is not in the module to which we purify w.r.t.,
+  ---- then first purify Q[TL] w.r.t. the other module (get T'),
+  ---- and come up a joint variable for that.
   
-  op purifyTerm-aux : 
-       Module 
-       Module 
-       Module 
-       Qid 
-       TermList 
-       TermList 
-       FOForm
+  ceq purifyTerm(M1, M2, Q[TL])
+    = V | C' /\ V ?= T'
+  if (not hasOpQ(M1, Q)) 
+  /\ T' | C' := purifyTerm(M2, M1, Q[TL])
+  /\ V := joint-variable(M1, M2, T') .
+  
+  eq purifyTerm(M1, M2, Q[TL])
+   = paux(M1, M2, Q, TL, empty, tt) .
+  
+  op paux : 
+       Module      ---- Q is in this module
+       Module      ---- the other module
+       Qid         ---- Q is an op
+       TermList    ---- terms that have been purified
+       TermList    ---- terms that haven't been purified
+       FOForm      ---- collective constraints
        -> CTerm .
 
-  eq purifyTerm-aux(M1, M2, M1, Q, empty, TL, C)
-   = Q[TL] | C .
-   
-  ceq purifyTerm-aux(M1, M2, M2, Q, empty, TL, C)
-    = V | C /\ V ?= Q[TL] 
-   if V := joint-variable(M1, M2, Q[TL]) .
-   
-  --- ceq purityTerm-aux(M1, M2, 
+  eq paux(M1, M2, Q, empty, TL', C)
+   = Q[TL'] | C .
+  
+ ceq paux(M1, M2, Q, (T, TL), TL', C)
+   = paux(M1, M2, Q, TL, (TL', T), C)
+ if  wellFormed(M1, T) .
+ 
+ ceq paux(M1, M2, Q, (T, TL), TL', C)
+   = paux(M1, M2, Q, TL, (TL', T'), (C /\ C'))
+ if  T' | C' := purifyTerm(M1, M2, T) .
    
 endfm
-
----- some test cases.
-
-reduce purify(upModule('MYINT-RAT, true),
-              upModule('MYINT-LIST, true),
-              '_`,_['one.NzN ,'_`,_['Y:NzN,'nil.List]]
-              !=
-              '_`,_['X:I,'L:List]) .
- 
-quit
-    
-  ---- (Case C) X ?= T
- 
-  
-  ---- (Case C1) Q[TL] ?= Q[TL']
-  ----           TL ?= TL'
-  
-  eq purify(M1, M2, Q[TL] ?= Q[TL'])
-   = makeEqBetweenTermList(M1, M2, TL, TL') .
-   
-  op makeEqBetweenTermList 
-   : FModule FModule TermList TermList -> PosEqConj .
-  eq makeEqBetweenTermList(M1, M2, empty, empty) = tt .
-  eq makeEqBetweenTermList(M1, M2, empty, TL) = ff .
-  eq makeEqBetweenTermList(M1, M2, TL, empty) = ff .
-  eq makeEqBetweenTermList(M1, M2, (T, TL), (T', TL'))
-   =    purify(M1, M2, T ?= T')
-     /\ makeEqBetweenTermList(M1, M2, TL, TL') .
-  
-  ---- (Case C2) otherwise
-  op purifyTerm : FModule FModule Term -> CTerm .
-  
-  ceq purify(M1, M2, T1 ?= T2)
-    = purify(M1, M2, PT1 ?= PT2) /\ C1 /\ C2 
-  if  PT1 | C1 := purifyTerm(M1, M2, T1)
-  /\  PT2 | C2 := purifyTerm(M1, M2, T2) .
-
-  ---- Purify a term
-  
-  ---- (Case 1) T is pure.
-  
-  ceq purifyTerm(M1, M2, T) = T
-   if (wellFormed(M1, T) or wellFormed(M2, T)) .
-   
-  ---- (Case 2) Q[T1,...,Tn] is not pure.
-  ----          Q[V1,...,Vn] | V1 ?= T1 /\ ... /\ Vn ?= Tn
-  
-  eq purifyTerm(M1, M2, Q[TL])
-   = if hasOpQ(M1, Q)
-     then purifyTerm-aux(M1, M2, M1, Q, TL, empty, tt)
-     else purifyTerm-aux(M1, M2, M2, Q, TL, empty, tt)
-     fi .
-  
-  
-  ---- Auxiliary function that purifies the complex term Q[...]
-  op purifyTerm-aux : 
-       FModule     ---- Module 1
-       FModule     ---- Module 2
-       FModule     ---- The home module of op Q
-       Qid         ---- The op Q
-       TermList    ---- Arguments that haven't been purified.
-       TermList    ---- Arguments that have been purified.
-       FOForm      ---- The constrained collected so far.
-       -> CTerm .  ---- Return a constrained term.
-       
-
-
-  ---- empty is the unit of TermList, defined in prelude.maude.
-  
-  eq purifyTerm-aux(M1, M2, M, Q, empty, TL, C)
-   = Q[TL] | C .
-   
-  ceq purifyTerm-aux(M1, M2, M, Q, (T, TL), TL', C)
-    = purifyTerm-aux(M1, M2, M, Q, TL, (TL', T'), C /\ purify(M1, M2, C'))
-   if T' | C' := purifyTerm(M1, M2, T) .
-   
-  eq purify(M1, M2, T1 ?= T2) = 'no ?= 'match .
-  
-  
-endfm
-
----- Some test cases
-
----- purify(one, one / Y:NzR, nil ?= X:R, Z:N, nil)
-
-reduce purify(upModule('MYINT-RAT, true),
-              upModule('MYINT-LIST, true),
-              '_`,_['one.NzN ,'_`,_['_/_['one.NzN,'Y:NzR],'nil.List]]
-              ?=
-              '_`,_['X:R,'_`,_['Z:N,'nil.List]]) .
-
----- purify(one, zero, nil ?= X:N, Y:N, nil)
-
-reduce purify(upModule('MYINT-RAT, true),
-              upModule('MYINT-LIST, true),
-              '_`,_['one.NzN,'_`,_['zero.N,'nil.List]]
-              ?=
-              '_`,_['X:N,'_`,_['Y:N,'nil.List]]) .
-              
-
----- purify(one / Y:NzR ?= Z:N)
-
-reduce purify(upModule('MYINT-RAT, true),
-              upModule('MYINT-LIST, true),
-              'Z:N ?= '_/_['one.NzN,'Y:NzR]) .
-              
-     
-              
----- purify( (X:N / Y:NzN) , nil ?= L:List)
-----      =    (Z:I, nil ?= L:List)    ---- in LIST module
----         /\ (X:N / Y:NzN ?= Z:I)    ---- in Rat  module
-
-reduce purify(upModule('MYINT-RAT, true),
-              upModule('MYINT-LIST, true),
-              '_`,_['_/_['X:N, 'Y:NzN], 'nil.List]
-              ?=
-              'L:List) .
-                      
-
