@@ -6,5 +6,5 @@ pandoc-tangle --from markdown --to code-maude --code cterm        constrained-te
 pandoc-tangle --from markdown --to code-maude --code msh          msh.md                    > src/msh.maude
 pandoc-tangle --from markdown --to code-maude --code vabs         vabs.md                   > src/vabs.maude
 pandoc-tangle --from markdown --to code-maude --code intersection intersection.md           > src/intersection.maude
-# pandoc-tangle --from markdown --to code-maude --code purification purification.md           > src/purification.maude
+pandoc-tangle --from markdown --to code-maude --code purification purification.md           > src/purification.maude
 # pandoc-tangle --from markdown --to code-maude --code state-space     state-space.md            > src/state-space.maude

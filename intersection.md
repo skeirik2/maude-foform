@@ -1,243 +1,144 @@
+Module Intersection
+===================
+
+This module computes module intersections over `ModuleDeclSet`.
+The intersection operation is lifted to `Module` via `asTemplate`.
+
 ```{.maude .intersection}
 load module-template.maude
-load full-maude.maude
-
------------------------------------------------------
----- Given two order-sorted signatures (as Modules),
----- calculate the intersection of those.
------------------------------------------------------
 
 fmod INTERSECTION is
   protecting MODULE-TEMPLATE * ( op _;;_ to _;;;_ ) .
   protecting RENAMING-EXPR-EVALUATION .
 
-  ---- Intersection of modules, sorts, subsorts, and ops.
+  var B : Bool . vars TL : TypeList . var T : Type . var AS : AttrSet . var OPD : OpDecl . var OPDS : OpDeclSet .
+  vars MOD MOD' M0 : Module . vars ME ME' : ModuleExpression .
+  vars Q Q' : Qid . vars H H' : Header . var S : Sort . vars SS SS' : SortSet .
+  vars NeMDS : NeModuleDeclSet . vars MDS MDS' : ModuleDeclSet .
 
-  op intersect : FModule FModule -> FModule .
-  op intersect : SortSet SortSet -> SortSet .
-  op intersect : SubsortDeclSet SubsortDeclSet -> SubsortDeclSet .
-  op intersect : OpDeclSet OpDeclSet -> OpDeclSet .
+  op intersect : ModuleDeclSet ModuleDeclSet -> ModuleDeclSet [assoc comm id: none] .
+  -----------------------------------------------------------------------------------
+  eq intersect(MDS, MDS') = none [owise] .
+  eq intersect( NeMDS MDS , NeMDS MDS' ) = NeMDS intersect( MDS , MDS' ) .
+  eq intersect( (sorts S ; SS .) MDS , (sorts S ; SS' .) MDS' ) = (sorts S .) intersect( (sorts SS .) MDS , (sorts SS' .) MDS' ) .
 
-  vars ME ME' : ModuleExpression .
-  vars Header1 Header2 : Qid .
-  vars ImportList1 ImportList2 : ImportList .
-  vars SortSet1 SortSet2 : SortSet .
-  vars SubsortDeclSet1 SubsortDeclSet2 : SubsortDeclSet .
-  vars OpDeclSet1 OpDeclSet2 : OpDeclSet .
-  vars MembAxSet1 MembAxSet2 : MembAxSet .
-  vars EquationSet1 EquationSet2 : EquationSet .
+  op intersect : Module Module -> Module .
+  op intersect : ModuleExpression ModuleExpression -> ModuleExpression .
+  ----------------------------------------------------------------------
+  ceq upModule(H /\ H', B) = fromTemplate(resolveNames(H /\ H'), MDS) if MDS := intersect(asTemplate(H), asTemplate(H')) .
+```
 
-  eq intersect(none, SortSet2) = none .
-  eq intersect((S:Sort ; SortSet1), 
-               (S:Sort ; SortSet2))
-   = S:Sort ; intersect(SortSet1, SortSet2) .
-  eq intersect(SortSet1, SortSet2) = none [owise] .
+It will often be useful to know if a sort or an operator is in a `ModuleDeclSet`.
 
-  eq intersect(none, SubsortDeclSet2) = none .
-  eq intersect((D:SubsortDecl SubsortDeclSet1),
-               (D:SubsortDecl SubsortDeclSet2))
-   = D:SubsortDecl intersect(SubsortDeclSet1, SubsortDeclSet2) .
-  eq intersect(SubsortDeclSet1, SubsortDeclSet2) = none [owise] .
+```{.maude .intersection}
+  op _in_ : Sort ModuleDeclSet -> Bool .
+  op _in_ : Qid  ModuleDeclSet -> Bool .
+  --------------------------------------
+  eq S in ( sorts SS . )            MDS = S in SS .
+  eq Q in ( op Q : TL -> T [AS] . ) MDS = true .
+  eq S in MDS = false [owise] .
+  eq Q in MDS = false [owise] .
+```
 
-  eq intersect(none, OpDeclSet2) = none .
-  eq intersect((D:OpDecl OpDeclSet1),
-               (D:OpDecl OpDeclSet2))
-   = D:OpDecl intersect(OpDeclSet1, OpDeclSet2) .
-  eq intersect(OpDeclSet1, OpDeclSet2) = none [owise] . 
+Joint Sorts
+-----------
 
-  eq intersect(
-      (fmod Header1 is
-         ImportList1
-         sorts SortSet1 .
-         SubsortDeclSet1
-         OpDeclSet1
-         MembAxSet1
-         EquationSet1
-       endfm),
-      (fmod Header2 is
-         ImportList2
-         sorts SortSet2 .
-         SubsortDeclSet2
-         OpDeclSet2
-         MembAxSet2
-         EquationSet2
-       endfm))
-  =   (fmod qid(string(Header1) + " intersect " + string(Header2)) is
-         nil
-         sorts intersect(SortSet1, SortSet2) .
-         intersect(SubsortDeclSet1, SubsortDeclSet2)
-         intersect(OpDeclSet1, OpDeclSet2)
-         none
-         none
-       endfm) .
+Calculating the joint sort of a sort `S` in connected components `C1` and `C2` corresponding to modules `MOD` and `MOD'`:
 
-  vars S S1 S2 : Sort . vars M M0 M1 M2 : FModule . var Q Q' : Qid .
-  var TL : TypeList .
-  vars T : Type .
-  var Att : AttrSet .
-  var OPDS : OpDeclSet .
+-   If `S` is a sort of `C1 /\ C2`, return `S`;
+-   If not, return the maximal sort in `C1 /\ C2`.
 
-  ---- Check whether a sort is in a module.
-
-  op hasSortQ : FModule Sort -> Bool .
-
-  eq hasSortQ(M, S) = S in getSorts(M) .
-
-  ---- Check whether an op is in a module.
-
-  op hasOpQ : FModule Qid -> Bool .
-  op hasOpQ : OpDeclSet Qid -> Bool .
-
-  eq hasOpQ(M, Q) = hasOpQ(getOps(M), Q) .
-
-  ceq hasOpQ(((op Q' : nil -> T [Att] .) OPDS), Q) = true
-   if Q = qid(string(Q') + "." + string(T)) .
-  eq hasOpQ(((op Q  : TL -> T [Att] .) OPDS), Q) = true .
-  eq hasOpQ(((op Q' : TL -> T [Att] .) OPDS), Q)
-   = hasOpQ(OPDS, Q) .
-  eq hasOpQ(OPDS, Q) = false .
-
-  ---- Calculating joint sorts.
-  ---- Given two modules M1 and M2, let M0 = intersect(M1, M2).
-  ---- Given S is a sort of M1 (or M2), the joint sort of S, 
-  ---- denoted as joint_sort(S), is defined as follows.
-  ---- (Case A) If S is a sort in M0, then return S.
-  ---- (Case B) If S is not a sort of M0, then
-  ----     1. Calculate intersect(connected_component(S), getSorts(M0)).
-  ----     2. Return the maximal sort (in M0) of the above. 
-
-  op joint-sort : Sort FModule FModule -> Sort .
-
-  ---- Auxiliary functions.
-  op joint-sort-aux : FModule SortSet -> Sort .
-
-  ---- (Case A)
-
-  ceq joint-sort(S, M1, M2) = S
-   if hasSortQ(intersect(M1, M2), S) .
-
-  ---- (Case B)
-
-  ceq joint-sort(S, M1, M2) 
-    = if hasSortQ(M1, S)
-      then maximalSorts(M0, kind(intersect(connectedSorts(M1, S), getSorts(M0))))
-      else maximalSorts(M0, kind(intersect(connectedSorts(M2, S), getSorts(M0))))
-      fi
-   if M0 := intersect(M1, M2) .
-
+```{.maude .intersection}
+  op joint-sort : Sort Module           Module           -> Sort .
+  op joint-sort : Sort ModuleExpression ModuleExpression -> Sort .
+  ----------------------------------------------------------------
+  eq  joint-sort(S, ME,  ME')  = joint-sort(S, upModule(ME, true),  upModule(ME', true)) .
+  ceq joint-sort(S, MOD, MOD') = S if S in asTemplate(intersect(MOD, MOD')) .
+  ceq joint-sort(S, MOD, MOD') = if S in asTemplate(MOD)
+                                 then maximalSorts(M0, kind(intersect(connectedSorts(MOD, S), getSorts(M0))))
+                                 else maximalSorts(M0, kind(intersect(connectedSorts(MOD', S), getSorts(M0))))
+                                 fi
+                               if M0 := intersect(MOD, MOD') .
 endfm
----(
+```
+
+```
 reduce intersect(upModule('TEST1, false), upModule('TEST2, false)) == upModule('TEST1-INTERSECT-TEST2, false) .
----)
+```
 
------------------------------------------
-----     Concrete Module FVAR        ----
----- upModule(FVAR-CONCRETE) is FVAR ----
------------------------------------------
+Deterministic Variables
+=======================
 
-fmod FVAR-CONCRETE is
+Having deterministically calculated variables makes many things much simpler.
+This module calculates a variable for a given term by simply turning the term into a string.
+This guarantees that if the same term is encountered twice, the same variable will be generated.
 
-  protecting META-LEVEL .
-  protecting STRING .
-  protecting CONVERSION .
+```{.maude .intersection}
+fmod DETERMINISTIC-VARIABLES is
   protecting INTERSECTION .
 
-  vars ME ME' : ModuleExpression .
+  vars ME ME' : ModuleExpression . vars MOD MOD' : Module . var T : Term .
 
-  ---- Convert a list of terms to a string.
   op #string : TermList -> String .
+  ---------------------------------
+  eq #string(Q:Qid)                 = string(Q:Qid) .
+  eq #string(Q:Qid[TL:TermList])    = #string(Q:Qid) + "[" + #string(TL:TermList) + "]" .  
+  eq #string((T:Term, TL:TermList)) = #string(T:Term) + ", " + #string(TL:TermList) .
 
-  eq #string(Q:Qid) = string(Q:Qid) .
-  eq #string(Q:Qid[TL:TermList]) 
-   = #string(Q:Qid) + "[" + #string(TL:TermList) + "]" .  
-  eq #string((T:Term, TL:TermList)) 
-   = #string(T:Term) + ", " + #string(TL:TermList) .
-
-  ---- Convert a list of terms to a qid.
   op #qid : TermList -> Qid .
+  ---------------------------
   eq #qid(TL:TermList) = qid(#string(TL:TermList)) .
 
-  ---- Make a Variable.
   op #makeVariable : Qid    Sort -> Variable .
   op #makeVariable : String Sort -> Variable .
+  --------------------------------------------
   eq #makeVariable(Name:Qid, S:Sort)    = qid("#makeVariable(" + string(Name:Qid) + "):" + string(S:Sort)) .
   eq #makeVariable(Name:String, S:Sort) = qid("#makeVariable(" + Name:String + "):" + string(S:Sort)) .
 
-  vars M1 M2 : FModule . var T : Term .
-
-  ---- Calculate the joint-variable of a Term in a signature.
-
   op joint-variable : ModuleExpression ModuleExpression Term -> Variable .
+  ------------------------------------------------------------------------
   eq joint-variable(ME, ME', T) = joint-variable(upModule(ME, true), upModule(ME', true), T) .
 
-  op joint-variable : FModule FModule Term -> Variable .
-  eq joint-variable(M1, M2, T)
-   = if wellFormed(M1, T)
-     then #makeVariable(#string(T), joint-sort(leastSort(M1, T), M1, M2))
-     else #makeVariable(#string(T), joint-sort(leastSort(M2, T), M1, M2))
-     fi .
-
+  op joint-variable : Module Module Term -> Variable .
+  ----------------------------------------------------
+  eq joint-variable(MOD, MOD', T) = if wellFormed(MOD, T) then #makeVariable(#string(T), joint-sort(leastSort(MOD, T), MOD, MOD'))
+                                                          else #makeVariable(#string(T), joint-sort(leastSort(MOD', T), MOD, MOD'))
+                                    fi .
 endfm
+```
 
+Breaking Equalities
+===================
+
+Breaking equality atoms means taking an equality atom between terms of different modules and reforming them:
+
+-   `T ?= T'` goes to `x ?= T /\ x ?= T'` for `x` a variable of sort common to `T` and `T'`.
+-   `T != T'` goes to `x ?= T /\ x != T'` for `x` a variable of sort greater than that `T'`.
+
+```{.maude .intersection}
 fmod BREAK-EQATOMS is
-    protecting FVAR-CONCRETE .
+    protecting DETERMINISTIC-VARIABLES .
 
-    vars EqC EqC' : EqConj . vars M1 M2 : Module . vars ME ME' : ModuleExpression .
+    vars EqC EqC' : EqConj . vars MOD MOD' : Module . vars ME ME' : ModuleExpression .
     vars T T' : Term . var NV : Variable .
 
     op break-eqatoms : Module Module EqConj -> EqConj .
     op break-eqatoms : ModuleExpression ModuleExpression EqConj -> EqConj .
     -----------------------------------------------------------------------
     eq break-eqatoms(ME, ME', EqC)        = break-eqatoms(upModule(ME, true), upModule(ME', true), EqC) .
-    eq break-eqatoms(M1, M2, EqC /\ EqC') = break-eqatoms(M1, M2, EqC) /\ break-eqatoms(M1, M2, EqC') .
+    eq break-eqatoms(MOD, MOD', EqC /\ EqC') = break-eqatoms(MOD, MOD', EqC) /\ break-eqatoms(MOD, MOD', EqC') .
 
-    ceq break-eqatoms(M1, M2, T ?= T') = T ?= NV /\ T' ?= NV
-     if not (T :: Variable or T' :: Variable)
-     /\ NV := joint-variable(M1, M2, T) .
-
-    ceq break-eqatoms(M1, M2, T != T') = T ?= NV /\ T' != NV
-     if not (T :: Variable or T' :: Variable)
-     /\ NV := joint-variable(M1, M2, T) 
-     /\ sortLeq(M1, leastSort(M1, T), leastSort(M1, NV)) .
-
-    ceq break-eqatoms(M1, M2, T != T') = T ?= NV /\ T' != NV
-     if not (T :: Variable or T' :: Variable)
-     /\ NV := joint-variable(M1, M2, T) 
-     /\ sortLeq(M2, leastSort(M2, T), leastSort(M2, NV)) .
+    ceq break-eqatoms(MOD, MOD', T ?= T') = T ?= NV /\ T' ?= NV if not (T :: Variable or T' :: Variable)
+                                                                /\ NV := joint-variable(MOD, MOD', T) .
+    ceq break-eqatoms(MOD, MOD', T != T') = T ?= NV /\ T' != NV if not (T :: Variable or T' :: Variable)
+                                                                /\ NV := joint-variable(MOD, MOD', T)
+                                                                /\ sortLeq(MOD, leastSort(MOD, T), leastSort(MOD, NV)) .
+    ceq break-eqatoms(MOD, MOD', T != T') = T ?= NV /\ T' != NV if not (T :: Variable or T' :: Variable)
+                                                                /\ NV := joint-variable(MOD, MOD', T) 
+                                                                /\ sortLeq(MOD', leastSort(MOD', T), leastSort(MOD', NV)) .
 endfm
----(
-reduce joint-variable(upModule('MYINT-RAT, true),
-                      upModule('MYINT-LIST, true),
-                      '_/_['_+_['one.NzN,'X:R],'Y:NzR]) .
----)                  
 ```
 
 ```
-------------------------------------
----- UniversalConstruction FVAR ----
-------------------------------------
-
-fmod FVAR is
-
-  protecting MODULE-EXPRESSION .
-
-  op FVAR : Qid Qid -> UniversalConstruction .
-
-  eq FVAR(MOD1,MOD2) = 
-    META-THEORY < MOD1 > ;
-    META-THEORY < MOD2 > ;
-    exists ( protecting 'META-LEVEL .
-             protecting 'STRING .
-             protecting 'CONVERSION . )
-           ( sorts none . ) ;
-    forall ( sorts 'Term ; 'Term{svar('M1)} ; 'Term{svar('M2)} . )
-    exists ( sorts 'Variable{svar('M1) svar('M2)} . )
-           ( subsorts 'Variable{svar('M1) svar('M2)} < 'Variable{svar('M1)} ; 'Variable{svar('M2)} . ) 
-           ( op 'fvar : ( 'Term{svar('M1)} ) ( 'Term{svar('M2)} ) -> 'Variable{svar('M1) svar('M2)} [none] . 
-             op 'fvar : 'Term -> 'Variable [none] . 
-             op '#string : 'TermList -> 'String [none] . )
-           ( eq '#string['Q:Qid] = 'string['Q:Qid] [none] .
-             eq '#string['_`,_['T:Term,'TL:TermList]] = '_+_['#string['T:Term],'", ".String,'#string['TL:TermList]] [none] .
-
-endfm
+reduce joint-variable(upModule('MYINT-RAT, true), upModule('MYINT-LIST, true), '_/_['_+_['one.NzN,'X:R],'Y:NzR]) .
 ```

@@ -20,7 +20,7 @@ fmod STRUCTURED-NAME is
   extending META-LEVEL .
 
   vars I I' : Import . vars IL IL' : ImportList . vars S S' : Sort . var SS : SortSet . var SSDS : SubsortDeclSet .
-  vars Q Q' : Qid . vars A A' : Attr . var AS : AttrSet . var SU : Substitution .
+  vars H H' : Header . vars Q Q' : Qid . vars A A' : Attr . var AS : AttrSet . var SU : Substitution .
   vars OP OP' : OpDecl . var OPDS : OpDeclSet . vars MB MB' : MembAx . var MAS : MembAxSet .
   vars EQ EQ' : Equation . var EQS : EquationSet . vars RL RL' : Rule . var RLS : RuleSet .
   var TYPE : Type . vars NeTL NeTL' : NeTypeList . var TL : TypeList . vars COND COND' : Condition . vars EQC EQC' : EqCondition .
@@ -31,6 +31,7 @@ fmod STRUCTURED-NAME is
   op _@_   : Sort Sort     -> Sort     [ctor prec 23] .
   op _?    : Sort          -> Sort     [ctor prec 23] .
   op _==>_ : Sort Sort     -> Sort     [ctor prec 25] .
+  op _/\_  : Header Header -> Header   [ctor prec 25] .
   op const : Qid  Sort     -> Constant [ctor] .
   op var   : Qid  Sort     -> Variable [ctor] .
   op var   : Term          -> Variable [ctor] .
@@ -127,6 +128,11 @@ version which descends to those points in the term and then calls the object
 level version. This should fix the preregularity issue with this as well.
 
 ```{.maude .mod-template}
+  op resolveNames : Header -> Header .
+  ------------------------------------
+  eq resolveNames(H) = H [owise] .
+  eq resolveNames(H /\ H') = qid(string(resolveNames(H)) + "/\\" + string(resolveNames(H'))) .
+  
   op #tl-string : TypeList -> String .
   ------------------------------------
   eq #tl-string(nil)        = "" .
