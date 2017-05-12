@@ -34,7 +34,6 @@ fmod STRUCTURED-NAME is
   op _/\_  : Header Header -> Header   [ctor prec 25] .
   op const : Qid  Sort     -> Constant [ctor] .
   op var   : Qid  Sort     -> Variable [ctor] .
-  op var   : Term          -> Variable [ctor] .
   ---------------------------------------------
 
   op downQidError?          : -> [Qid] .

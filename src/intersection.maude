@@ -65,18 +65,27 @@ fmod INTERSECTION is
 --- -   If `S` is a sort of `C1 /\ C2`, return `S`;
 --- -   If not, return the maximal sort in `C1 /\ C2`.
 
+--- Right now we just take *any* maximal sort in `C1 /\ C2`, but we really need to
+--- take the correct maximal sort.
 
-  op joint-sort : Sort ModuleDeclSet    ModuleDeclSet    -> Sort .
-  ----------------------------------------------------------------
-  ceq joint-sort(S, MDS, MDS') = joint-sort(S, MDS', MDS) if (not S inS MDS) /\ S inS MDS' .
+
+  op joint-sort : Sort ModuleDeclSet ModuleDeclSet -> Sort .
+  ----------------------------------------------------------
+  ceq joint-sort(S, MDS, MDS') = S if S inS intersect(MDS, MDS') .
+  ceq joint-sort(S, MDS, MDS') = joint-sort(S, MDS', MDS) if (not S inS MDS) /\ S inS MDS .
   ceq joint-sort(S, MDS, MDS') = if S inS MDS'' then S else #top-sort(MDS'') fi
                                if S inS MDS /\ MDS'' := intersect(connected-component(MDS, (sorts S .)), MDS') .
+---   ceq joint-sort(S, MDS, MDS') = S if S inS intersect(MDS, MDS') .
+---   ceq joint-sort(S, MDS, MDS') = maximalSorts(MOD, kind(getSorts(MOD)))
+---                                if S inS MDS /\ (not S inS intersect(MDS, MDS')) .
+---                                /\ MOD  := fromTemplate('X, intersect(connected-component(MDS, (sorts S .)), connected-component(MDS', (sorts S .))))
+---                                /\ MOD' := 
 
   op joint-sort : Sort Module           Module           -> Sort .
   op joint-sort : Sort ModuleExpression ModuleExpression -> Sort .
   ----------------------------------------------------------------
-  eq  joint-sort(S, ME,  ME')  = joint-sort(S, upModule(ME /\ ME', true), upModule(ME /\ ME', true)) .
-  eq  joint-sort(S, MOD, MOD') = joint-sort(S, asTemplate(MOD), asTemplate(MOD')) .
+  eq  joint-sort(S, ME,  ME')  = joint-sort(S, upModule(ME /\ ME', true), upModule(ME /\ ME', true)) [label e1] .
+  eq  joint-sort(S, MOD, MOD') = joint-sort(S, asTemplate(MOD), asTemplate(MOD')) [label e1] .
 
   op #top-sort : ModuleDeclSet -> [Sort] .
   ----------------------------------------
@@ -97,23 +106,25 @@ endfm
 fmod DETERMINISTIC-VARIABLES is
   protecting INTERSECTION .
 
+  var Q : Qid . var Str : String . var S : Sort .
   vars ME ME' : ModuleExpression . vars MOD MOD' : Module . var T : Term .
+  vars NeTL NeTL' : NeTermList . var TL : TermList .
 
   op #string : TermList -> String .
   ---------------------------------
-  eq #string(Q:Qid)                 = string(Q:Qid) .
-  eq #string(Q:Qid[TL:TermList])    = #string(Q:Qid) + "[" + #string(TL:TermList) + "]" .  
-  eq #string((T:Term, TL:TermList)) = #string(T:Term) + ", " + #string(TL:TermList) .
+  eq #string(Q)              = string(Q) .
+  eq #string(Q[TL])          = #string(Q) + "[" + #string(TL) + "]" .  
+  eq #string((NeTL , NeTL')) = #string(NeTL) + "," + #string(NeTL') .
 
   op #qid : TermList -> Qid .
   ---------------------------
-  eq #qid(TL:TermList) = qid(#string(TL:TermList)) .
+  eq #qid(TL) = qid(#string(TL)) .
 
   op #makeVariable : Qid    Sort -> Variable .
   op #makeVariable : String Sort -> Variable .
   --------------------------------------------
-  eq #makeVariable(Name:Qid, S:Sort)    = qid("#makeVariable(" + string(Name:Qid) + "):" + string(S:Sort)) .
-  eq #makeVariable(Name:String, S:Sort) = qid("#makeVariable(" + Name:String + "):" + string(S:Sort)) .
+  eq #makeVariable(Q, S)   = qid("#makeVariable(" + string(Q) + "):" + string(S)) .
+  eq #makeVariable(Str, S) = qid("#makeVariable(" + Str + "):" + string(S)) .
 
   op joint-variable : ModuleExpression ModuleExpression Term -> Variable .
   ------------------------------------------------------------------------
@@ -121,9 +132,8 @@ fmod DETERMINISTIC-VARIABLES is
 
   op joint-variable : Module Module Term -> Variable .
   ----------------------------------------------------
-  eq joint-variable(MOD, MOD', T) = if wellFormed(MOD, T) then #makeVariable(#string(T), joint-sort(leastSort(MOD, T), MOD, MOD'))
-                                                          else #makeVariable(#string(T), joint-sort(leastSort(MOD', T), MOD, MOD'))
-                                    fi .
+  ceq joint-variable(MOD, MOD', T) = #makeVariable(#string(T), joint-sort(leastSort(MOD, T),  MOD, MOD')) if wellFormed(MOD, T) .
+  ceq joint-variable(MOD, MOD', T) = #makeVariable(#string(T), joint-sort(leastSort(MOD', T), MOD', MOD)) if wellFormed(MOD', T) .
 endfm
 
 

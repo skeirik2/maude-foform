@@ -130,9 +130,9 @@ reduce vabs('TEST-MODULE, TERM 4 ?= TERM 2 /\ TERM 5 != TERM 2) .
 reduce vabs('TEST-MODULE, TERM 3 ?= TERM 2 /\ TERM 5 != TERM 3) .
 
 reduce vabs('MYINT-COMBINED, TERM 6 ?= TERM 7) .
---- reduce vabs('MYINT-COMBINED, TERM 9 != TERM 11) .
---- reduce vabs('MYINT-COMBINED, TERM 9 ?= TERM 11 /\ TERM 10 != TERM 11) .
---- reduce vabs('MYINT-COMBINED, TERM 8 ?= TERM 7 /\ TERM 10 != TERM 11) .
+reduce vabs('MYINT-COMBINED, TERM 9 != TERM 11) .
+reduce vabs('MYINT-COMBINED, TERM 9 ?= TERM 11 /\ TERM 10 != TERM 11) .
+reduce vabs('MYINT-COMBINED, TERM 8 ?= TERM 7 /\ TERM 10 != TERM 11) .
 
 --- 1/y is a subterm of an I List, but 1/y is only an I when y is 1.
 --- We need to check that there is a ground instance of 1/y of sort I.
