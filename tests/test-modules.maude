@@ -1,5 +1,4 @@
-load ../src/vabs.maude
-load ../src/purification.maude
+load ../src/intersection.maude
 
 ------------------------------------------------------------
 ----              Testing Modules:                      ----
