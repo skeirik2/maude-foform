@@ -18,7 +18,7 @@
 load full-maude.maude
 load string.maude
 load metafresh.maude
-load foform.maude
+load eqform.maude
 
 fmod CTERM-SET is
   protecting FOFORM-DEFINEDOPS + FOFORMSIMPLIFY + FOFORM-SUBSTITUTIONSET .
